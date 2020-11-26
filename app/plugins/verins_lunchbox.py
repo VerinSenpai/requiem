@@ -32,7 +32,7 @@ class VerinsLunchbox(commands.Cog, name="verins lunchbox"):
         """
         Shows a random cat girl picture.
         """
-        embed = discord.Embed(color=discord.Colour.purple())
+        embed = discord.Embed(colour=discord.Colour.purple())
         embed.set_footer(text="Results provided by https://Nekos.Life")
         embed.set_image(url=nekos.img("neko"))
         await ctx.send(embed=embed)
@@ -44,10 +44,10 @@ class VerinsLunchbox(commands.Cog, name="verins lunchbox"):
         Provides a random cat fact.
         """
         async with aiohttp.ClientSession() as csess:
-            async with csess.get("https://catfact.ninja/fact") as session:
-                data = await session.json(content_type="application/json")
+            async with csess.get("https://catfact.ninja/fact") as response:
+                data = await response.json(content_type="application/json")
 
-        embed = discord.Embed(description=data["fact"], color=discord.Colour.purple())
+        embed = discord.Embed(description=data["fact"], colour=discord.Colour.purple())
         embed.set_footer(text="Results Provided By https://catfact.ninja/facts")
         await ctx.send(embed=embed)
 
@@ -58,10 +58,10 @@ class VerinsLunchbox(commands.Cog, name="verins lunchbox"):
         Chuck Norris was here.
         """
         async with aiohttp.ClientSession() as csess:
-            async with csess.get("https://api.chucknorris.io/jokes/random") as session:
-                data = await session.json(content_type="application/json")
+            async with csess.get("https://api.chucknorris.io/jokes/random") as response:
+                data = await response.json(content_type="application/json")
 
-        embed = discord.Embed(description=data["value"], color=discord.Colour.purple())
+        embed = discord.Embed(description=data["value"], colour=discord.Colour.purple())
         embed.set_footer(text="Results Provided By https://api.chucknorris.io/")
         await ctx.send(embed=embed)
 

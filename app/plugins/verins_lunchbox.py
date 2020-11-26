@@ -65,6 +65,16 @@ class VerinsLunchbox(commands.Cog, name="verins lunchbox"):
         embed.set_footer(text="Results Provided By https://api.chucknorris.io/")
         await ctx.send(embed=embed)
 
+    @commands.command(brief="Fox girl pics?")
+    @commands.cooldown(1, 2.5)
+    async def foxgirl(self, ctx: commands.Context) -> None:
+        """
+        Shows a random fox girl picture. Almost as good as cat girls ngl.
+        """
+        embed = discord.Embed(colour=discord.Colour.purple())
+        embed.set_footer(text="Results provided by https://Nekos.Life")
+        embed.set_image(url=nekos.img("fox_girl"))
+        await ctx.send(embed=embed)
 
 def setup(bot):
     """

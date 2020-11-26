@@ -78,7 +78,8 @@ class Requiem(commands.AutoShardedBot):
                 _LOGGER.info("requiem has successfully loaded the plugin <%s>!", plugin)
 
             except Exception as exc:
-                await self.report_error("load_extension", exc)
+                message = f"loading the plugin <{plugin}>"
+                await self.report_error(message, exc)
 
     async def on_guild_join(self, guild: discord.Guild) -> None:
         """
@@ -105,7 +106,8 @@ class Requiem(commands.AutoShardedBot):
         """
         Overwrites on_error to implement custom event error reporting.
         """
-        await self.report_error(event_method, sys.exc_info()[1])
+        message = f"dispatching the event method <{event_method}>"
+        await self.report_error(message, sys.exc_info()[1])
 
     async def on_command_error(
         self, ctx: commands.Context, exc: commands.CommandError
@@ -119,8 +121,9 @@ class Requiem(commands.AutoShardedBot):
             return
 
         elif isinstance(exc, commands.CommandInvokeError):
+            message = f"executing the command <{ctx.command.name}>"
+            await self.report_error(message, exc)
             response = random.choice(constants.UNHANDLED)
-            await self.report_error(ctx.command.name, exc)
 
         elif exc_name in constants.HANDLED:
             response = constants.HANDLED.get(exc_name)(ctx, exc)
@@ -175,7 +178,7 @@ class Requiem(commands.AutoShardedBot):
         await super().close()
         await tortoise.Tortoise.close_connections()
 
-    async def report_error(self, method: str, exc: BaseException) -> None:
+    async def report_error(self, message: str, exc: BaseException) -> None:
         """
         Logs an exceptions occurrence to the database and reports it to the owners if configured to do so.
         """
@@ -191,9 +194,7 @@ class Requiem(commands.AutoShardedBot):
                 if owner := self.get_user(owner_id):
                     await owner.send(file=file)
 
-        _LOGGER.error(
-            f"requiem has encountered an exception while executing method <{method}>! it has been reported!"
-        )
+        _LOGGER.error("requiem encountered an exception while %s! it has been reported!", message)
 
 
 async def start_database(cfg: config.PostgresConfig) -> None:

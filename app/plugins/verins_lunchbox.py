@@ -75,6 +75,18 @@ class VerinsLunchbox(commands.Cog, name="verins lunchbox"):
         embed.set_footer(text="Results provided by https://Nekos.Life")
         embed.set_image(url=nekos.img("fox_girl"))
         await ctx.send(embed=embed)
+    
+    @commands.command(brief="Random dad jokes.")
+    @commands.cooldown(1, 2.5)
+    async def dadjoke(self, ctx: commands.Context) -> None:
+        async with aiohttp.ClientSession() as csess:
+            async with csess.get("https://icanhazdadjoke.com/") as response:
+                data = await response.json(content_type="application/json")
+
+        embed = discord.Embed(description=data["joke"], colour=discord.Colour.purple())
+        embed.set_footer(text="Results Provided By https://icanhazdadjoke.com/")
+        await ctx.send(embed=embed)
+
 
 def setup(bot):
     """

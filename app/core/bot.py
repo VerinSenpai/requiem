@@ -44,7 +44,7 @@ class Requiem(commands.AutoShardedBot):
     def __init__(self, bot_config: config.Config) -> None:
         intents = discord.Intents.default()
         intents.members = True
-
+        
         super().__init__(
             command_prefix=None,
             owner_ids=bot_config.owner_ids,
@@ -183,12 +183,13 @@ class Requiem(commands.AutoShardedBot):
             return
 
         tb = traceback.format_exception(type(exc), exc, exc.__traceback__)
-        file = discord.File(fp=io.StringIO(tb), filename="error_report.txt")
+        string_io = io.StringIO("".join(tb))
+        file = discord.File(fp=string_io, filename="error_report.txt")
 
         for owner_id in self.owner_ids:
             with contextlib.suppress(discord.Forbidden, discord.NotFound):
-                owner = self.get_user(owner_id)
-                await owner.send(file=file)
+                if owner := self.get_user(owner_id):
+                    await owner.send(file=file)
 
         _LOGGER.error(
             f"requiem has encountered an exception while executing method <{method}>! it has been reported!"

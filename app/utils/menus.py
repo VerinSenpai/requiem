@@ -24,12 +24,15 @@ class Paginator(menus.Menu):
     """
     Embed page menu built using dpy menus lib.
     """
+
     def __init__(self, pages, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.pages = pages
         self.current_page = 0
 
-    async def send_initial_message(self, ctx: commands.Context, channel: discord.TextChannel) -> discord.Message:
+    async def send_initial_message(
+        self, ctx: commands.Context, channel: discord.TextChannel
+    ) -> discord.Message:
         """
         Sends the initial message.
         """
@@ -89,12 +92,15 @@ class ConfirmMenu(menus.Menu):
     """
     Confirm menu.
     """
+
     def __init__(self, embed: discord.Embed, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.embed = embed
         self.state = False
 
-    async def send_initial_message(self, ctx: commands.Context, channel: discord.TextChannel) -> discord.Message:
+    async def send_initial_message(
+        self, ctx: commands.Context, channel: discord.TextChannel
+    ) -> discord.Message:
         """
         Sends the initial message.
         """
@@ -108,4 +114,3 @@ class ConfirmMenu(menus.Menu):
     @menus.button("❎")
     async def deny(self, _) -> None:
         self.stop()
-

@@ -1,3 +1,4 @@
 .idea
 *.pyc
 app/config.yaml
+app/plugins/dev_tools.py

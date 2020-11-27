@@ -75,7 +75,7 @@ class VerinsLunchbox(commands.Cog, name="verins lunchbox"):
         embed.set_footer(text="Results provided by https://Nekos.Life")
         embed.set_image(url=nekos.img("fox_girl"))
         await ctx.send(embed=embed)
-    
+
     @commands.command(brief="Random dad jokes.")
     @commands.cooldown(1, 2.5)
     async def dadjoke(self, ctx: commands.Context) -> None:

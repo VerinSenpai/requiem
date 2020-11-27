@@ -33,7 +33,7 @@ from discord.ext import commands
 from aiocache import Cache
 
 
-_LOGGER = logging.getLogger("requiem.bot")
+_LOGGER = logging.getLogger("requiem")
 
 
 class Requiem(commands.AutoShardedBot):

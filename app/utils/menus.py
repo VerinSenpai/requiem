@@ -100,10 +100,6 @@ class ConfirmMenu(menus.Menu):
         """
         return await channel.send(embed=self.embed)
 
-    async def start(self, ctx: commands.Context, *, channel: discord.TextChannel = None, wait: bool = False) -> bool:
-        await super().start(ctx, channel=channel, wait=wait)
-        return self.state
-
     @menus.button("☑")
     async def confirm(self, _) -> None:
         self.state = True

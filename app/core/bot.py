@@ -78,8 +78,7 @@ class Requiem(commands.AutoShardedBot):
                 _LOGGER.info("requiem has successfully loaded the plugin <%s>!", plugin)
 
             except Exception as exc:
-                message = f"loading the plugin <{plugin}>"
-                await self.report_error(message, exc)
+                await self.report_error(exc)
 
     async def on_guild_join(self, guild: discord.Guild) -> None:
         """
@@ -106,8 +105,7 @@ class Requiem(commands.AutoShardedBot):
         """
         Overwrites on_error to implement custom event error reporting.
         """
-        message = f"dispatching the event method <{event_method}>"
-        await self.report_error(message, sys.exc_info()[1])
+        await self.report_error(sys.exc_info()[1])
 
     async def on_command_error(
         self, ctx: commands.Context, exc: commands.CommandError
@@ -121,8 +119,7 @@ class Requiem(commands.AutoShardedBot):
             return
 
         elif isinstance(exc, commands.CommandInvokeError):
-            message = f"executing the command <{ctx.command.name}>"
-            await self.report_error(message, exc)
+            await self.report_error(exc)
             response = random.choice(constants.UNHANDLED)
 
         elif exc_name in constants.HANDLED:
@@ -178,7 +175,7 @@ class Requiem(commands.AutoShardedBot):
         await super().close()
         await tortoise.Tortoise.close_connections()
 
-    async def report_error(self, message: str, exc: BaseException) -> None:
+    async def report_error(self, exc: BaseException) -> None:
         """
         Logs an exceptions occurrence to the database and reports it to the owners if configured to do so.
         """
@@ -193,8 +190,6 @@ class Requiem(commands.AutoShardedBot):
             with contextlib.suppress(discord.Forbidden, discord.NotFound):
                 if owner := self.get_user(owner_id):
                     await owner.send(file=file)
-
-        _LOGGER.error("requiem encountered an exception while %s! it has been reported!", message)
 
 
 async def start_database(cfg: config.PostgresConfig) -> None:

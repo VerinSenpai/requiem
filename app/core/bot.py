@@ -44,7 +44,7 @@ class Requiem(commands.AutoShardedBot):
     def __init__(self, bot_config: config.Config) -> None:
         intents = discord.Intents.default()
         intents.members = True
-        
+
         super().__init__(
             command_prefix=None,
             owner_ids=bot_config.owner_ids,
@@ -78,7 +78,7 @@ class Requiem(commands.AutoShardedBot):
                 _LOGGER.info("requiem has successfully loaded the plugin <%s>!", plugin)
 
             except Exception as exc:
-                await self.report_error(exc)
+                await self.report_error(exc, f"loading the plugin <{plugin}>")
 
     async def on_guild_join(self, guild: discord.Guild) -> None:
         """
@@ -105,7 +105,8 @@ class Requiem(commands.AutoShardedBot):
         """
         Overwrites on_error to implement custom event error reporting.
         """
-        await self.report_error(sys.exc_info()[1])
+        exc = sys.exc_info()[1]
+        await self.report_error(exc, f"dispatching the event <{event_method}>")
 
     async def on_command_error(
         self, ctx: commands.Context, exc: commands.CommandError
@@ -119,7 +120,7 @@ class Requiem(commands.AutoShardedBot):
             return
 
         elif isinstance(exc, commands.CommandInvokeError):
-            await self.report_error(exc)
+            await self.report_error(exc, f"executing the command <{ctx.command.name}>")
             response = random.choice(constants.UNHANDLED)
 
         elif exc_name in constants.HANDLED:
@@ -175,7 +176,7 @@ class Requiem(commands.AutoShardedBot):
         await super().close()
         await tortoise.Tortoise.close_connections()
 
-    async def report_error(self, exc: BaseException) -> None:
+    async def report_error(self, exc: BaseException, message: str) -> None:
         """
         Logs an exceptions occurrence to the database and reports it to the owners if configured to do so.
         """
@@ -190,6 +191,10 @@ class Requiem(commands.AutoShardedBot):
             with contextlib.suppress(discord.Forbidden, discord.NotFound):
                 if owner := self.get_user(owner_id):
                     await owner.send(file=file)
+
+        _LOGGER.error(
+            "requiem encountered an error while %s! it has been reported!", message
+        )
 
 
 async def start_database(cfg: config.PostgresConfig) -> None:

@@ -78,7 +78,7 @@ class Requiem(commands.AutoShardedBot):
                 _LOGGER.info("requiem has successfully loaded the plugin <%s>!", plugin)
 
             except Exception as exc:
-                await self.report_error(exc, f"loading the plugin <{plugin}>")
+                await self.report_error(exc, f"loading plugin <{plugin}>")
 
     async def on_guild_join(self, guild: discord.Guild) -> None:
         """
@@ -106,7 +106,7 @@ class Requiem(commands.AutoShardedBot):
         Overwrites on_error to implement custom event error reporting.
         """
         exc = sys.exc_info()[1]
-        await self.report_error(exc, f"dispatching the event <{event_method}>")
+        await self.report_error(exc, f"dispatching event <{event_method}>")
 
     async def on_command_error(
         self, ctx: commands.Context, exc: commands.CommandError
@@ -120,7 +120,7 @@ class Requiem(commands.AutoShardedBot):
             return
 
         elif isinstance(exc, commands.CommandInvokeError):
-            await self.report_error(exc, f"executing the command <{ctx.command.name}>")
+            await self.report_error(exc, f"dispatching command <{ctx.command.name}>")
             response = random.choice(constants.UNHANDLED)
 
         elif exc_name in constants.HANDLED:
@@ -176,7 +176,7 @@ class Requiem(commands.AutoShardedBot):
         await super().close()
         await tortoise.Tortoise.close_connections()
 
-    async def report_error(self, exc: BaseException, message: str) -> None:
+    async def report_error(self, exc: BaseException, action: str) -> None:
         """
         Logs an exceptions occurrence to the database and reports it to the owners if configured to do so.
         """
@@ -193,7 +193,8 @@ class Requiem(commands.AutoShardedBot):
                     await owner.send(file=file)
 
         _LOGGER.error(
-            "requiem encountered an error while %s! it has been reported!", message
+            "requiem encountered an exception while %s! an error report has been submitted!",
+            action,
         )
 
 

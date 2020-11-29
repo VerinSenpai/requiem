@@ -98,6 +98,9 @@ class ConfirmMenu(menus.Menu):
         self.embed = embed
         self.state = False
 
+    async def start(self, ctx, *, channel=None, wait=True):
+        await super().start(ctx, channel=channel, wait=wait)
+
     async def send_initial_message(
         self, ctx: commands.Context, channel: discord.TextChannel
     ) -> discord.Message:

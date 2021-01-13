@@ -70,6 +70,7 @@ UNHANDLED = (
     "Now where did I put that error message?",
     "Solar (probably): Thats exceedingly gay verin",
     "thats an error. hold the mayo",
+    "misaka best girl.",
 )
 
 PREFIX = (

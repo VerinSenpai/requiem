@@ -18,7 +18,7 @@
 import discord
 
 from discord.ext import commands
-from utils import menus
+from utils import paginator
 
 
 class HelpCommand(commands.HelpCommand):
@@ -38,7 +38,7 @@ class HelpCommand(commands.HelpCommand):
         Sends embed pages using paginator.
         """
         ctx = self.context
-        await menus.Paginator(pages).start(ctx)
+        await paginator.Paginator(pages).start(ctx)
 
     async def create_cog_page(self, cog: commands.Cog):
         """

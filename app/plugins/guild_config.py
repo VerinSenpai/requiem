@@ -16,8 +16,8 @@
 
 
 import discord
-from core import models
 
+from core import models, constants
 from discord.ext import commands
 
 
@@ -51,6 +51,179 @@ class GuildConfig(commands.Cog, name="guild config"):
             output = "The prefix can be no longer than 5 characters!"
 
         embed = discord.Embed(description=output, colour=discord.Colour.purple())
+        await ctx.send(embed=embed)
+
+    @commands.group(brief="Manage the greeting channel and message for this guild.", aliases=["greet", "welcome"])
+    @commands.guild_only()
+    @commands.has_permissions(manage_guild=True)
+    @commands.cooldown(1, 2.5)
+    async def greeting(self, ctx: commands.Context) -> None:
+        """
+        View the current greeting configuration for this guild.
+        """
+        if ctx.invoked_subcommand:
+            return
+
+        guild_config = await models.Guilds.get(snowflake=ctx.guild.id)
+        channel = discord.utils.get(ctx.guild.channels, id=guild_config.welcome_channel)
+        message = guild_config.welcome_message
+
+        if not message:
+            message = "Welcome %user%!"
+
+        for key, value in constants.REPLACEMENTS.items():
+            message = message.replace(key, value(ctx.author))
+
+        embed = discord.Embed(title="Guild Greeting Configuration", colour=discord.Colour.purple())
+        embed.add_field(name="Channel", value=channel or "Not Configured", inline=False)
+        embed.add_field(name="Message", value=message, inline=False)
+        await ctx.send(embed=embed)
+
+    @greeting.command(brief="Configure the greeting channel for this guild.")
+    @commands.guild_only()
+    @commands.has_permissions(manage_guild=True)
+    @commands.cooldown(1, 2.5)
+    async def channel(self, ctx: commands.Context, channel: discord.TextChannel = None) -> None:
+        """
+        Configure the greeting channel for this guild.
+        """
+        guild_config = await models.Guilds.get(snowflake=ctx.guild.id)
+        current_channel = discord.utils.get(ctx.guild.channels, id=guild_config.welcome_channel)
+
+        if not current_channel == channel:
+            entry = models.Guilds.filter(snowflake=ctx.guild.id)
+
+            if channel:
+                output = f"Alright! The greeting channel has been set to <{channel}>!"
+                await entry.update(welcome_channel=channel.id)
+
+            else:
+                output = "Alright! The greeting service has been disabled!"
+                await entry.update(welcome_channel=0)
+
+        else:
+            channel_msg = f"set to <{current_channel}>" if current_channel else "disabled"
+            output = f"The greeting channel is already set to <{channel_msg}>"
+
+        embed = discord.Embed(title="Guild Greeting Configuration", description=output, colour=discord.Colour.purple())
+        await ctx.send(embed=embed)
+
+    @greeting.command(brief="Configure the greeting message for this guild.")
+    @commands.guild_only()
+    @commands.has_permissions(manage_guild=True)
+    @commands.cooldown(1, 2.5)
+    async def message(self, ctx: commands.Context, message: str = None) -> None:
+        """
+        Configure the greeting message for this guild.
+        """
+        guild_config = await models.Guilds.get(snowflake=ctx.guild.id)
+        current_message = guild_config.welcome_message
+
+        if not current_message == message:
+            entry = models.Guilds.filter(snowflake=ctx.guild.id)
+
+            if message:
+                if len(message) <= 1024:
+                    output = "Alright! You have set the greeting message!"
+                    await entry.update(welcome_message=message)
+
+                else:
+                    output = "The message provided was too large! Please limit your message to 1024 characters!"
+
+            else:
+                output = "Alright! The greeting message has been reset!"
+                await entry.update(welcome_message="")
+
+        else:
+            output = f"The greeting service is already using that message!"
+
+        embed = discord.Embed(title="Guild Greeting Configuration", description=output, colour=discord.Colour.purple())
+        await ctx.send(embed=embed)
+
+    @commands.group(brief="Manage the farewell channel and message for this guild.")
+    @commands.guild_only()
+    @commands.has_permissions(manage_guild=True)
+    @commands.cooldown(1, 2.5)
+    async def farewell(self, ctx: commands.Context) -> None:
+        """
+        View the current farewell configuration for this guild.
+        """
+        if ctx.invoked_subcommand:
+            return
+
+        guild_config = await models.Guilds.get(snowflake=ctx.guild.id)
+        channel = discord.utils.get(ctx.guild.channels, id=guild_config.farewell_channel)
+        message = guild_config.farewell_message
+
+        if not message:
+            message = "Farewell %user%!"
+
+        for key, value in constants.REPLACEMENTS.items():
+            message = message.replace(key, value(ctx.author))
+
+        embed = discord.Embed(title="Guild Farewell Configuration", colour=discord.Colour.purple())
+        embed.add_field(name="Channel", value=channel or "Not Configured", inline=False)
+        embed.add_field(name="Message", value=message, inline=False)
+        await ctx.send(embed=embed)
+
+    @farewell.command(name="channel", brief="Configure the farewell channel for this guild.")
+    @commands.guild_only()
+    @commands.has_permissions(manage_guild=True)
+    @commands.cooldown(1, 2.5)
+    async def _channel(self, ctx: commands.Context, channel: discord.TextChannel = None) -> None:
+        """
+        Configure the farewell channel for this guild.
+        """
+        guild_config = await models.Guilds.get(snowflake=ctx.guild.id)
+        current_channel = discord.utils.get(ctx.guild.channels, id=guild_config.farewell_channel)
+
+        if not current_channel == channel:
+            entry = models.Guilds.filter(snowflake=ctx.guild.id)
+
+            if channel:
+                output = f"Alright! The farewell channel has been set to <{channel}>!"
+                await entry.update(farewell_channel=channel.id)
+            else:
+                output = "Alright! The farewell service has been disabled!"
+                await entry.update(farewell_channel=0)
+
+        else:
+            channel_msg = f"set to <{current_channel}>" if current_channel else "disabled"
+            output = f"The farewell channel is already set to <{channel_msg}>"
+
+        embed = discord.Embed(title="Guild Farewell Configuration", description=output, colour=discord.Colour.purple())
+        await ctx.send(embed=embed)
+
+    @farewell.command(name="message", brief="Configure the farewell message for this guild.")
+    @commands.guild_only()
+    @commands.has_permissions(manage_guild=True)
+    @commands.cooldown(1, 2.5)
+    async def _message(self, ctx: commands.Context, message: str = None) -> None:
+        """
+        Configure the farewell message for this guild.
+        """
+        guild_config = await models.Guilds.get(snowflake=ctx.guild.id)
+        current_message = guild_config.farewell_message
+
+        if not current_message == message:
+            entry = models.Guilds.filter(snowflake=ctx.guild.id)
+
+            if message:
+                if len(message) <= 1024:
+                    output = "Alright! You have set the farewell message!"
+                    await entry.update(farewell_message=message)
+
+                else:
+                    output = "The message provided was too large! Please limit your message to 1024 characters!"
+
+            else:
+                output = "Alright! The farewell message has been reset!"
+                await entry.update(farewell_message="")
+
+        else:
+            output = f"The farewell service is already using that message!"
+
+        embed = discord.Embed(title="Guild Farewell Configuration", description=output, colour=discord.Colour.purple())
         await ctx.send(embed=embed)
 
 

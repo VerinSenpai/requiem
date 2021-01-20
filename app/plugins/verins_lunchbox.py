@@ -162,7 +162,9 @@ class VerinsLunchbox(commands.Cog, name="verins lunchbox"):
         Sends a random useless fact.
         """
         async with aiohttp.ClientSession() as csess:
-            async with csess.get("https://uselessfacts.jsph.pl/random.json?language=en") as result:
+            async with csess.get(
+                "https://uselessfacts.jsph.pl/random.json?language=en"
+            ) as result:
                 data = await result.json(content_type="application/json")
         fact, source_url, source = data["text"], data["source_url"], data["source"]
 

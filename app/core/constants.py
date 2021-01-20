@@ -21,8 +21,6 @@ HANDLED = {
     "NoPrivateMessage": lambda _, __: "That command cannot be run in dms!",
     "PrivateMessageOnly": lambda _, __: "That command can only be run in dms!",
     "NSFWChannelRequired": lambda _, __: "That command can only be run in NSFW channels and dms!",
-    "NotFound": lambda _, __: "404 Not Found... How did I get here?",
-    "Forbidden": lambda _, __: "I lack the permissions necessary to perform that action!",
     "CommandOnCooldown": lambda _, e: f"That command is on cooldown! Try again in {round(e.retry_after, 2)} seconds!",
     "UserNotFound": lambda _, e: f"I was unable to find a user matching {e.argument}!",
     "MemberNotFound": lambda _, e: f"I was unable to find a member matching {e.argument}!",
@@ -82,5 +80,10 @@ PREFIX = (
     lambda prefix: f"You're a wizard Harry! My prefix is <**{prefix}**>",
     lambda prefix: f"Looking for me? My prefix is <**{prefix}**>",
     lambda prefix: f"Need something? My prefix is <**{prefix}**>",
-    lambda prefix: f"Forget my prefix? You can always execute commands by pinging me! My prefix is <**{prefix}**>",
 )
+
+REPLACEMENTS = {
+    "%user%": lambda member: member.name,
+    "%user_mention%": lambda member: member.mention,
+    "%guild%": lambda member: member.guild.name
+}

@@ -86,34 +86,3 @@ class Paginator(menus.Menu):
         """
         self.current_page = len(self.pages) - 1
         await self.change_page()
-
-
-class ConfirmMenu(menus.Menu):
-    """
-    Confirm menu.
-    """
-
-    def __init__(self, embed: discord.Embed, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.embed = embed
-        self.state = False
-
-    async def start(self, ctx, *, channel=None, wait=True):
-        await super().start(ctx, channel=channel, wait=wait)
-
-    async def send_initial_message(
-        self, ctx: commands.Context, channel: discord.TextChannel
-    ) -> discord.Message:
-        """
-        Sends the initial message.
-        """
-        return await channel.send(embed=self.embed)
-
-    @menus.button("☑")
-    async def confirm(self, _) -> None:
-        self.state = True
-        self.stop()
-
-    @menus.button("❎")
-    async def deny(self, _) -> None:
-        self.stop()

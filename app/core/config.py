@@ -41,17 +41,6 @@ class PostgresConfig:
 
 
 @attr.s(auto_attribs=True)
-class PoliticsAndWar:
-    """
-    PnW configuration object.
-    """
-
-    email: str = ""
-    password: str = ""
-    api_key: str = ""
-
-
-@attr.s(auto_attribs=True)
 class Config:
     """
     Bot configuration object.
@@ -60,11 +49,11 @@ class Config:
     discord_token: str
     default_prefix: str = "r!"
     owner_ids: typing.List[int] = attr.ib(factory=list)
+    api_key: str = ""
     show_statuses: bool = True
     prefix_on_mention: bool = True
     report_errors: bool = True
     postgres: PostgresConfig = attr.ib(factory=PostgresConfig)
-    pnw: PoliticsAndWar = attr.ib(factory=PoliticsAndWar)
 
 
 def load() -> T:

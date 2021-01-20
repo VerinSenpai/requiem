@@ -31,25 +31,3 @@ class Guilds(tortoise.models.Model):
     welcome_message: str = tortoise.fields.TextField(default="")
     farewell_channel: int = tortoise.fields.BigIntField(default=0)
     farewell_message: str = tortoise.fields.TextField(default="")
-
-
-class Users(tortoise.models.Model):
-    """
-    Base user configuration model.
-    """
-
-    snowflake: int = tortoise.fields.BigIntField(pk=True)
-    nation_id: int = tortoise.fields.IntField(default=0)
-
-
-class PWNS(tortoise.models.Model):
-    """
-    War monitor configuration model.
-    """
-
-    id: int = tortoise.fields.IntField(pk=True, generated=True)
-    snowflake: int = tortoise.fields.BigIntField()
-    target_id: int = tortoise.fields.IntField()
-    war: bool = tortoise.fields.BooleanField(default=False)
-    applicant: bool = tortoise.fields.BooleanField(default=False)
-    beige: bool = tortoise.fields.BooleanField(default=False)

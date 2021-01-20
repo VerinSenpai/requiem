@@ -55,6 +55,7 @@ class Requiem(commands.AutoShardedBot):
 
         self.config = bot_config
         self.cached_prefixes = Cache(Cache.MEMORY)
+        self.add_check(bot_check)
         self.loop.run_until_complete(start_database(bot_config.postgres))
 
     async def on_ready(self) -> None:
@@ -106,6 +107,10 @@ class Requiem(commands.AutoShardedBot):
         Overwrites on_error to implement custom event error reporting.
         """
         exc = sys.exc_info()[1]
+
+        if isinstance(exc, discord.Forbidden):
+            return
+
         await self.report_error(exc, f"dispatching event <{event_method}>")
 
     async def on_command_error(
@@ -117,6 +122,9 @@ class Requiem(commands.AutoShardedBot):
         exc_name = exc.__class__.__name__
 
         if isinstance(exc, commands.CommandNotFound):
+            return
+
+        elif isinstance(exc, commands.CheckFailure):
             return
 
         elif isinstance(exc, commands.CommandInvokeError):
@@ -150,6 +158,51 @@ class Requiem(commands.AutoShardedBot):
         Implements on_message_edit to handle command execution on message edit.
         """
         await self.process_commands(message_edit)
+
+    async def on_member_join(self, member: discord.Member) -> None:
+        """
+        Implements on_member_join greeting and automatic role assignment.
+        """
+        guild_config = await models.Guilds.get(snowflake=member.guild.id)
+
+        role = discord.utils.get(member.guild.roles, id=guild_config.auto_role)
+        channel = discord.utils.get(member.guild.channels, id=guild_config.welcome_channel)
+        message = guild_config.welcome_message
+
+        if role:
+            await member.add_roles((role,), reason="Automatic Role Assignment")
+
+        if not channel:
+            return
+
+        if not message:
+            message = "Welcome %user%!"
+
+        for key, value in constants.REPLACEMENTS.items():
+            message = message.replace(key, value(member))
+
+        embed = discord.Embed(colour=discord.Colour.purple(), description=message)
+        await channel.send(embed=embed)
+
+    async def on_member_remove(self, member: discord.Member) -> None:
+        """
+        Implements on_member_leave farewell.
+        """
+        guild_config = await models.Guilds.get(snowflake=member.guild.id)
+        channel = discord.utils.get(member.guild.channels, id=guild_config.farewell_channel)
+        message = guild_config.farewell_message
+
+        if not channel:
+            return
+
+        if not message:
+            message = "Farewell %user%!"
+
+        for key, value in constants.REPLACEMENTS.items():
+            message = message.replace(key, value(member))
+
+        embed = discord.Embed(colour=discord.Colour.purple(), description=message)
+        await channel.send(embed=embed)
 
     async def get_prefix(self, message: discord.Message) -> str:
         """
@@ -196,6 +249,23 @@ class Requiem(commands.AutoShardedBot):
             "requiem encountered an exception while %s! an error report has been submitted!",
             action,
         )
+
+
+async def bot_check(ctx) -> bool:
+    """
+    Global bot check that ensures Requiem has all required global permissions in a channel.
+    This prevents errors arising because of basic permissions missing.
+    """
+    if ctx.guild:
+        bot_member = discord.utils.get(ctx.guild.members, id=ctx.bot.user.id)
+        channel_perms = ctx.channel.permissions_for(bot_member)
+        if not channel_perms.send_messages or not channel_perms.embed_links or not channel_perms.add_reactions:
+            output = f"Requiem is missing a required permission in {ctx.channel.mention}! Please ensure Requiem has " \
+                     f"send_messages, embed_links and add_reactions privileges and try again!"
+            embed = discord.Embed(description=output, colour=discord.Colour.purple())
+            await ctx.author.send(embed=embed)
+            return False
+    return True
 
 
 async def start_database(cfg: config.PostgresConfig) -> None:

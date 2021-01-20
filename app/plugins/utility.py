@@ -125,4 +125,4 @@ def setup(bot):
     """
     Setup function required by dpy. Adds Utility as a cog.
     """
-    bot.add_cog(Utility(bot))
+    bot.add_cog(Utility())

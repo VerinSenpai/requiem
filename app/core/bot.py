@@ -56,7 +56,7 @@ class Requiem(commands.AutoShardedBot):
         self.config = bot_config
         self.cached_prefixes = Cache(Cache.MEMORY)
         self.add_check(bot_check)
-        self.loop.run_until_complete(start_database(bot_config.postgres))
+        self.loop.run_until_complete(start_database(bot_config))
 
     async def on_ready(self) -> None:
         """
@@ -268,7 +268,7 @@ async def bot_check(ctx) -> bool:
     return True
 
 
-async def start_database(cfg: config.PostgresConfig) -> None:
+async def start_database(cfg: config.Config) -> None:
     """
     Starts database connection with postgres server or sqlite.
     """
@@ -286,11 +286,11 @@ async def start_database(cfg: config.PostgresConfig) -> None:
 
     url = yarl.URL.build(
         scheme="postgres",
-        host=cfg.host,
-        port=cfg.port,
-        user=cfg.user,
-        password=cfg.password,
-        path=f"/{cfg.database}",
+        host=cfg.postgres_host,
+        port=cfg.postgres_port,
+        user=cfg.postgres_user,
+        password=cfg.postgres_password,
+        path=f"/{cfg.postgres_database}",
     )
     modules = {"models": ["core.models"]}
 

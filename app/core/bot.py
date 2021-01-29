@@ -135,7 +135,7 @@ class Requiem(commands.AutoShardedBot):
             response = constants.HANDLED.get(exc_name)(ctx, exc)
 
         else:
-            response = str(exc)
+            return
 
         embed = discord.Embed(description=response, colour=discord.Colour.red())
         await ctx.send(embed=embed)

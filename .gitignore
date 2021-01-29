@@ -2,3 +2,6 @@
 *.pyc
 app/config.yaml
 app/plugins/dev_tools.py
+app/db.sqlite3
+app/db.sqlite3-shm
+app/db.sqlite3-wal

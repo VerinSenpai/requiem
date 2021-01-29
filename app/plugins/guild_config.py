@@ -103,7 +103,7 @@ class GuildConfig(commands.Cog, name="guild config"):
 
         else:
             channel_msg = f"set to <{current_channel}>" if current_channel else "disabled"
-            output = f"The greeting channel is already set to <{channel_msg}>"
+            output = f"The greeting channel is already <{channel_msg}>"
 
         embed = discord.Embed(title="Guild Greeting Configuration", description=output, colour=discord.Colour.purple())
         await ctx.send(embed=embed)
@@ -189,7 +189,7 @@ class GuildConfig(commands.Cog, name="guild config"):
 
         else:
             channel_msg = f"set to <{current_channel}>" if current_channel else "disabled"
-            output = f"The farewell channel is already set to <{channel_msg}>"
+            output = f"The farewell channel is already <{channel_msg}>"
 
         embed = discord.Embed(title="Guild Farewell Configuration", description=output, colour=discord.Colour.purple())
         await ctx.send(embed=embed)
@@ -224,6 +224,34 @@ class GuildConfig(commands.Cog, name="guild config"):
             output = f"The farewell service is already using that message!"
 
         embed = discord.Embed(title="Guild Farewell Configuration", description=output, colour=discord.Colour.purple())
+        await ctx.send(embed=embed)
+
+    @commands.command(brief="Configure the role for automatic role assignment.")
+    @commands.guild_only()
+    @commands.has_permissions(manage_roles=True)
+    @commands.cooldown(1, 2.5)
+    async def _channel(self, ctx: commands.Context, role: discord.Role = None) -> None:
+        """
+        Configure the role for automatic role assignment.
+        """
+        guild_config = await models.Guilds.get(snowflake=ctx.guild.id)
+        current_role = discord.utils.get(ctx.guild.roles, id=guild_config.auto_role)
+
+        if not current_role == role:
+            entry = models.Guilds.filter(snowflake=ctx.guild.id)
+
+            if role:
+                output = f"Alright! The ARA has been set to <{role}>!"
+                await entry.update(farewell_channel=role.id)
+            else:
+                output = "Alright! The ARA service has been disabled!"
+                await entry.update(farewell_channel=0)
+
+        else:
+            channel_msg = f"set to <{current_role}>" if current_role else "disabled"
+            output = f"The ARA role is already <{channel_msg}>"
+
+        embed = discord.Embed(title="Auto Role Configuration", description=output, colour=discord.Colour.purple())
         await ctx.send(embed=embed)
 
 

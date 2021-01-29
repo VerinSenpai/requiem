@@ -21,9 +21,7 @@ HANDLED = {
     "NoPrivateMessage": lambda _, __: "That command cannot be run in dms!",
     "PrivateMessageOnly": lambda _, __: "That command can only be run in dms!",
     "NSFWChannelRequired": lambda _, __: "That command can only be run in NSFW channels and dms!",
-    "CommandOnCooldown": lambda _, e: f"That command is on cooldown! Try again in {round(e.retry_after, 2)} seconds!",
-    "UserNotFound": lambda _, e: f"I was unable to find a user matching {e.argument}!",
-    "MemberNotFound": lambda _, e: f"I was unable to find a member matching {e.argument}!",
+    "CommandOnCooldown": lambda _, e: f"That command is on cooldown! Try again in {round(e.retry_after, 2)} seconds!"
 }
 
 UNHANDLED = (

@@ -28,19 +28,6 @@ T = typing.TypeVar("T")
 
 
 @attr.s(auto_attribs=True)
-class PostgresConfig:
-    """
-    Postgres configuration object.
-    """
-
-    host: str or int = "localhost"
-    port: int = 5432
-    database: str = "postgres"
-    user: str = "postgres"
-    password: str = ""
-
-
-@attr.s(auto_attribs=True)
 class Config:
     """
     Bot configuration object.
@@ -49,11 +36,14 @@ class Config:
     discord_token: str
     default_prefix: str = "r!"
     owner_ids: typing.List[int] = attr.ib(factory=list)
-    api_key: str = ""
     show_statuses: bool = True
     prefix_on_mention: bool = True
     report_errors: bool = True
-    postgres: PostgresConfig = attr.ib(factory=PostgresConfig)
+    postgres_host: str or int = "localhost"
+    postgres_port: int = 5432
+    postgres_database: str = "postgres"
+    postgres_user: str = "postgres"
+    postgres_password: str = ""
 
 
 def load() -> T:

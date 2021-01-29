@@ -35,6 +35,7 @@ additional functionality.
     show_statuses     | OPTIONAL | BOOL | defaults to True      | sets whether requiem should show statuses
     prefix_on_mention | OPTIONAL | BOOL | defaults to True      | sets whether requiem should state the current prefix when mentioned.
     report_errors     | OPTIONAL | BOOL | defaults to True      | sets whether requiem should report errors to the owners
+    pnw_api_key       | OPTIONAL | TEXT | defaults to None      | sets the key that requiem will use for politics and war
     postgres_host     | OPTIONAL | TEXT | defaults to localhost | the host to be connected to for postgres
     postgres_port     | OPTIONAL | INT  | defaults to 5432      | the port to be connected to for postgres
     postgres_database | OPTIONAL | TEXT | defaults to postgres  | the database to be connected to for postgres

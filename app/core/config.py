@@ -39,6 +39,7 @@ class Config:
     show_statuses: bool = True
     prefix_on_mention: bool = True
     report_errors: bool = True
+    pnw_api_key: str = ""
     postgres_host: str or int = "localhost"
     postgres_port: int = 5432
     postgres_database: str = "postgres"

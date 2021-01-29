@@ -31,3 +31,14 @@ class Guilds(tortoise.models.Model):
     welcome_message: str = tortoise.fields.TextField(default="")
     farewell_channel: int = tortoise.fields.BigIntField(default=0)
     farewell_message: str = tortoise.fields.TextField(default="")
+
+
+class Nations(tortoise.models.Model):
+    """
+    Nation identity model.
+    """
+
+    nation_id: int = tortoise.fields.IntField(pk=True)
+    nation_name: str = tortoise.fields.TextField()
+    nation_leader: str = tortoise.fields.TextField()
+    snowflake: int = tortoise.fields.BigIntField(default=0)

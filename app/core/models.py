@@ -41,4 +41,8 @@ class Nations(tortoise.models.Model):
     nation_id: int = tortoise.fields.IntField(pk=True)
     nation_name: str = tortoise.fields.TextField()
     nation_leader: str = tortoise.fields.TextField()
+    alliance_id: int = tortoise.fields.IntField()
+    alliance_position: str = tortoise.fields.TextField()
+    creation_date: str = tortoise.fields.TextField()
+    is_reroll: str = tortoise.fields.BooleanField(default=False)
     snowflake: int = tortoise.fields.BigIntField(default=0)

@@ -230,7 +230,7 @@ class GuildConfig(commands.Cog, name="guild config"):
     @commands.guild_only()
     @commands.has_permissions(manage_roles=True)
     @commands.cooldown(1, 2.5)
-    async def _channel(self, ctx: commands.Context, role: discord.Role = None) -> None:
+    async def autorole(self, ctx: commands.Context, role: discord.Role = None) -> None:
         """
         Configure the role for automatic role assignment.
         """

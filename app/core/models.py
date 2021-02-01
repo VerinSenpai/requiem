@@ -46,3 +46,23 @@ class Nations(tortoise.models.Model):
     creation_date: str = tortoise.fields.TextField()
     is_reroll: str = tortoise.fields.BooleanField(default=False)
     snowflake: int = tortoise.fields.BigIntField(default=0)
+
+
+class Alliances(tortoise.models.Model):
+    """
+    Alliances identity model.
+    """
+    alliance_id: int = tortoise.fields.IntField(pk=True)
+    alliance_name: str = tortoise.fields.TextField()
+    acronym: str = tortoise.fields.TextField()
+    color: str = tortoise.fields.TextField()
+
+
+class AllianceHistory(tortoise.models.Model):
+    """
+    Alliance history model.
+    """
+
+    id: int = tortoise.fields.IntField(pk=True, generated=True)
+    nation_id: int = tortoise.fields.IntField()
+    alliance_id: int = tortoise.fields.IntField()

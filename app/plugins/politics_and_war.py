@@ -151,13 +151,14 @@ class Backend(commands.Cog):
                 "nation_leader": nation["leader_name"].lower(),
                 "alliance_id": nation["alliance_id"],
                 "alliance_position": nation["alliance_position"],
-                "creation_date": nation["date"]
+                "original_creation_date": nation["date"],
+                "latest_creation_date": nation["date"]
             }
             saved, created = await models.Nations.get_or_create(defaults, nation_id=nation["id"])
             filtered = models.Nations.filter(nation_id=nation["id"])
 
-            if saved.creation_date != nation["date"]:
-                await filtered.update(is_reroll=True)
+            if saved.latest_creation_date != nation["date"]:
+                await filtered.update(latest_creation_date=nation["date"])
                 self.create_task(self.dispatch_reroll_notification(nation, saved))
 
             if int(nation["alliance_id"]) != 0 and nation["alliance_position"] != "APPLICANT":
@@ -233,6 +234,7 @@ class PoliticsAndWar(commands.Cog):
               alliance_position
               nation_name
               leader_name
+              date
               warpolicy
               dompolicy
               color
@@ -268,15 +270,23 @@ class PoliticsAndWar(commands.Cog):
             description=f"[{nation['nation_name']}](https://politicsandwar.com/nation/id={nation['id']}) - {leader}",
             colour=discord.Colour.purple()
         )
+
+        if nation["date"] != entry.original_creation_date:
+            embed.add_field(name="Re-roll Alert", value="This nation is a re-roll!", inline=False)
+            embed.add_field(name="Original Creation Date", value=entry.original_creation_date, inline=False)
+            embed.add_field(name="Latest Creation Date", value=nation["date"], inline=False)
+
         if nation["alliance"]:
             embed.add_field(name="Alliance", value=f"[{nation['alliance']['name']}](https://politicsandwar.com/alliance"
                                                    f"/id={nation['alliance_id']})")
             embed.add_field(name="Position", value=nation["alliance_position"].title())
-        embed.add_field(name="Score", value=nation["score"])
-        embed.add_field(name="Color", value=nation["color"].title())
-        embed.add_field(name="Cities", value=nation["num_cities"])
+
+        embed.add_field(name="Score", value=nation["score"], inline=False)
+        embed.add_field(name="Cities", value=nation["num_cities"], inline=False)
         embed.add_field(name="War Policy", value=nation["warpolicy"])
         embed.add_field(name="Domestic Policy", value=nation["dompolicy"])
+        embed.add_field(name="Color", value=nation["color"].title(), inline=False)
+
         embed.add_field(name="Soldiers", value=nation["soldiers"])
         embed.add_field(name="Tanks", value=nation["tanks"])
         embed.add_field(name="Aircraft", value=nation["aircraft"])

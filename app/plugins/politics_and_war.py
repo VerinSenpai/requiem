@@ -166,26 +166,32 @@ class Backend(commands.Cog):
     async def report_applicant(self, nation, entry) -> None:
         shut_up_pylint = self.bot
         print(f"NATION APPLIED TO JOIN ALLIANCE {nation}")
+        await asyncio.sleep(15)
 
     async def report_reroll(self, nation, entry) -> None:
         shut_up_pylint = self.bot
         print(f"NATION REROLLED {nation}")
+        await asyncio.sleep(15)
 
     async def report_enter_vmode(self, nation, entry) -> None:
         shut_up_pylint = self.bot
         print(f"NATION ENTERED VMODE {nation}")
+        await asyncio.sleep(15)
 
     async def report_exit_vmode(self, nation, entry) -> None:
         shut_up_pylint = self.bot
         print(f"NATION EXITED VMODE {nation}")
+        await asyncio.sleep(15)
 
     async def report_enter_beige(self, nation, entry) -> None:
         shut_up_pylint = self.bot
         print(f"NATION EXITED BEIGE {nation}")
+        await asyncio.sleep(15)
 
     async def report_exit_beige(self, nation, entry) -> None:
         shut_up_pylint = self.bot
         print(f"NATION EXITED BEIGE {nation}")
+        await asyncio.sleep(15)
 
 
 class PoliticsAndWar(commands.Cog):

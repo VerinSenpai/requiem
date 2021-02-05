@@ -257,13 +257,18 @@ async def bot_check(ctx) -> bool:
     This prevents errors arising because of basic permissions missing.
     """
     if ctx.guild:
-        bot_member = discord.utils.get(ctx.guild.members, id=ctx.bot.user.id)
-        channel_perms = ctx.channel.permissions_for(bot_member)
-        if not channel_perms.send_messages or not channel_perms.embed_links or not channel_perms.add_reactions:
-            output = f"Requiem is missing a required permission in {ctx.channel.mention}! Please ensure Requiem has " \
-                     f"send_messages, embed_links and add_reactions privileges and try again!"
-            embed = discord.Embed(description=output, colour=discord.Colour.purple())
-            await ctx.author.send(embed=embed)
+        bot = discord.utils.get(ctx.guild.members, id=ctx.bot.user.id)
+        perms = ctx.channel.permissions_for(bot)
+        if not all(perm for perm in (perms.send_messages, perms.embed_links, perms.add_reactions)):
+            perms = ctx.channel.permissions_for(ctx.author)
+            if perms.manage_roles:
+                output = f"Requiem is missing a required permission in {ctx.channel.mention}!\n" \
+                         f"Please ensure Requiem has the following permissions and try again!\n" \
+                         f"SEND_MESSAGES\n" \
+                         f"EMBED_LINKS\n" \
+                         f"ADD_REACTIONS\n"
+                embed = discord.Embed(description=output, colour=discord.Colour.purple())
+                await ctx.author.send(embed=embed)
             return False
     return True
 

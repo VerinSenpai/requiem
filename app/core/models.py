@@ -33,36 +33,19 @@ class Guilds(tortoise.models.Model):
     farewell_message: str = tortoise.fields.TextField(default="")
 
 
-class Nations(tortoise.models.Model):
+class NationIndex(tortoise.models.Model):
     """
     Nation identity model.
     """
 
     nation_id: int = tortoise.fields.IntField(pk=True)
     nation_name: str = tortoise.fields.TextField()
-    nation_leader: str = tortoise.fields.TextField()
     alliance_id: int = tortoise.fields.IntField()
     alliance_position: str = tortoise.fields.TextField()
+    color: str = tortoise.fields.TextField()
+    cities: int = tortoise.fields.IntField()
+    vmode_turns: int = tortoise.fields.IntField()
+    beige_turns: int = tortoise.fields.IntField()
     original_creation_date: str = tortoise.fields.TextField()
     latest_creation_date: str = tortoise.fields.TextField()
     snowflake: int = tortoise.fields.BigIntField(default=0)
-
-
-class Alliances(tortoise.models.Model):
-    """
-    Alliances identity model.
-    """
-    alliance_id: int = tortoise.fields.IntField(pk=True)
-    alliance_name: str = tortoise.fields.TextField()
-    acronym: str = tortoise.fields.TextField()
-    color: str = tortoise.fields.TextField()
-
-
-class AllianceHistory(tortoise.models.Model):
-    """
-    Alliance history model.
-    """
-
-    id: int = tortoise.fields.IntField(pk=True, generated=True)
-    nation_id: int = tortoise.fields.IntField()
-    alliance_id: int = tortoise.fields.IntField()

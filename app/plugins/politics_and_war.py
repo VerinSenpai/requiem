@@ -133,30 +133,30 @@ class Backend(commands.Cog):
 
             if nation["alliance_id"] != entry.alliance_id:
                 if nation["alliance_position"] == "APPLICANT":
-                    await self.report_applicant(nation, entry)
+                    self.create_task(self.report_applicant(nation, entry))
                 entry.alliance_id = nation["alliance_id"]
 
             if nation["alliance_position"] != entry.alliance_position:
                 entry.alliance_position = nation["alliance_position"]
 
             if nation["date"] != entry.latest_creation_date:
-                await self.report_reroll(nation, entry)
+                self.create_task(self.report_reroll(nation, entry))
                 entry.latest_creation_date = nation["date"]
 
             if nation["vmode"] > entry.vmode_turns == 0:
-                await self.report_enter_vmode(nation, entry)
+                self.create_task(self.report_enter_vmode(nation, entry))
                 entry.vmode_turns = nation["vmode"]
 
             elif entry.vmode_turns > nation["vmode"] == 0:
-                await self.report_exit_vmode(nation, entry)
+                self.create_task(self.report_exit_vmode(nation, entry))
                 entry.vmode_turns = nation["vmode"]
 
             if nation["beigeturns"] > entry.beige_turns == 0:
-                await self.report_enter_beige(nation, entry)
+                self.create_task(self.report_enter_beige(nation, entry))
                 entry.beige_turns = nation["beigeturns"]
 
             elif entry.beige_turns > nation["beigeturns"] == 0:
-                await self.report_exit_beige(nation, entry)
+                self.create_task(self.report_exit_beige(nation, entry))
                 entry.beige_turns = nation["beigeturns"]
 
             await entry.save()

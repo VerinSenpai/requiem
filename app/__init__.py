@@ -17,4 +17,4 @@
 
 __author__ = "God Empress Verin"
 __version__ = "3.0.0"
-__senpai__ = "Nekokatt"
+__senpai__ = "Espy"

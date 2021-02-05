@@ -185,7 +185,7 @@ class Backend(commands.Cog):
 
     async def report_enter_beige(self, nation, entry) -> None:
         shut_up_pylint = self.bot
-        print(f"NATION EXITED BEIGE {nation}")
+        print(f"NATION ENTERED BEIGE {nation}")
         await asyncio.sleep(15)
 
     async def report_exit_beige(self, nation, entry) -> None:

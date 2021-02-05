@@ -110,6 +110,8 @@ class Backend(commands.Cog):
 
             page += 1
 
+        await self.process_nations(nations)
+
     async def process_nations(self, nations: list) -> None:
         """
         Handles stowing and processing of nation events.
@@ -131,7 +133,7 @@ class Backend(commands.Cog):
             if created:
                 continue
 
-            if nation["alliance_id"] != entry.alliance_id:
+            if int(nation["alliance_id"]) != entry.alliance_id:
                 if nation["alliance_position"] == "APPLICANT":
                     self.create_task(self.report_applicant(nation, entry))
                 entry.alliance_id = nation["alliance_id"]
@@ -143,19 +145,19 @@ class Backend(commands.Cog):
                 self.create_task(self.report_reroll(nation, entry))
                 entry.latest_creation_date = nation["date"]
 
-            if nation["vmode"] > entry.vmode_turns == 0:
+            if int(nation["vmode"]) > entry.vmode_turns == 0:
                 self.create_task(self.report_enter_vmode(nation, entry))
                 entry.vmode_turns = nation["vmode"]
 
-            elif entry.vmode_turns > nation["vmode"] == 0:
+            elif entry.vmode_turns > int(nation["vmode"]) == 0:
                 self.create_task(self.report_exit_vmode(nation, entry))
                 entry.vmode_turns = nation["vmode"]
 
-            if nation["beigeturns"] > entry.beige_turns == 0:
+            if int(nation["beigeturns"]) > entry.beige_turns == 0:
                 self.create_task(self.report_enter_beige(nation, entry))
                 entry.beige_turns = nation["beigeturns"]
 
-            elif entry.beige_turns > nation["beigeturns"] == 0:
+            elif entry.beige_turns > int(nation["beigeturns"]) == 0:
                 self.create_task(self.report_exit_beige(nation, entry))
                 entry.beige_turns = nation["beigeturns"]
 

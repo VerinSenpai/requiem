@@ -26,6 +26,7 @@ HANDLED = {
 
 UNHANDLED = (
     "Well that happened",
+    "when in doubt, blame boki",
     "How did I get here?",
     "When in doubt, pinky out!",
     "99 little bugs in the code\n99 little bugs\ntake one down\npatch it around\n127 little bugs in the code",

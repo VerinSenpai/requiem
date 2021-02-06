@@ -292,7 +292,7 @@ class Backend(commands.Cog):
                 entry.leader_name = alliance["acronym"].lower()
 
             if alliance["color"] != entry.color:
-                self.create_task(self.report_alliance_color_change(alliance, entry))
+                self.create_task(self.report_color_change(alliance, entry))
                 entry.color = alliance["color"]
 
             await entry.save()
@@ -327,14 +327,9 @@ class Backend(commands.Cog):
         print(f"NATION EXITED BEIGE {nation}")
         await asyncio.sleep(15)
 
-    async def report_color_change(self, nation: dict, entry: models.NationIndex) -> None:
+    async def report_color_change(self, target: dict, entry: models.NationIndex or models.AllianceIndex) -> None:
         shut_up_pylint = self.bot
-        print(f"NATION CHANGED COLOR {nation}")
-        await asyncio.sleep(15)
-
-    async def report_alliance_color_change(self, alliance: dict, entry: models.AllianceIndex) -> None:
-        shut_up_pylint = self.bot
-        print(f"ALLIANCE CHANGED COLOR {alliance}")
+        print(f"TARGET CHANGED COLOR {target}")
         await asyncio.sleep(15)
 
 

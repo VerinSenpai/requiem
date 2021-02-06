@@ -326,6 +326,11 @@ class Backend(commands.Cog):
         print(f"NATION CHANGED COLOR {nation}")
         await asyncio.sleep(15)
 
+    async def report_alliance_color_change(self, alliance: dict, entry: models.AllianceIndex) -> None:
+        shut_up_pylint = self.bot
+        print(f"ALLIANCE CHANGED COLOR {alliance}")
+        await asyncio.sleep(15)
+
 
 class PoliticsAndWar(commands.Cog):
     """

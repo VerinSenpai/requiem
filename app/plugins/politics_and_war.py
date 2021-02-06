@@ -296,32 +296,32 @@ class Backend(commands.Cog):
         print(f"NATION APPLIED TO JOIN ALLIANCE {nation}")
         await asyncio.sleep(15)
 
-    async def report_reroll(self, nation, entry) -> None:
+    async def report_reroll(self, nation: dict, entry: models.NationIndex) -> None:
         shut_up_pylint = self.bot
         print(f"NATION REROLLED {nation}")
         await asyncio.sleep(15)
 
-    async def report_enter_vmode(self, nation, entry) -> None:
+    async def report_enter_vmode(self, nation: dict, entry: models.NationIndex) -> None:
         shut_up_pylint = self.bot
         print(f"NATION ENTERED VMODE {nation}")
         await asyncio.sleep(15)
 
-    async def report_exit_vmode(self, nation, entry) -> None:
+    async def report_exit_vmode(self, nation: dict, entry: models.NationIndex) -> None:
         shut_up_pylint = self.bot
         print(f"NATION EXITED VMODE {nation}")
         await asyncio.sleep(15)
 
-    async def report_enter_beige(self, nation, entry) -> None:
+    async def report_enter_beige(self, nation: dict, entry: models.NationIndex) -> None:
         shut_up_pylint = self.bot
         print(f"NATION ENTERED BEIGE {nation}")
         await asyncio.sleep(15)
 
-    async def report_exit_beige(self, nation, entry) -> None:
+    async def report_exit_beige(self, nation: dict, entry: models.NationIndex) -> None:
         shut_up_pylint = self.bot
         print(f"NATION EXITED BEIGE {nation}")
         await asyncio.sleep(15)
 
-    async def report_color_change(self, nation, entry) -> None:
+    async def report_color_change(self, nation: dict, entry: models.NationIndex) -> None:
         shut_up_pylint = self.bot
         print(f"NATION CHANGED COLOR {nation}")
         await asyncio.sleep(15)

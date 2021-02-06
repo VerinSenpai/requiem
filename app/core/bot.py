@@ -166,7 +166,9 @@ class Requiem(commands.AutoShardedBot):
         guild_config = await models.Guilds.get(snowflake=member.guild.id)
 
         role = discord.utils.get(member.guild.roles, id=guild_config.auto_role)
-        channel = discord.utils.get(member.guild.channels, id=guild_config.welcome_channel)
+        channel = discord.utils.get(
+            member.guild.channels, id=guild_config.welcome_channel
+        )
         message = guild_config.welcome_message
 
         if role:
@@ -189,7 +191,9 @@ class Requiem(commands.AutoShardedBot):
         Implements on_member_leave farewell.
         """
         guild_config = await models.Guilds.get(snowflake=member.guild.id)
-        channel = discord.utils.get(member.guild.channels, id=guild_config.farewell_channel)
+        channel = discord.utils.get(
+            member.guild.channels, id=guild_config.farewell_channel
+        )
         message = guild_config.farewell_message
 
         if not channel:
@@ -259,15 +263,22 @@ async def bot_check(ctx) -> bool:
     if ctx.guild:
         bot = discord.utils.get(ctx.guild.members, id=ctx.bot.user.id)
         perms = ctx.channel.permissions_for(bot)
-        if not all(perm for perm in (perms.send_messages, perms.embed_links, perms.add_reactions)):
+        if not all(
+            perm
+            for perm in (perms.send_messages, perms.embed_links, perms.add_reactions)
+        ):
             perms = ctx.channel.permissions_for(ctx.author)
             if perms.manage_roles:
-                output = f"Requiem is missing a required permission in {ctx.channel.mention}!\n" \
-                         f"Please ensure Requiem has the following permissions and try again!\n" \
-                         f"SEND_MESSAGES\n" \
-                         f"EMBED_LINKS\n" \
-                         f"ADD_REACTIONS\n"
-                embed = discord.Embed(description=output, colour=discord.Colour.purple())
+                output = (
+                    f"Requiem is missing a required permission in {ctx.channel.mention}!\n"
+                    f"Please ensure Requiem has the following permissions and try again!\n"
+                    f"SEND_MESSAGES\n"
+                    f"EMBED_LINKS\n"
+                    f"ADD_REACTIONS\n"
+                )
+                embed = discord.Embed(
+                    description=output, colour=discord.Colour.purple()
+                )
                 await ctx.author.send(embed=embed)
             return False
     return True

@@ -70,7 +70,9 @@ class Backend(commands.Cog):
         self.create_task = bot.loop.create_task
 
         if not self.key:
-            _LOGGER.warning("requiem could not start pnw backend tasks because a key has not been provided!")
+            _LOGGER.warning(
+                "requiem could not start pnw backend tasks because a key has not been provided!"
+            )
             return
 
         self.handle_nations.error(self.on_task_error)
@@ -120,7 +122,9 @@ class Backend(commands.Cog):
                     }
                   }
                 }
-                """.replace("#", str(page))
+                """.replace(
+                "#", str(page)
+            )
             payload = {"api_key": self.key, "query": query}
 
             async with aiohttp.ClientSession() as session:
@@ -153,9 +157,11 @@ class Backend(commands.Cog):
                 "vmode_turns": nation["vmode"],
                 "beige_turns": nation["beigeturns"],
                 "original_creation_date": nation["date"],
-                "latest_creation_date": nation["date"]
+                "latest_creation_date": nation["date"],
             }
-            entry, created = await models.NationIndex.get_or_create(defaults=defaults, nation_id=nation["id"])
+            entry, created = await models.NationIndex.get_or_create(
+                defaults=defaults, nation_id=nation["id"]
+            )
 
             if created:
                 continue
@@ -299,7 +305,9 @@ class PoliticsAndWar(commands.Cog):
                 }
               }
             }
-            """.replace("#", str(entry.nation_id))
+            """.replace(
+            "#", str(entry.nation_id)
+        )
         payload = {"api_key": self.key, "query": query}
 
         async with aiohttp.ClientSession() as session:
@@ -322,12 +330,22 @@ class PoliticsAndWar(commands.Cog):
         nation_str = f"[{nation['nation_name']}](https://politicsandwar.com/nation/id={nation['id']})"
         leader_str = f"[{leader}](https://politicsandwar.com/inbox/message/receiver={leader.replace(' ', '%20')})"
 
-        embed = discord.Embed(description=f"{nation_str} - {leader_str}", colour=discord.Colour.purple())
+        embed = discord.Embed(
+            description=f"{nation_str} - {leader_str}", colour=discord.Colour.purple()
+        )
 
         if entry.latest_creation_date != entry.original_creation_date:
-            embed.add_field(name="Notice", value=f"This nation is a re-roll.", inline=False)
-            embed.add_field(name="Original Creation Date", value=entry.original_creation_date, inline=False)
-            embed.add_field(name="Latest Creation Date", value=nation["date"], inline=False)
+            embed.add_field(
+                name="Notice", value=f"This nation is a re-roll.", inline=False
+            )
+            embed.add_field(
+                name="Original Creation Date",
+                value=entry.original_creation_date,
+                inline=False,
+            )
+            embed.add_field(
+                name="Latest Creation Date", value=nation["date"], inline=False
+            )
 
         if nation["alliance"]:
             alliance_name = nation["alliance"]["name"].title()

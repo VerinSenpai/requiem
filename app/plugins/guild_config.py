@@ -53,7 +53,10 @@ class GuildConfig(commands.Cog, name="guild config"):
         embed = discord.Embed(description=output, colour=discord.Colour.purple())
         await ctx.send(embed=embed)
 
-    @commands.group(brief="Manage the greeting channel and message for this guild.", aliases=["greet", "welcome"])
+    @commands.group(
+        brief="Manage the greeting channel and message for this guild.",
+        aliases=["greet", "welcome"],
+    )
     @commands.guild_only()
     @commands.has_permissions(manage_guild=True)
     @commands.cooldown(1, 2.5)
@@ -74,7 +77,9 @@ class GuildConfig(commands.Cog, name="guild config"):
         for key, value in constants.REPLACEMENTS.items():
             message = message.replace(key, value(ctx.author))
 
-        embed = discord.Embed(title="Guild Greeting Configuration", colour=discord.Colour.purple())
+        embed = discord.Embed(
+            title="Guild Greeting Configuration", colour=discord.Colour.purple()
+        )
         embed.add_field(name="Channel", value=channel or "Not Configured", inline=False)
         embed.add_field(name="Message", value=message, inline=False)
         await ctx.send(embed=embed)
@@ -83,12 +88,16 @@ class GuildConfig(commands.Cog, name="guild config"):
     @commands.guild_only()
     @commands.has_permissions(manage_guild=True)
     @commands.cooldown(1, 2.5)
-    async def channel(self, ctx: commands.Context, channel: discord.TextChannel = None) -> None:
+    async def channel(
+        self, ctx: commands.Context, channel: discord.TextChannel = None
+    ) -> None:
         """
         Configure the greeting channel for this guild.
         """
         guild_config = await models.Guilds.get(snowflake=ctx.guild.id)
-        current_channel = discord.utils.get(ctx.guild.channels, id=guild_config.welcome_channel)
+        current_channel = discord.utils.get(
+            ctx.guild.channels, id=guild_config.welcome_channel
+        )
 
         if not current_channel == channel:
             entry = models.Guilds.filter(snowflake=ctx.guild.id)
@@ -102,10 +111,16 @@ class GuildConfig(commands.Cog, name="guild config"):
                 await entry.update(welcome_channel=0)
 
         else:
-            channel_msg = f"set to <{current_channel}>" if current_channel else "disabled"
+            channel_msg = (
+                f"set to <{current_channel}>" if current_channel else "disabled"
+            )
             output = f"The greeting channel is already <{channel_msg}>"
 
-        embed = discord.Embed(title="Guild Greeting Configuration", description=output, colour=discord.Colour.purple())
+        embed = discord.Embed(
+            title="Guild Greeting Configuration",
+            description=output,
+            colour=discord.Colour.purple(),
+        )
         await ctx.send(embed=embed)
 
     @greeting.command(brief="Configure the greeting message for this guild.")
@@ -137,7 +152,11 @@ class GuildConfig(commands.Cog, name="guild config"):
         else:
             output = f"The greeting service is already using that message!"
 
-        embed = discord.Embed(title="Guild Greeting Configuration", description=output, colour=discord.Colour.purple())
+        embed = discord.Embed(
+            title="Guild Greeting Configuration",
+            description=output,
+            colour=discord.Colour.purple(),
+        )
         await ctx.send(embed=embed)
 
     @commands.group(brief="Manage the farewell channel and message for this guild.")
@@ -152,7 +171,9 @@ class GuildConfig(commands.Cog, name="guild config"):
             return
 
         guild_config = await models.Guilds.get(snowflake=ctx.guild.id)
-        channel = discord.utils.get(ctx.guild.channels, id=guild_config.farewell_channel)
+        channel = discord.utils.get(
+            ctx.guild.channels, id=guild_config.farewell_channel
+        )
         message = guild_config.farewell_message
 
         if not message:
@@ -161,21 +182,29 @@ class GuildConfig(commands.Cog, name="guild config"):
         for key, value in constants.REPLACEMENTS.items():
             message = message.replace(key, value(ctx.author))
 
-        embed = discord.Embed(title="Guild Farewell Configuration", colour=discord.Colour.purple())
+        embed = discord.Embed(
+            title="Guild Farewell Configuration", colour=discord.Colour.purple()
+        )
         embed.add_field(name="Channel", value=channel or "Not Configured", inline=False)
         embed.add_field(name="Message", value=message, inline=False)
         await ctx.send(embed=embed)
 
-    @farewell.command(name="channel", brief="Configure the farewell channel for this guild.")
+    @farewell.command(
+        name="channel", brief="Configure the farewell channel for this guild."
+    )
     @commands.guild_only()
     @commands.has_permissions(manage_guild=True)
     @commands.cooldown(1, 2.5)
-    async def _channel(self, ctx: commands.Context, channel: discord.TextChannel = None) -> None:
+    async def _channel(
+        self, ctx: commands.Context, channel: discord.TextChannel = None
+    ) -> None:
         """
         Configure the farewell channel for this guild.
         """
         guild_config = await models.Guilds.get(snowflake=ctx.guild.id)
-        current_channel = discord.utils.get(ctx.guild.channels, id=guild_config.farewell_channel)
+        current_channel = discord.utils.get(
+            ctx.guild.channels, id=guild_config.farewell_channel
+        )
 
         if not current_channel == channel:
             entry = models.Guilds.filter(snowflake=ctx.guild.id)
@@ -188,13 +217,21 @@ class GuildConfig(commands.Cog, name="guild config"):
                 await entry.update(farewell_channel=0)
 
         else:
-            channel_msg = f"set to <{current_channel}>" if current_channel else "disabled"
+            channel_msg = (
+                f"set to <{current_channel}>" if current_channel else "disabled"
+            )
             output = f"The farewell channel is already <{channel_msg}>"
 
-        embed = discord.Embed(title="Guild Farewell Configuration", description=output, colour=discord.Colour.purple())
+        embed = discord.Embed(
+            title="Guild Farewell Configuration",
+            description=output,
+            colour=discord.Colour.purple(),
+        )
         await ctx.send(embed=embed)
 
-    @farewell.command(name="message", brief="Configure the farewell message for this guild.")
+    @farewell.command(
+        name="message", brief="Configure the farewell message for this guild."
+    )
     @commands.guild_only()
     @commands.has_permissions(manage_guild=True)
     @commands.cooldown(1, 2.5)
@@ -223,7 +260,11 @@ class GuildConfig(commands.Cog, name="guild config"):
         else:
             output = f"The farewell service is already using that message!"
 
-        embed = discord.Embed(title="Guild Farewell Configuration", description=output, colour=discord.Colour.purple())
+        embed = discord.Embed(
+            title="Guild Farewell Configuration",
+            description=output,
+            colour=discord.Colour.purple(),
+        )
         await ctx.send(embed=embed)
 
     @commands.command(brief="Configure the role for automatic role assignment.")
@@ -251,7 +292,11 @@ class GuildConfig(commands.Cog, name="guild config"):
             channel_msg = f"set to <{current_role}>" if current_role else "disabled"
             output = f"The ARA role is already <{channel_msg}>"
 
-        embed = discord.Embed(title="Auto Role Configuration", description=output, colour=discord.Colour.purple())
+        embed = discord.Embed(
+            title="Auto Role Configuration",
+            description=output,
+            colour=discord.Colour.purple(),
+        )
         await ctx.send(embed=embed)
 
 

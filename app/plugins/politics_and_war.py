@@ -89,12 +89,15 @@ class Backend(commands.Cog):
 
         self.handle_nations.error(self.on_task_error)
         self.handle_nations.start()
+        self.handle_alliances.error(self.on_task_error)
+        self.handle_alliances.start()
 
     def cog_unload(self) -> None:
         """
         Stops all tasks on unload.
         """
         self.handle_nations.stop()
+        self.handle_alliances.stop()
 
     async def on_task_error(self, *args, **kwargs) -> None:
         """
@@ -219,7 +222,46 @@ class Backend(commands.Cog):
 
             await entry.save()
 
-    async def report_applicant(self, nation, entry) -> None:
+    @tasks.loop(minutes=5)
+    async def handle_alliances(self) -> None:
+        """
+        Handles fetching of alliances. When completed, starts process_alliances.
+        """
+        alliances = []
+        page = 1
+
+        while True:
+            query = """
+                {
+                  alliances(first: 50, page: #) {
+                    data {
+                      id
+                      name
+                      acronym
+                      color
+                    }
+                  }
+                }
+                """.replace(
+                "#", str(page)
+            )
+            payload = {"api_key": self.key, "query": query}
+
+            async with aiohttp.ClientSession() as session:
+                async with session.get(v2_url, json=payload) as response:
+                    returned_json = await response.json(content_type="application/json")
+
+            fetched_alliances = returned_json["data"]["alliances"]["data"]
+
+            if not fetched_alliances:
+                break
+
+            alliances.extend(fetched_alliances)
+
+            page += 1
+
+        await self.process_alliances(alliances)
+
         shut_up_pylint = self.bot
         print(f"NATION APPLIED TO JOIN ALLIANCE {nation}")
         await asyncio.sleep(15)

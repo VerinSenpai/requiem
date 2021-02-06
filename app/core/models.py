@@ -40,6 +40,7 @@ class NationIndex(tortoise.models.Model):
 
     nation_id: int = tortoise.fields.IntField(pk=True)
     nation_name: str = tortoise.fields.TextField()
+    leader_name: str = tortoise.fields.TextField()
     alliance_id: int = tortoise.fields.IntField()
     alliance_position: str = tortoise.fields.TextField()
     color: str = tortoise.fields.TextField()

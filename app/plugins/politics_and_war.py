@@ -122,7 +122,7 @@ class Backend(commands.Cog):
         while True:
             query = """
                 {
-                  nations(first: 500, page:#) {
+                  nations(first: 500, page: #) {
                     data {
                       id
                       alliance_id

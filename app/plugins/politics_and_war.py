@@ -173,7 +173,7 @@ class Backend(commands.Cog):
                 entry.leader_name = nation["leader_name"].lower()
 
             if nation["color"] != entry.color:
-                if nation["color"] != "beige":
+                if nation["color"] != "beige" != entry.color:
                     self.create_task(self.report_color_change(nation, entry))
                 entry.color = nation["color"]
 

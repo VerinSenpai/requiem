@@ -34,6 +34,11 @@ def main() -> None:
         format="%(log_color)s%(bold)s%(levelname)-1.1s%(thin)s %(asctime)23.23s %(bold)s%(name)s: "
         "%(thin)s%(message)s%(reset)s",
     )
+    _LOGGER.warning(
+        "requiem is being developed with a number of experimental APIs and libraries which are subject to change at "
+        "any time! if you experience any issues, please report it to the requiem dev team at "
+        "https://discord.com/invite/uTXdx7J"
+    )
 
     try:
         if bot_config := config.load():

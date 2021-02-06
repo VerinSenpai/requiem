@@ -455,6 +455,7 @@ class PoliticsAndWar(commands.Cog):
         View information about a nation.
 
         You can look a nation up by its id, name, or a discord user (if they've linked themselves to their nation)
+        If you don't specify a target, a lookup is performed for a nation linked to your discord.
         """
         if not target:
             target = ctx.author.id

@@ -51,6 +51,18 @@ async def nation_lookup(ctx: commands.Context, target: str) -> models.NationInde
     return by_leader or by_name
 
 
+async def alliance_lookup(target: str) -> models.AllianceIndex:
+    target = str(target).lower()
+
+    if target.isnumeric():
+        return await models.AllianceIndex.get_or_none(alliance_id=int(target))
+
+    by_name = await models.AllianceIndex.get_or_none(alliance_name=target)
+    by_acr = await models.AllianceIndex.get_or_none(alliance_acronym=target)
+
+    return by_name or by_acr
+
+
 async def quick_send_embed(ctx, message) -> None:
     """
     Creates an embed with a given message and sends it.

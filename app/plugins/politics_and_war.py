@@ -347,7 +347,108 @@ class PoliticsAndWar(commands.Cog):
         """
         return bool(self.key)
 
-    @commands.command(aliases=["pwnat"], brief="View a given nation.")
+    @commands.command(aliases=["pwaa"], brief="View a given alliance.")
+    @commands.cooldown(1, 2.5)
+    async def pwalliance(self, ctx: commands.Context, *, target: str):
+        """
+        View information about an alliance.
+
+        You can look an alliance up by its id, name, or acronym.
+        """
+        entry = await alliance_lookup(target)
+
+        if not entry:
+            message = "I was unable to find an alliance matching your query!"
+            return await quick_send_embed(ctx, message)
+
+        query = """
+        {
+          alliances(first: 1, id: #) {
+            data {
+              id
+              name
+              acronym
+              score
+              color
+              nations {
+                num_cities
+                soldiers
+                tanks
+                aircraft
+                ships
+                missiles
+                nukes
+              }
+              flag
+              forumlink
+              irclink
+            }
+          }
+        }
+        """.replace("#", str(entry.alliance_id))
+        payload = {"api_key": self.key, "query": query}
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(v2_url, json=payload) as response:
+                returned_json = await response.json(content_type="application/json")
+
+        if not isinstance(returned_json, dict):
+            message = "The API returned an unexpected response!"
+            return await quick_send_embed(ctx, message)
+
+        fetched_alliances = returned_json["data"]["alliances"]["data"]
+
+        if not fetched_alliances:
+            message = "The alliance specified no longer exists!"
+            return await quick_send_embed(ctx, message)
+
+        aa = fetched_alliances[0]
+        name_str = f"[{aa['name']} - {aa['acronym']}](https://politicsandwar.com/alliance/id={aa['id']})"
+
+        cities = 0
+        soldiers = 0
+        tanks = 0
+        aircraft = 0
+        ships = 0
+        missiles = 0
+        nukes = 0
+
+        for nation in aa["nations"]:
+            cities += nation["num_cities"]
+            soldiers += nation["soldiers"]
+            tanks += nation["tanks"]
+            aircraft += nation["aircraft"]
+            ships += nation["ships"]
+            missiles += nation["missiles"]
+            nukes += nation["nukes"]
+
+        max_units = 16350 * cities
+        total_units = soldiers + tanks + aircraft + ships
+        mil_level = float((total_units / max_units) * 100)
+
+        embed = discord.Embed(description=f"{name_str}", colour=discord.Colour.purple())
+        embed.add_field(name="Score", value=aa["score"])
+        embed.add_field(name="Color", value=aa["color"].title())
+        embed.add_field(name="Members", value=str(len(aa["nations"])))
+
+        if aa["forumlink"]:
+            embed.add_field(name="Forums", value=aa["forumlink"], inline=False)
+
+        if aa["irclink"]:
+            embed.add_field(name="Discord", value=aa["irclink"], inline=False)
+
+        embed.add_field(name="Militarization Level", value=f"%{mil_level:.2f}", inline=False)
+        embed.add_field(name="Soldiers", value=str(soldiers))
+        embed.add_field(name="Tanks", value=str(tanks))
+        embed.add_field(name="Aircraft", value=str(aircraft))
+        embed.add_field(name="Ships", value=str(ships))
+        embed.add_field(name="Missiles", value=str(missiles))
+        embed.add_field(name="Nukes", value=str(nukes))
+        embed.set_image(url=aa["flag"])
+
+        await ctx.send(embed=embed)
+
+    @commands.command(aliases=["pwna"], brief="View a given nation.")
     @commands.cooldown(1, 2.5)
     async def pwnation(self, ctx: commands.Context, *, target: str = None) -> None:
         """

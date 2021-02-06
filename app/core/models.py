@@ -35,7 +35,7 @@ class Guilds(tortoise.models.Model):
 
 class NationIndex(tortoise.models.Model):
     """
-    Nation identity model.
+    Nation index model.
     """
 
     nation_id: int = tortoise.fields.IntField(pk=True)
@@ -50,3 +50,14 @@ class NationIndex(tortoise.models.Model):
     original_creation_date: str = tortoise.fields.TextField()
     latest_creation_date: str = tortoise.fields.TextField()
     snowflake: int = tortoise.fields.BigIntField(default=0)
+
+
+class AllianceIndex(tortoise.models.Model):
+    """
+    Alliance index model.
+    """
+
+    alliance_id: int = tortoise.fields.IntField(pk=True)
+    alliance_name: str = tortoise.fields.TextField()
+    alliance_acronym: str = tortoise.fields.TextField()
+    color: str = tortoise.fields.TextField()

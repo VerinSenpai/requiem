@@ -262,6 +262,36 @@ class Backend(commands.Cog):
 
         await self.process_alliances(alliances)
 
+    async def process_alliances(self, alliances: list) -> None:
+        """
+        Handles stowing and processing of nation events.
+        """
+        for alliance in alliances:
+            defaults = {
+                "alliance_name": alliance["name"].lower(),
+                "alliance_acronym": alliance["acronym"].lower(),
+                "color": alliance["color"],
+            }
+            entry, created = await models.AllianceIndex.get_or_create(
+                defaults=defaults, alliance_id=alliance["id"]
+            )
+
+            if created:
+                continue
+
+            if alliance["name"].lower() != entry.alliance_name:
+                entry.nation_name = alliance["name"].lower()
+
+            if alliance["acronym"].lower() != entry.alliance_acronym:
+                entry.leader_name = alliance["acronym"].lower()
+
+            if alliance["color"] != entry.color:
+                self.create_task(self.report_alliance_color_change(alliance, entry))
+                entry.color = alliance["color"]
+
+            await entry.save()
+
+    async def report_applicant(self, nation: dict, entry: models.NationIndex) -> None:
         shut_up_pylint = self.bot
         print(f"NATION APPLIED TO JOIN ALLIANCE {nation}")
         await asyncio.sleep(15)

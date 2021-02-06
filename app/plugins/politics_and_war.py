@@ -36,6 +36,9 @@ v2_url = "https://api.politicsandwar.com/graphql"
 
 
 async def nation_lookup(ctx: commands.Context, target: str) -> models.NationIndex:
+    """
+    Look up a nation using a string. Can be ID, user, name, or leader.
+    """
     target = str(target).lower()
 
     with contextlib.suppress(commands.BadArgument):
@@ -52,6 +55,9 @@ async def nation_lookup(ctx: commands.Context, target: str) -> models.NationInde
 
 
 async def alliance_lookup(target: str) -> models.AllianceIndex:
+    """
+    Look up an alliance using a string. Can be ID, name, or acronym.
+    """
     target = str(target).lower()
 
     if target.isnumeric():

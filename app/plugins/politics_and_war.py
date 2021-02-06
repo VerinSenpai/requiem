@@ -422,14 +422,18 @@ class PoliticsAndWar(commands.Cog):
             missiles += nation["missiles"]
             nukes += nation["nukes"]
 
-        max_units = 16350 * cities
+        sol_mil = soldiers / (15000 * cities) * 100
+        tan_mil = tanks / (1250 * cities) * 100
+        air_mil = aircraft / (75 * cities) * 100
+        shi_mil = ships / (15 * cities) * 100
         total_units = soldiers + tanks + aircraft + ships
-        mil_level = float((total_units / max_units) * 100)
+        mil_level = total_units / (16340 * cities) * 100
 
         embed = discord.Embed(description=f"{name_str}", colour=discord.Colour.purple())
         embed.add_field(name="Score", value=aa["score"])
         embed.add_field(name="Color", value=aa["color"].title())
         embed.add_field(name="Members", value=str(len(aa["nations"])))
+        embed.add_field(name="Cities", value=str(cities))
 
         if aa["forumlink"]:
             embed.add_field(name="Forums", value=aa["forumlink"], inline=False)
@@ -437,13 +441,13 @@ class PoliticsAndWar(commands.Cog):
         if aa["irclink"]:
             embed.add_field(name="Discord", value=aa["irclink"], inline=False)
 
-        embed.add_field(name="Militarization Level", value=f"%{mil_level:.2f}", inline=False)
-        embed.add_field(name="Soldiers", value=str(soldiers))
-        embed.add_field(name="Tanks", value=str(tanks))
-        embed.add_field(name="Aircraft", value=str(aircraft))
-        embed.add_field(name="Ships", value=str(ships))
-        embed.add_field(name="Missiles", value=str(missiles))
-        embed.add_field(name="Nukes", value=str(nukes))
+        embed.add_field(name="Total Militarization Level", value=f"{mil_level:.2f}%", inline=False)
+        embed.add_field(name="Soldiers", value=f"{soldiers:,} ({sol_mil:.2f}%)")
+        embed.add_field(name="Tanks", value=f"{tanks:,} ({tan_mil:.2f}%)")
+        embed.add_field(name="Aircraft", value=f"{aircraft:,} ({air_mil:.2f}%)")
+        embed.add_field(name="Ships", value=f"{ships:,} ({shi_mil:.2f}%)")
+        embed.add_field(name="Missiles", value=f"{missiles:,}")
+        embed.add_field(name="Nukes", value=f"{nukes:,}")
         embed.set_image(url=aa["flag"])
 
         await ctx.send(embed=embed)

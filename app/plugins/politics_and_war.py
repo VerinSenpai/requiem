@@ -15,66 +15,62 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-import contextlib
-import datetime
-import aiohttp
 import logging
 import discord
-import asyncio
-import string
-import random
-import time
+import typing
+import aiohttp
 
+
+from datetime import datetime, timezone, timedelta
 from discord.ext import commands, tasks
+from tortoise.query_utils import Q
+from utils import paginator
 from core import models
 
 
 _LOGGER = logging.getLogger("requiem.plugins.politics_and_war")
+base_url = "https://politicsandwar.com"
 
 
-v2_url = "https://api.politicsandwar.com/graphql"
+async def v3_post(key: str, query: str) -> dict:
+    """
+    Posts a request to the politics and war graphql api.
+    """
+    payload = {"api_key": key, "query": query}
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get("https://api.politicsandwar.com/graphql", json=payload) as response:
+            return await response.json(content_type="application/json")
 
 
-async def nation_lookup(ctx: commands.Context, target: str) -> models.NationIndex:
+async def nation_lookup(target: str or int) -> models.Nations:
     """
     Look up a nation using a string. Can be ID, user, name, or leader.
     """
     target = str(target).lower()
 
-    with contextlib.suppress(commands.BadArgument):
-        user = await commands.UserConverter().convert(ctx, target)
-        return await models.NationIndex.get_or_none(snowflake=user.id)
-
     if target.isnumeric():
-        return await models.NationIndex.get_or_none(nation_id=int(target))
+        q = Q(id=target, snowflake=target, join_type="OR")
 
-    by_name = await models.NationIndex.get_or_none(nation_name=target)
-    by_leader = await models.NationIndex.get_or_none(leader_name=target)
+    else:
+        q = Q(name=target, leader=target, join_type="OR")
 
-    return by_leader or by_name
+    return await models.Nations.get_or_none(q)
 
 
-async def alliance_lookup(target: str) -> models.AllianceIndex:
+async def alliance_lookup(target: str or int) -> models.Alliances:
     """
     Look up an alliance using a string. Can be ID, name, or acronym.
     """
     target = str(target).lower()
 
     if target.isnumeric():
-        return await models.AllianceIndex.get_or_none(alliance_id=int(target))
+        q = Q(id=target)
 
-    by_name = await models.AllianceIndex.get_or_none(alliance_name=target)
-    by_acr = await models.AllianceIndex.get_or_none(alliance_acronym=target)
+    else:
+        q = Q(name=target, acronym=target, join_type="OR")
 
-    return by_name or by_acr
-
-
-async def quick_send_embed(ctx, message) -> None:
-    """
-    Creates an embed with a given message and sends it.
-    """
-    embed = discord.Embed(description=message, colour=discord.Colour.purple())
-    await ctx.send(embed=embed)
+    return await models.Alliances.get_or_none(q)
 
 
 class Backend(commands.Cog):
@@ -89,13 +85,11 @@ class Backend(commands.Cog):
 
         if not self.key:
             _LOGGER.warning(
-                "requiem could not start pnw backend tasks because a key has not been provided!"
+                "requiem could not start backend tasks because a key has not been provided!"
             )
             return
 
-        self.handle_nations.error(self.on_task_error)
         self.handle_nations.start()
-        self.handle_alliances.error(self.on_task_error)
         self.handle_alliances.start()
 
     def cog_unload(self) -> None:
@@ -103,19 +97,6 @@ class Backend(commands.Cog):
         Stops all tasks on unload.
         """
         self.handle_nations.stop()
-        self.handle_alliances.stop()
-
-    async def on_task_error(self, *args, **kwargs) -> None:
-        """
-        Handles catching TypeErrors raised while fetching API queries.
-        """
-        exc = args[1]
-
-        if isinstance(exc, TypeError):
-            _LOGGER.warning("requiem received an error from the API!")
-            return
-
-        await self.bot.report_error(exc, "executing a task in politics_and_war.Backend")
 
     @tasks.loop(minutes=5)
     async def handle_nations(self) -> None:
@@ -127,32 +108,37 @@ class Backend(commands.Cog):
 
         while True:
             query = """
-                {
-                  nations(first: 500, page: #) {
-                    data {
-                      id
-                      alliance_id
-                      alliance_position
-                      nation_name
-                      leader_name
-                      color
-                      num_cities
-                      vmode
-                      beigeturns
-                      date
-                    }
-                  }
+            {
+              nations(first:500, page: #) {
+                data {
+                  id
+                  alliance_id
+                  alliance_position
+                  nation_name
+                  leader_name
+                  warpolicy
+                  dompolicy
+                  color
+                  num_cities
+                  score
+                  vmode
+                  beigeturns
+                  last_active
+                  date
+                  soldiers
+                  tanks
+                  aircraft
+                  ships
+                  missiles
+                  nukes
                 }
+              }
+            }
                 """.replace(
                 "#", str(page)
             )
-            payload = {"api_key": self.key, "query": query}
-
-            async with aiohttp.ClientSession() as session:
-                async with session.get(v2_url, json=payload) as response:
-                    returned_json = await response.json(content_type="application/json")
-
-            fetched_nations = returned_json["data"]["nations"]["data"]
+            response = await v3_post(self.key, query)
+            fetched_nations = response["data"]["nations"]["data"]
 
             if not fetched_nations:
                 break
@@ -169,95 +155,100 @@ class Backend(commands.Cog):
         """
         for nation in nations:
             defaults = {
-                "nation_name": nation["nation_name"].lower(),
-                "leader_name": nation["leader_name"].lower(),
-                "alliance_id": nation["alliance_id"],
+                "name": nation["nation_name"].lower(),
+                "leader": nation["leader_name"].lower(),
+                "alliance": nation["alliance_id"],
                 "alliance_position": nation["alliance_position"],
+                "war_policy": nation["warpolicy"],
+                "dom_policy": nation["dompolicy"],
                 "color": nation["color"],
                 "cities": nation["num_cities"],
+                "score": nation["score"],
                 "vmode_turns": nation["vmode"],
                 "beige_turns": nation["beigeturns"],
                 "original_creation_date": nation["date"],
                 "latest_creation_date": nation["date"],
+                "soldiers": nation["soldiers"],
+                "tanks": nation["tanks"],
+                "aircraft": nation["aircraft"],
+                "ships": nation["ships"],
+                "missiles": nation["missiles"],
+                "nukes": nation["nukes"],
             }
-            entry, created = await models.NationIndex.get_or_create(
-                defaults=defaults, nation_id=nation["id"]
+            entry, created = await models.Nations.get_or_create(
+                defaults=defaults, id=nation["id"]
             )
 
             if created:
                 continue
 
-            if nation["nation_name"].lower() != entry.nation_name:
-                entry.nation_name = nation["nation_name"].lower()
+            if nation["nation_name"].lower() != entry.name:
+                entry.prev_name = entry.name
 
-            if nation["leader_name"].lower() != entry.leader_name:
-                entry.leader_name = nation["leader_name"].lower()
+            if nation["leader_name"].lower() != entry.leader:
+                entry.prev_leader = entry.leader
 
-            if nation["color"] != entry.color:
-                if nation["color"] != "beige" != entry.color:
-                    self.create_task(self.report_color_change(nation, entry))
-                entry.color = nation["color"]
-
-            if int(nation["alliance_id"]) != entry.alliance_id:
+            if int(nation["alliance_id"]) != entry.alliance:
                 if nation["alliance_position"] == "APPLICANT":
                     self.create_task(self.report_applicant(nation, entry))
-                entry.alliance_id = nation["alliance_id"]
-
-            if nation["alliance_position"] != entry.alliance_position:
-                entry.alliance_position = nation["alliance_position"]
 
             if nation["date"] != entry.latest_creation_date:
                 self.create_task(self.report_reroll(nation, entry))
-                entry.latest_creation_date = nation["date"]
 
             if int(nation["vmode"]) > entry.vmode_turns == 0:
                 self.create_task(self.report_enter_vmode(nation, entry))
-                entry.vmode_turns = nation["vmode"]
 
             if entry.vmode_turns > int(nation["vmode"]) == 0:
                 self.create_task(self.report_exit_vmode(nation, entry))
-                entry.vmode_turns = nation["vmode"]
 
             if int(nation["beigeturns"]) > entry.beige_turns == 0:
                 self.create_task(self.report_enter_beige(nation, entry))
-                entry.beige_turns = nation["beigeturns"]
 
             if entry.beige_turns > int(nation["beigeturns"]) == 0:
                 self.create_task(self.report_exit_beige(nation, entry))
-                entry.beige_turns = nation["beigeturns"]
+
+            entry.name = nation["nation_name"].lower()
+            entry.leader = nation["leader_name"].lower()
+            entry.alliance = nation["alliance_id"]
+            entry.alliance_position = nation["alliance_position"]
+            entry.latest_creation_date = nation["date"]
+            entry.vmode_turns = nation["vmode"]
+            entry.beige_turns = nation["beigeturns"]
+            entry.cities = nation["num_cities"]
+            entry.color = nation["color"]
+            entry.color = nation["color"]
 
             await entry.save()
 
     @tasks.loop(minutes=5)
     async def handle_alliances(self) -> None:
         """
-        Handles fetching of alliances. When completed, starts process_alliances.
+
         """
         alliances = []
         page = 1
 
         while True:
             query = """
-                {
-                  alliances(first: 50, page: #) {
-                    data {
-                      id
-                      name
-                      acronym
-                      color
-                    }
-                  }
+            {
+              alliances(first: 50, page: #) {
+                data {
+                  id
+                  name
+                  acronym
+                  score
+                  color
+                  flag
+                  forumlink
+                  irclink
                 }
-                """.replace(
+              }
+            }
+            """.replace(
                 "#", str(page)
             )
-            payload = {"api_key": self.key, "query": query}
-
-            async with aiohttp.ClientSession() as session:
-                async with session.get(v2_url, json=payload) as response:
-                    returned_json = await response.json(content_type="application/json")
-
-            fetched_alliances = returned_json["data"]["alliances"]["data"]
+            response = await v3_post(self.key, query)
+            fetched_alliances = response["data"]["alliances"]["data"]
 
             if not fetched_alliances:
                 break
@@ -274,296 +265,201 @@ class Backend(commands.Cog):
         """
         for alliance in alliances:
             defaults = {
-                "alliance_name": alliance["name"].lower(),
-                "alliance_acronym": alliance["acronym"].lower(),
+                "name": alliance["name"].lower(),
+                "acronym": alliance["acronym"].lower(),
+                "score": alliance["score"],
                 "color": alliance["color"],
+                "flag": alliance["flag"],
+                "forum": alliance["forumlink"],
+                "irc": alliance["irclink"]
             }
-            entry, created = await models.AllianceIndex.get_or_create(
-                defaults=defaults, alliance_id=alliance["id"]
+            entry, created = await models.Alliances.get_or_create(
+                defaults=defaults, id=alliance["id"]
             )
 
             if created:
                 continue
 
-            if alliance["name"].lower() != entry.alliance_name:
-                entry.nation_name = alliance["name"].lower()
+            if alliance["name"].lower() != entry.name:
+                entry.prev_name = entry.name
 
-            if alliance["acronym"].lower() != entry.alliance_acronym:
-                entry.leader_name = alliance["acronym"].lower()
+            if alliance["acronym"].lower() != entry.acronym:
+                entry.prev_acr = entry.acronym
 
-            if alliance["color"] != entry.color:
-                self.create_task(self.report_color_change(alliance, entry))
-                entry.color = alliance["color"]
+            entry.name = alliance["name"].lower()
+            entry.acronym = alliance["acronym"].lower()
+            entry.score = alliance["score"]
+            entry.color = alliance["color"]
+            entry.flag = alliance["flag"]
+            entry.forum = alliance["forumlink"]
+            entry.irc = alliance["irclink"]
 
             await entry.save()
 
-    async def report_applicant(self, nation: dict, entry: models.NationIndex) -> None:
-        shut_up_pylint = self.bot
-        print(f"NATION APPLIED TO JOIN ALLIANCE {nation}")
-        await asyncio.sleep(15)
+    async def report_applicant(self, nation: dict, entry: models.Nations) -> None:
+        channel = self.bot.get_channel(812669787511324692)
+        await channel.send(f"NATION APPLIED TO JOIN ALLIANCE {nation}")
 
-    async def report_reroll(self, nation: dict, entry: models.NationIndex) -> None:
-        shut_up_pylint = self.bot
-        print(f"NATION REROLLED {nation}")
-        await asyncio.sleep(15)
+    async def report_reroll(self, nation: dict, entry: models.Nations) -> None:
+        channel = self.bot.get_channel(812669787511324692)
+        await channel.send(f"NATION REROLLED {nation}")
 
-    async def report_enter_vmode(self, nation: dict, entry: models.NationIndex) -> None:
-        shut_up_pylint = self.bot
-        print(f"NATION ENTERED VMODE {nation}")
-        await asyncio.sleep(15)
+    async def report_enter_vmode(self, nation: dict, entry: models.Nations) -> None:
+        channel = self.bot.get_channel(812669787511324692)
+        await channel.send(f"NATION ENTERED VMODE {nation}")
 
-    async def report_exit_vmode(self, nation: dict, entry: models.NationIndex) -> None:
-        shut_up_pylint = self.bot
-        print(f"NATION EXITED VMODE {nation}")
-        await asyncio.sleep(15)
+    async def report_exit_vmode(self, nation: dict, entry: models.Nations) -> None:
+        channel = self.bot.get_channel(812669787511324692)
+        await channel.send(f"NATION EXITED VMODE {nation}")
 
-    async def report_enter_beige(self, nation: dict, entry: models.NationIndex) -> None:
-        shut_up_pylint = self.bot
-        print(f"NATION ENTERED BEIGE {nation}")
-        await asyncio.sleep(15)
+    async def report_enter_beige(self, nation: dict, entry: models.Nations) -> None:
+        channel = self.bot.get_channel(812669787511324692)
+        await channel.send(f"NATION ENTERED BEIGE {nation}")
 
-    async def report_exit_beige(self, nation: dict, entry: models.NationIndex) -> None:
-        shut_up_pylint = self.bot
-        print(f"NATION EXITED BEIGE {nation}")
-        await asyncio.sleep(15)
-
-    async def report_color_change(self, target: dict, entry: models.NationIndex or models.AllianceIndex) -> None:
-        shut_up_pylint = self.bot
-        print(f"TARGET CHANGED COLOR {target}")
-        await asyncio.sleep(15)
+    async def report_exit_beige(self, nation: dict, entry: models.Nations) -> None:
+        channel = self.bot.get_channel(812669787511324692)
+        await channel.send(f"NATION EXITED BEIGE {nation}")
 
 
-class PoliticsAndWar(commands.Cog):
+class PoliticsAndWar(commands.Cog, name="politics and war"):
     """
     Various informational and utility commands for Politics and War.
     """
 
-    def __init__(self, bot) -> None:
-        self.bot = bot
-        self.key = bot.config.pnw_api_key
-
-    async def cog_check(self, ctx) -> bool:
+    async def cog_check(self, ctx: commands.Context) -> True or None:
         """
         Returns true if an api key has been configured.
         """
-        return bool(self.key)
+        if ctx.bot.config.pnw_api_key and ctx.bot.uptime[0] > 5:
+            return True
 
-    @commands.command(aliases=["pwaa"], brief="View a given alliance.")
+    @commands.command(aliases=["pwla"], brief="List all currently active alliances.")
     @commands.cooldown(1, 2.5)
-    async def pwalliance(self, ctx: commands.Context, *, target: str):
+    async def pwlistaa(self, ctx: commands.Context) -> None:
         """
-        View information about an alliance.
-
-        You can look an alliance up by its id, name, or acronym.
+        List all currently active alliances.
         """
-        entry = await alliance_lookup(target)
+        entries = await models.Alliances.all()
+        active = [aa for aa in entries if (datetime.now(timezone.utc) - aa.last_updated).days == 0]
 
-        if not entry:
-            message = "I was unable to find an alliance matching your query!"
-            return await quick_send_embed(ctx, message)
+        pages = []
+        rank = 1
+        embed = discord.Embed(colour=discord.Colour.purple())
 
-        query = """
-        {
-          alliances(first: 1, id: #) {
-            data {
-              id
-              name
-              acronym
-              score
-              color
-              nations {
-                num_cities
-                soldiers
-                tanks
-                aircraft
-                ships
-                missiles
-                nukes
-              }
-              flag
-              forumlink
-              irclink
-            }
-          }
-        }
-        """.replace("#", str(entry.alliance_id))
-        payload = {"api_key": self.key, "query": query}
+        for alliance in sorted(active, key=lambda aa: aa.score, reverse=True):
+            embed.add_field(
+                name=f"{rank} of {len(active)}",
+                value=f"[{alliance.name.title()} ({alliance.acronym})]({base_url}/alliance/id={alliance.id})",
+                inline=False
+            )
+            rank += 1
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(v2_url, json=payload) as response:
-                returned_json = await response.json(content_type="application/json")
+            if len(embed.fields) == 10:
+                pages.append(embed)
+                embed = discord.Embed(colour=discord.Colour.purple())
 
-        if not isinstance(returned_json, dict):
-            message = "The API returned an unexpected response!"
-            return await quick_send_embed(ctx, message)
+        if embed not in pages:
+            pages.append(embed)
 
-        fetched_alliances = returned_json["data"]["alliances"]["data"]
+        await paginator.Paginator(pages).start(ctx)
 
-        if not fetched_alliances:
-            message = "The alliance specified no longer exists!"
-            return await quick_send_embed(ctx, message)
-
-        aa = fetched_alliances[0]
-        name_str = f"[{aa['name']} - {aa['acronym']}](https://politicsandwar.com/alliance/id={aa['id']})"
-
-        cities = 0
-        soldiers = 0
-        tanks = 0
-        aircraft = 0
-        ships = 0
-        missiles = 0
-        nukes = 0
-
-        for nation in aa["nations"]:
-            cities += nation["num_cities"]
-            soldiers += nation["soldiers"]
-            tanks += nation["tanks"]
-            aircraft += nation["aircraft"]
-            ships += nation["ships"]
-            missiles += nation["missiles"]
-            nukes += nation["nukes"]
-
-        sol_mil = soldiers / (15000 * cities) * 100
-        tan_mil = tanks / (1250 * cities) * 100
-        air_mil = aircraft / (75 * cities) * 100
-        shi_mil = ships / (15 * cities) * 100
-        total_units = soldiers + tanks + aircraft + ships
-        mil_level = total_units / (16340 * cities) * 100
-
-        embed = discord.Embed(description=f"{name_str}", colour=discord.Colour.purple())
-        embed.add_field(name="Score", value=aa["score"])
-        embed.add_field(name="Color", value=aa["color"].title())
-        embed.add_field(name="Members", value=str(len(aa["nations"])))
-        embed.add_field(name="Cities", value=str(cities))
-
-        if aa["forumlink"]:
-            embed.add_field(name="Forums", value=aa["forumlink"], inline=False)
-
-        if aa["irclink"]:
-            embed.add_field(name="Discord", value=aa["irclink"], inline=False)
-
-        embed.add_field(name="Total Militarization Level", value=f"{mil_level:.2f}%", inline=False)
-        embed.add_field(name="Soldiers", value=f"{soldiers:,} ({sol_mil:.2f}%)")
-        embed.add_field(name="Tanks", value=f"{tanks:,} ({tan_mil:.2f}%)")
-        embed.add_field(name="Aircraft", value=f"{aircraft:,} ({air_mil:.2f}%)")
-        embed.add_field(name="Ships", value=f"{ships:,} ({shi_mil:.2f}%)")
-        embed.add_field(name="Missiles", value=f"{missiles:,}")
-        embed.add_field(name="Nukes", value=f"{nukes:,}")
-        embed.set_image(url=aa["flag"])
-
-        await ctx.send(embed=embed)
-
-    @commands.command(aliases=["pwna"], brief="View a given nation.")
+    @commands.group(aliases=["pwna"], brief="View a given nation.")
     @commands.cooldown(1, 2.5)
-    async def pwnation(self, ctx: commands.Context, *, target: str = None) -> None:
+    async def pwnation(
+        self, ctx: commands.Context, *, target: typing.Union[discord.User, str] = None
+    ) -> None:
         """
         View information about a nation.
 
         You can look a nation up by its id, name, or a discord user (if they've linked themselves to their nation)
         If you don't specify a target, a lookup is performed for a nation linked to your discord.
         """
-        if not target:
-            target = ctx.author.id
+        target = target or ctx.author.id
 
-        entry = await nation_lookup(ctx, target)
+        if isinstance(target, discord.User):
+            target = target.id
 
-        if not entry:
-            message = "I was unable to find a nation matching your query!"
-            return await quick_send_embed(ctx, message)
+        entry = await nation_lookup(target)
 
-        query = """
-            {
-              nations(first: 1, id: #) {
-                data {
-                  id
-                  alliance {
-                    name
-                  }
-                  alliance_id
-                  alliance_position
-                  nation_name
-                  leader_name
-                  continent
-                  warpolicy
-                  dompolicy
-                  color
-                  num_cities
-                  score
-                  vmode
-                  beigeturns
-                  date
-                  soldiers
-                  tanks
-                  aircraft
-                  ships
-                  missiles
-                  nukes
-                }
-              }
-            }
-            """.replace(
-            "#", str(entry.nation_id)
-        )
-        payload = {"api_key": self.key, "query": query}
+        if entry:
+            since_update = datetime.now(timezone.utc) - entry.last_updated
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(v2_url, json=payload) as response:
-                returned_json = await response.json(content_type="application/json")
-
-        if not isinstance(returned_json, dict):
-            message = "The API returned an unexpected response!"
-            return await quick_send_embed(ctx, message)
-
-        fetched_nations = returned_json["data"]["nations"]["data"]
-
-        if not fetched_nations:
-            message = "The nation specified no longer exists!"
-            return await quick_send_embed(ctx, message)
-
-        nation = fetched_nations[0]
-        leader = nation["leader_name"]
-
-        nation_str = f"[{nation['nation_name']}](https://politicsandwar.com/nation/id={nation['id']})"
-        leader_str = f"[{leader}](https://politicsandwar.com/inbox/message/receiver={leader.replace(' ', '%20')})"
-
-        embed = discord.Embed(
-            description=f"{nation_str} - {leader_str}", colour=discord.Colour.purple()
-        )
-
-        if entry.latest_creation_date != entry.original_creation_date:
-            embed.add_field(
-                name="Notice", value=f"This nation is a re-roll.", inline=False
+            name = (
+                f"{entry.name} (formerly {entry.prev_name})"
+                if entry.prev_name
+                else entry.name
             )
-            embed.add_field(
-                name="Original Creation Date",
-                value=entry.original_creation_date,
-                inline=False,
-            )
-            embed.add_field(
-                name="Latest Creation Date", value=nation["date"], inline=False
+            leader = (
+                f"{entry.leader} (formerly {entry.leader})"
+                if entry.prev_leader
+                else entry.leader
             )
 
-        if nation["alliance"]:
-            alliance_name = nation["alliance"]["name"].title()
-            alliance_str = f"[{alliance_name}](https://politicsandwar.com/alliance/id={nation['alliance_id']})"
-            embed.add_field(name="Alliance", value=alliance_str)
-            embed.add_field(name="Position", value=nation["alliance_position"].title())
+            name_url = f"[{name.title()}]({base_url}/nation/id={entry.id})"
+            leader_url = f"[{leader.title()}]({base_url}/inbox/message/receiver={leader.replace(' ', '+')})"
 
-        embed.add_field(name="Score", value=nation["score"], inline=False)
-        embed.add_field(name="Color", value=nation["color"].title(), inline=False)
-        embed.add_field(name="Cities", value=nation["num_cities"], inline=False)
-        embed.add_field(name="War Policy", value=nation["warpolicy"], inline=False)
-        embed.add_field(name="Domestic Policy", value=nation["dompolicy"], inline=False)
-        embed.add_field(name="Soldiers", value=nation["soldiers"])
-        embed.add_field(name="Tanks", value=nation["tanks"])
-        embed.add_field(name="Aircraft", value=nation["aircraft"])
-        embed.add_field(name="Ships", value=nation["ships"])
-        embed.add_field(name="Missiles", value=nation["missiles"])
-        embed.add_field(name="Nukes", value=nation["nukes"])
+            embed = discord.Embed(
+                description=f"{name_url} - {leader_url}", colour=discord.Colour.purple()
+            )
+
+            if since_update.days > 0:
+                embed.add_field(
+                    name="Deleted Nation",
+                    value="You are viewing a nation that no longer exists.",
+                    inline=False,
+                )
+
+            if entry.original_creation_date != entry.latest_creation_date:
+                embed.add_field(
+                    name="Re-roll",
+                    value="You are viewing a nation that has re-rolled.",
+                    inline=False,
+                )
+
+            if entry.vmode_turns:
+                embed.add_field(
+                    name="Vacation Mode",
+                    value=f"This nation is in vacation mode for {entry.vmode_turns} more turns.",
+                    inline=False,
+                )
+
+            if entry.beige_turns:
+                embed.add_field(
+                    name="Beige",
+                    value=f"This nation is on beige for {entry.beige_turns} more turns.",
+                    inline=False,
+                )
+
+            if alliance := await alliance_lookup(entry.alliance):  # this probably angers some of you. that's okay.
+                embed.add_field(name="Alliance", value=f"{alliance.name.title()} ({alliance.acronym})")
+                embed.add_field(name="Position", value=f"{entry.alliance_position.title()}")
+                embed.add_field(name="IRC/Discord", value=alliance.irc, inline=False)
+
+            elif entry.alliance:
+                embed.add_field(name="Alliance", value="Unknown Alliance", inline=False)
+
+            embed.add_field(name="War Policy", value=entry.war_policy.title())
+            embed.add_field(name="Domestic Policy", value=entry.dom_policy.title())
+            embed.add_field(name="Color", value=entry.color.title())
+            embed.add_field(name="Cities", value=str(entry.cities))
+            embed.add_field(name="Score", value=f"{entry.score:,}")
+            embed.add_field(name="Soldiers", value=f"{entry.soldiers:,}")
+            embed.add_field(name="Tanks", value=f"{entry.tanks:,}")
+            embed.add_field(name="Aircraft", value=f"{entry.aircraft:,}")
+            embed.add_field(name="Ships", value=f"{entry.ships:,}")
+            embed.add_field(name="Missiles", value=f"{entry.missiles:,}")
+            embed.add_field(name="Nukes", value=f"{entry.nukes:,}")
+            embed.set_footer(text=f"Nation Last Updated {entry.last_updated}")
+
+        else:
+            embed = discord.Embed(
+                description="That nation does not exist.",
+                colour=discord.Colour.purple(),
+            )
 
         await ctx.send(embed=embed)
 
 
 def setup(bot):
     bot.add_cog(Backend(bot))
-    bot.add_cog(PoliticsAndWar(bot))
+    bot.add_cog(PoliticsAndWar())

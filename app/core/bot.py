@@ -29,6 +29,7 @@ import os
 import io
 
 from core import config, constants, help, models
+from datetime import datetime, timedelta
 from discord.ext import commands
 from aiocache import Cache
 
@@ -57,6 +58,20 @@ class Requiem(commands.AutoShardedBot):
         self.cached_prefixes = Cache(Cache.MEMORY)
         self.add_check(bot_check)
         self.loop.run_until_complete(start_database(bot_config))
+        self.started_at = datetime.now()
+        self.served = {}
+        self.executed = 0
+
+    @property
+    def uptime(self) -> tuple:
+        """
+        Returns a timedelta object of the bots current uptime.
+        """
+        uptime = datetime.now() - self.started_at
+        minutes = int(uptime.seconds / 60)
+        hours = int(minutes / 60)
+        days = int(hours / 24)
+        return minutes, hours, days
 
     async def on_ready(self) -> None:
         """

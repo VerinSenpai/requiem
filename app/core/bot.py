@@ -270,7 +270,7 @@ class Requiem(commands.AutoShardedBot):
         )
 
 
-async def bot_check(ctx) -> bool:
+async def bot_check(ctx: commands.Context) -> bool:
     """
     Global bot check that ensures Requiem has all required global permissions in a channel.
     This prevents errors arising because of basic permissions missing.

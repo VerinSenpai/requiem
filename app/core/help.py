@@ -56,7 +56,10 @@ class HelpCommand(commands.HelpCommand):
         )
 
         for command in sorted(_commands, key=lambda c: c.name):
-            command_page.add_field(name=command.name, value=command.brief, inline=False)
+            if not command.hidden:
+                command_page.add_field(
+                    name=command.name, value=command.brief, inline=False
+                )
 
         return command_page
 

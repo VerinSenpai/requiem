@@ -91,6 +91,7 @@ class Backend(commands.Cog):
 
         self.handle_nations.start()
         self.handle_alliances.start()
+        self.handle_wars.start()
 
     def cog_unload(self) -> None:
         """
@@ -220,10 +221,34 @@ class Backend(commands.Cog):
 
             await entry.save()
 
+    async def report_applicant(self, nation: dict, entry: models.Nations) -> None:
+        channel = self.bot.get_channel(812669787511324692)
+        await channel.send(f"NATION APPLIED TO JOIN ALLIANCE {nation}")
+
+    async def report_reroll(self, nation: dict, entry: models.Nations) -> None:
+        channel = self.bot.get_channel(812669787511324692)
+        await channel.send(f"NATION REROLLED {nation}")
+
+    async def report_enter_vmode(self, nation: dict, entry: models.Nations) -> None:
+        channel = self.bot.get_channel(812669787511324692)
+        await channel.send(f"NATION ENTERED VMODE {nation}")
+
+    async def report_exit_vmode(self, nation: dict, entry: models.Nations) -> None:
+        channel = self.bot.get_channel(812669787511324692)
+        await channel.send(f"NATION EXITED VMODE {nation}")
+
+    async def report_enter_beige(self, nation: dict, entry: models.Nations) -> None:
+        channel = self.bot.get_channel(812669787511324692)
+        await channel.send(f"NATION ENTERED BEIGE {nation}")
+
+    async def report_exit_beige(self, nation: dict, entry: models.Nations) -> None:
+        channel = self.bot.get_channel(812669787511324692)
+        await channel.send(f"NATION EXITED BEIGE {nation}")
+
     @tasks.loop(minutes=5)
     async def handle_alliances(self) -> None:
         """
-
+        Handles fetching of alliances.
         """
         alliances = []
         page = 1
@@ -296,29 +321,36 @@ class Backend(commands.Cog):
 
             await entry.save()
 
-    async def report_applicant(self, nation: dict, entry: models.Nations) -> None:
-        channel = self.bot.get_channel(812669787511324692)
-        await channel.send(f"NATION APPLIED TO JOIN ALLIANCE {nation}")
+    @tasks.loop(minutes=5)
+    async def handle_wars(self) -> None:
+        """
+        Handle fetching of wars.
+        """
+        query = """
+        {
+          wars {
+            id
+            date
+            reason
+            war_type
+            attid
+            defid
+          }
+        }
+        """
+        response = await v3_post(self.key, query)
+        wars = response["data"]["wars"]["data"]
 
-    async def report_reroll(self, nation: dict, entry: models.Nations) -> None:
-        channel = self.bot.get_channel(812669787511324692)
-        await channel.send(f"NATION REROLLED {nation}")
+        await self.process_wars(wars)
 
-    async def report_enter_vmode(self, nation: dict, entry: models.Nations) -> None:
-        channel = self.bot.get_channel(812669787511324692)
-        await channel.send(f"NATION ENTERED VMODE {nation}")
+    async def process_wars(self, wars: list):
+        dispatched = []
 
-    async def report_exit_vmode(self, nation: dict, entry: models.Nations) -> None:
-        channel = self.bot.get_channel(812669787511324692)
-        await channel.send(f"NATION EXITED VMODE {nation}")
+        for war in wars:
+            if war["id"] in dispatched:
+                continue
 
-    async def report_enter_beige(self, nation: dict, entry: models.Nations) -> None:
-        channel = self.bot.get_channel(812669787511324692)
-        await channel.send(f"NATION ENTERED BEIGE {nation}")
-
-    async def report_exit_beige(self, nation: dict, entry: models.Nations) -> None:
-        channel = self.bot.get_channel(812669787511324692)
-        await channel.send(f"NATION EXITED BEIGE {nation}")
+            self.create_task()
 
 
 class PoliticsAndWar(commands.Cog, name="politics and war"):

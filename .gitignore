@@ -5,3 +5,5 @@ app/db.sqlite3
 app/db.sqlite3-shm
 app/db.sqlite3-wal
 app/config.yaml
+venv/
+.vscode/

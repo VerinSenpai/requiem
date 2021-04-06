@@ -213,11 +213,6 @@ class Backend(commands.Cog):
                   id
                   name
                   acronym
-                  score
-                  color
-                  flag
-                  forumlink
-                  irclink
                 }
               }
             }
@@ -244,11 +239,6 @@ class Backend(commands.Cog):
             defaults = {
                 "name": alliance["name"].lower(),
                 "acronym": alliance["acronym"].lower(),
-                "score": alliance["score"],
-                "color": alliance["color"],
-                "flag": alliance["flag"],
-                "forum": alliance["forumlink"],
-                "irc": alliance["irclink"]
             }
             entry, created = await models.Alliances.get_or_create(
                 defaults=defaults, id=alliance["id"]
@@ -265,11 +255,6 @@ class Backend(commands.Cog):
 
             entry.name = alliance["name"].lower()
             entry.acronym = alliance["acronym"].lower()
-            entry.score = alliance["score"]
-            entry.color = alliance["color"]
-            entry.flag = alliance["flag"]
-            entry.forum = alliance["forumlink"]
-            entry.irc = alliance["irclink"]
 
             await entry.save()
 

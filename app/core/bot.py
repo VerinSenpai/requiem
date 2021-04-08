@@ -192,55 +192,6 @@ class Requiem(commands.AutoShardedBot):
         """
         await self.process_commands(message_edit)
 
-    async def on_member_join(self, member: discord.Member) -> None:
-        """
-        Implements on_member_join greeting and automatic role assignment.
-        """
-        guild_config = await models.Guilds.get(snowflake=member.guild.id)
-
-        role = discord.utils.get(member.guild.roles, id=guild_config.auto_role)
-        channel = discord.utils.get(
-            member.guild.channels, id=guild_config.welcome_channel
-        )
-        message = guild_config.welcome_message
-
-        if role:
-            await member.add_roles((role,), reason="Automatic Role Assignment")
-
-        if not channel:
-            return
-
-        if not message:
-            message = "Welcome %user%!"
-
-        for key, value in constants.REPLACEMENTS.items():
-            message = message.replace(key, value(member))
-
-        embed = discord.Embed(colour=discord.Colour.purple(), description=message)
-        await channel.send(embed=embed)
-
-    async def on_member_remove(self, member: discord.Member) -> None:
-        """
-        Implements on_member_leave farewell.
-        """
-        guild_config = await models.Guilds.get(snowflake=member.guild.id)
-        channel = discord.utils.get(
-            member.guild.channels, id=guild_config.farewell_channel
-        )
-        message = guild_config.farewell_message
-
-        if not channel:
-            return
-
-        if not message:
-            message = "Farewell %user%!"
-
-        for key, value in constants.REPLACEMENTS.items():
-            message = message.replace(key, value(member))
-
-        embed = discord.Embed(colour=discord.Colour.purple(), description=message)
-        await channel.send(embed=embed)
-
     async def get_prefix(self, message: discord.Message) -> str:
         """
         Determines current prefix based on context. Also returns prefix if configured to on mention.

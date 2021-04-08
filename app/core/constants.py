@@ -82,9 +82,3 @@ PREFIX = (
     lambda prefix: f"Looking for me? My prefix is <**{prefix}**>",
     lambda prefix: f"Need something? My prefix is <**{prefix}**>",
 )
-
-REPLACEMENTS = {
-    "%user%": lambda member: member.name,
-    "%user_mention%": lambda member: member.mention,
-    "%guild%": lambda member: member.guild.name,
-}

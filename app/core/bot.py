@@ -155,6 +155,24 @@ class Requiem(commands.AutoShardedBot):
         embed = discord.Embed(description=response, colour=discord.Colour.red())
         await ctx.send(embed=embed)
 
+    async def report_error(self, exc: BaseException, action: str) -> None:
+        """
+        Logs an exceptions occurrence to the database and reports it to the owners if configured to do so.
+        """
+        if not self.config.report_errors:
+            return
+
+        tb = traceback.format_exception(type(exc), exc, exc.__traceback__)
+        string_io = io.StringIO("".join(tb))
+        file = discord.File(fp=string_io, filename="error_report.txt")
+
+        for owner_id in self.owner_ids:
+            with contextlib.suppress(discord.Forbidden, discord.NotFound):
+                if owner := self.get_user(owner_id):
+                    await owner.send(file=file)
+
+        _LOGGER.exception(f"requiem encountered an exception while {action}!", exc_info=exc)
+
     async def on_command_completion(self, ctx: commands.Context) -> None:
         """
         Implements on_command to handle logging command execution on command.
@@ -247,27 +265,6 @@ class Requiem(commands.AutoShardedBot):
         """
         await super().close()
         await tortoise.Tortoise.close_connections()
-
-    async def report_error(self, exc: BaseException, action: str) -> None:
-        """
-        Logs an exceptions occurrence to the database and reports it to the owners if configured to do so.
-        """
-        if not self.config.report_errors:
-            return
-
-        tb = traceback.format_exception(type(exc), exc, exc.__traceback__)
-        string_io = io.StringIO("".join(tb))
-        file = discord.File(fp=string_io, filename="error_report.txt")
-
-        for owner_id in self.owner_ids:
-            with contextlib.suppress(discord.Forbidden, discord.NotFound):
-                if owner := self.get_user(owner_id):
-                    await owner.send(file=file)
-
-        _LOGGER.error(
-            "requiem encountered an exception while %s! an error report has been submitted!",
-            action,
-        )
 
 
 async def bot_check(ctx: commands.Context) -> bool:

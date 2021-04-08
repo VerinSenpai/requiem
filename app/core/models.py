@@ -34,30 +34,14 @@ class Guilds(tortoise.models.Model):
     farewell_message: str = tortoise.fields.TextField(default="")
 
 
-class Alliances(tortoise.models.Model):
-    """
-    Alliance index model.
-    """
-
-    id: int = tortoise.fields.IntField(pk=True)
-    name: str = tortoise.fields.TextField()
-    prev_name: str = tortoise.fields.TextField(default="")
-    acronym: str = tortoise.fields.TextField()
-    prev_acr: str = tortoise.fields.TextField(default="")
-    score: int = tortoise.fields.IntField()
-    color: str = tortoise.fields.TextField()
-    flag: str = tortoise.fields.TextField()
-    forum: str = tortoise.fields.TextField()
-    irc: str = tortoise.fields.TextField()
-    last_updated: datetime.datetime = tortoise.fields.DatetimeField(auto_now=True)
-
-
 class Nations(tortoise.models.Model):
     """
     Nation index model.
     """
 
     id: int = tortoise.fields.IntField(pk=True)
+    deleted: bool = tortoise.fields.BooleanField(default=False)
+    reroll: bool = tortoise.fields.BooleanField(default=False)
     name: str = tortoise.fields.TextField()
     prev_name: str = tortoise.fields.TextField(default="")
     leader: str = tortoise.fields.TextField()
@@ -71,8 +55,7 @@ class Nations(tortoise.models.Model):
     score: int = tortoise.fields.IntField()
     vmode_turns: int = tortoise.fields.IntField()
     beige_turns: int = tortoise.fields.IntField()
-    original_creation_date: str = tortoise.fields.TextField()
-    latest_creation_date: str = tortoise.fields.TextField()
+    creation_date: str = tortoise.fields.TextField()
     soldiers: int = tortoise.fields.IntField()
     tanks: int = tortoise.fields.IntField()
     aircraft: int = tortoise.fields.IntField()
@@ -80,7 +63,7 @@ class Nations(tortoise.models.Model):
     missiles: int = tortoise.fields.IntField()
     nukes: int = tortoise.fields.IntField()
     snowflake: int = tortoise.fields.BigIntField(default=0)
-    last_updated: datetime.datetime = tortoise.fields.DatetimeField(auto_now=True)
+    last_updated: datetime.datetime = tortoise.fields.DatetimeField()
 
 
 class Cities(tortoise.models.Model):
@@ -121,4 +104,24 @@ class Cities(tortoise.models.Model):
     airforcebase: int = tortoise.fields.IntField()
     drydock: int = tortoise.fields.IntField()
     factory: int = tortoise.fields.IntField()
+    last_updated: datetime.datetime = tortoise.fields.DatetimeField()
+
+
+class Alliances(tortoise.models.Model):
+    """
+    Alliance index model.
+    """
+
+    id: int = tortoise.fields.IntField(pk=True)
+    deleted: bool = tortoise.fields.BooleanField(default=False)
+    name: str = tortoise.fields.TextField()
+    prev_name: str = tortoise.fields.TextField(default="")
+    acronym: str = tortoise.fields.TextField()
+    prev_acr: str = tortoise.fields.TextField(default="")
+    score: int = tortoise.fields.IntField()
+    color: str = tortoise.fields.TextField()
+    flag: str = tortoise.fields.TextField()
+    forum: str = tortoise.fields.TextField()
+    irc: str = tortoise.fields.TextField()
+    last_updated: datetime.datetime = tortoise.fields.DatetimeField()
 

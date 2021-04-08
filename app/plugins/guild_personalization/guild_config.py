@@ -19,9 +19,10 @@ import discord
 
 from core import models, constants
 from discord.ext import commands
+from .announcers import Announcers
 
 
-class GuildConfig(commands.Cog, name="guild config"):
+class GuildConfig(Announcers, commands.Cog, name="guild config"):
     """
     Various guild specific settings.
     """

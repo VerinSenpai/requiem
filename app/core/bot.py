@@ -83,7 +83,7 @@ class Requiem(commands.AutoShardedBot):
         _LOGGER.info("requiem has logged in as <%s:%s>!", self.user.name, self.user.id)
 
         plugins = (
-            plugin[:-3]
+            plugin.replace(".py", "")
             for plugin in os.listdir("plugins")
             if plugin not in ("__init__.py", "__pycache__")
         )

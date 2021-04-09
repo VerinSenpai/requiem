@@ -19,6 +19,7 @@ import discord
 import nekos
 
 from discord.ext import commands
+from core.bot import Requiem
 
 
 class VerinsLunchbox(commands.Cog, name="verins lunchbox"):
@@ -175,8 +176,5 @@ class VerinsLunchbox(commands.Cog, name="verins lunchbox"):
         await ctx.send(embed=embed)
 
 
-def setup(bot):
-    """
-    Setup function required by dpy. Adds VerinsLunchbox as a cog.
-    """
+def setup(bot: Requiem) -> None:
     bot.add_cog(VerinsLunchbox())

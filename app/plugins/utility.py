@@ -18,8 +18,9 @@
 import discord
 import time
 
-from discord import Colour
 from discord.ext import commands
+from core.bot import Requiem
+from discord import Colour
 
 
 class Utility(commands.Cog, name="utility"):
@@ -121,8 +122,5 @@ class Utility(commands.Cog, name="utility"):
         await ctx.send(embed=embed)
 
 
-def setup(bot):
-    """
-    Setup function required by dpy. Adds Utility as a cog.
-    """
+def setup(bot: Requiem):
     bot.add_cog(Utility())

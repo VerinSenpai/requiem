@@ -22,7 +22,7 @@ from core.bot import Requiem
 from core import models
 
 
-replacements = {
+REPLACEMENTS = {
     "%user%": lambda member: member.name,
     "%user_mention%": lambda member: member.mention,
     "%guild%": lambda member: member.guild.name,

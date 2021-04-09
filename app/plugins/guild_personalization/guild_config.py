@@ -19,7 +19,7 @@ import discord
 
 from core import models, constants
 from discord.ext import commands
-from .announcers import Announcers
+from .announcers import Announcers, REPLACEMENTS
 
 
 class GuildConfig(Announcers, commands.Cog, name="guild config"):
@@ -75,7 +75,7 @@ class GuildConfig(Announcers, commands.Cog, name="guild config"):
         if not message:
             message = "Welcome %user%!"
 
-        for key, value in constants.REPLACEMENTS.items():
+        for key, value in REPLACEMENTS.items():
             message = message.replace(key, value(ctx.author))
 
         embed = discord.Embed(
@@ -180,7 +180,7 @@ class GuildConfig(Announcers, commands.Cog, name="guild config"):
         if not message:
             message = "Farewell %user%!"
 
-        for key, value in constants.REPLACEMENTS.items():
+        for key, value in REPLACEMENTS.items():
             message = message.replace(key, value(ctx.author))
 
         embed = discord.Embed(

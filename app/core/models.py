@@ -44,12 +44,16 @@ class Nations(tortoise.models.Model):
     alliance_id: int = tortoise.fields.IntField()
     alliance_position: str = tortoise.fields.TextField()
     nation_name: str = tortoise.fields.TextField()
+    prev_nation_name: str = tortoise.fields.TextField(null=True)
     leader_name: str = tortoise.fields.TextField()
+    prev_leader_name: str = tortoise.fields.TextField(null=True)
     color: str = tortoise.fields.TextField()
     vmode: int = tortoise.fields.IntField()
     beigeturns: int = tortoise.fields.IntField()
     date: datetime = tortoise.fields.DatetimeField()
-    latest_date: datetime = tortoise.fields.DatetimeField()
+    is_reroll: bool = tortoise.fields.BooleanField(default=False)
+    is_deleted: bool = tortoise.fields.BooleanField(default=False)
+    last_seen: datetime = tortoise.fields.DatetimeField(auto_now=True)
 
 
 class AllianceHistory(tortoise.models.Model):

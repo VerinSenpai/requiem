@@ -17,11 +17,9 @@
 
 import aiohttp
 import asyncio
-import time
-import pytz
 
 from discord.ext import tasks
-from datetime import datetime, timezone
+from datetime import datetime
 from core import models
 from . import utils
 
@@ -31,14 +29,16 @@ class Scripts:
     def __init__(self, bot):
         self.bot = bot
         self.key = bot.config.pnw_api_key
-        self.gather_nations.start()
+        self.handle_nations.start()
 
     @tasks.loop(minutes=10)
-    async def gather_nations(self) -> None:
+    async def handle_nations(self) -> None:
         """
         Handles fetching of nations. Starts process_nations.
         """
         try:
+            update_start = datetime.now()
+            futures = []
             page = 0
 
             async with aiohttp.ClientSession() as session:
@@ -70,7 +70,16 @@ class Scripts:
                         break
 
                     for nation in nations:
-                        asyncio.create_task(self.process_nation(nation))
+                        future = asyncio.ensure_future(self.process_nation(nation))
+                        futures.append(future)
+
+            await asyncio.gather(*futures)
+
+            nations = await models.Nations.filter(is_deleted=False, last_seen__lt=update_start)
+            for entry in nations:
+                asyncio.create_task(self.nation_deleted(entry))
+                entry.is_deleted = True
+                await entry.save()
 
         except Exception as exc:
             await self.bot.on_error(exc, "gather_nations")
@@ -78,6 +87,10 @@ class Scripts:
     async def process_nation(self, nation: dict) -> None:
         try:
             entry, created = await models.Nations.get_or_create(defaults=nation, nation_id=nation["id"])
+
+            if entry.is_deleted:
+                entry.is_deleted = False
+                entry.is_reroll = True
 
             if int(nation["alliance_id"]):
                 if int(nation["alliance_id"]) != entry.alliance_id:
@@ -95,6 +108,12 @@ class Scripts:
                 elif created:
                     await models.AllianceHistory.create(nation_id=entry.nation_id, alliance_id=entry.alliance_id)
 
+            if nation["nation_name"] != entry.nation_name:
+                entry.prev_nation_name = entry.nation_name
+
+            if nation["leader_name"] != entry.leader_name:
+                entry.prev_leader_name = entry.prev_leader_name
+
             if nation["vmode"] > entry.vmode == 0:
                 asyncio.create_task(self.nation_entered_vmode(nation, entry))
 
@@ -107,10 +126,6 @@ class Scripts:
             if 0 == nation["beigeturns"] < entry.beigeturns:
                 asyncio.create_task(self.nation_exited_beige(nation, entry))
 
-            creation_date = datetime.strptime(nation["date"], "%Y-%m-%d %H:%M:%S")
-            if creation_date != entry.date.replace(tzinfo=None):
-                asyncio.create_task(self.nation_rerolled(nation, entry))
-
             entry.alliance_id = nation["alliance_id"]
             entry.alliance_position = nation["alliance_position"]
             entry.nation_name = nation["nation_name"]
@@ -118,7 +133,6 @@ class Scripts:
             entry.color = nation["color"]
             entry.vmode = nation["vmode"]
             entry.beigeturns = nation["beigeturns"]
-            entry.latest_date = creation_date
 
             await entry.save()
 
@@ -152,3 +166,9 @@ class Scripts:
     async def nation_rerolled(self, nation: dict, entry: models.Nations) -> None:
         channel = self.bot.get_channel(812669787511324692)
         await channel.send(f"nation rerolled {nation['nation_name']}")
+
+    async def nation_deleted(self, entry: models.Nations) -> None:
+        channel = self.bot.get_channel(812669787511324692)
+        await channel.send(f"nation deleted {entry.nation_name}")
+
+

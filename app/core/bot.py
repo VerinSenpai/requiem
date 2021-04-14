@@ -123,10 +123,7 @@ class Requiem(commands.AutoShardedBot):
         """
         exc = sys.exc_info()[1]
 
-        if isinstance(exc, discord.Forbidden):
-            return
-
-        await self.report_error(exc, f"dispatching event <{event_method}>")
+        await self.report_error(exc, event_method)
 
     async def on_command_error(
         self, ctx: commands.Context, exc: commands.CommandError
@@ -143,7 +140,7 @@ class Requiem(commands.AutoShardedBot):
             return
 
         elif isinstance(exc, commands.CommandInvokeError):
-            await self.report_error(exc, f"dispatching command <{ctx.command.name}>")
+            await self.report_error(exc, ctx.command.name)
             response = random.choice(constants.UNHANDLED)
 
         elif exc_name in constants.HANDLED:
@@ -171,7 +168,7 @@ class Requiem(commands.AutoShardedBot):
                 if owner := self.get_user(owner_id):
                     await owner.send(file=file)
 
-        _LOGGER.exception(f"requiem encountered an exception while {action}!", exc_info=exc)
+        _LOGGER.exception(f"requiem encountered an exception while running <{action}>!", exc_info=exc)
 
     async def on_command_completion(self, ctx: commands.Context) -> None:
         """

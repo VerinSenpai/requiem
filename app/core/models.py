@@ -16,7 +16,8 @@
 
 
 import tortoise
-import datetime
+
+from datetime import datetime
 
 
 class Guilds(tortoise.models.Model):
@@ -36,92 +37,27 @@ class Guilds(tortoise.models.Model):
 
 class Nations(tortoise.models.Model):
     """
-    Nation index model.
+    Nation index and event checking model.
     """
 
-    id: int = tortoise.fields.IntField(pk=True)
-    deleted: bool = tortoise.fields.BooleanField(default=False)
-    reroll: bool = tortoise.fields.BooleanField(default=False)
-    name: str = tortoise.fields.TextField()
-    prev_name: str = tortoise.fields.TextField(default="")
-    leader: str = tortoise.fields.TextField()
-    prev_leader: str = tortoise.fields.TextField(default="")
-    alliance: int = tortoise.fields.IntField()
+    nation_id: int = tortoise.fields.IntField(pk=True)
+    alliance_id: int = tortoise.fields.IntField()
     alliance_position: str = tortoise.fields.TextField()
-    war_policy: str = tortoise.fields.TextField()
-    dom_policy: str = tortoise.fields.TextField()
+    nation_name: str = tortoise.fields.TextField()
+    leader_name: str = tortoise.fields.TextField()
     color: str = tortoise.fields.TextField()
-    cities: int = tortoise.fields.IntField()
-    score: int = tortoise.fields.IntField()
-    vmode_turns: int = tortoise.fields.IntField()
-    beige_turns: int = tortoise.fields.IntField()
-    creation_date: str = tortoise.fields.TextField()
-    soldiers: int = tortoise.fields.IntField()
-    tanks: int = tortoise.fields.IntField()
-    aircraft: int = tortoise.fields.IntField()
-    ships: int = tortoise.fields.IntField()
-    missiles: int = tortoise.fields.IntField()
-    nukes: int = tortoise.fields.IntField()
-    snowflake: int = tortoise.fields.BigIntField(default=0)
-    last_updated: datetime.datetime = tortoise.fields.DatetimeField()
+    vmode: int = tortoise.fields.IntField()
+    beigeturns: int = tortoise.fields.IntField()
+    date: datetime = tortoise.fields.DatetimeField()
+    latest_date: datetime = tortoise.fields.DatetimeField()
 
 
-class Cities(tortoise.models.Model):
+class AllianceHistory(tortoise.models.Model):
     """
-    City index model.
-    """
-    id: int = tortoise.fields.IntField(pk=True)
-    nation: int = tortoise.fields.IntField()
-    name: str = tortoise.fields.TextField()
-    date: datetime.datetime = tortoise.fields.DatetimeField()
-    powered: bool = tortoise.fields.BooleanField()
-    infra: int = tortoise.fields.IntField()
-    land: int = tortoise.fields.IntField()
-    nuclearpower: int = tortoise.fields.IntField()
-    oilpower: int = tortoise.fields.IntField()
-    coalpower: int = tortoise.fields.IntField()
-    windpower: int = tortoise.fields.IntField()
-    bauxitemine: int = tortoise.fields.IntField()
-    coalmine: int = tortoise.fields.IntField()
-    ironmine: int = tortoise.fields.IntField()
-    leadmine: int = tortoise.fields.IntField()
-    oilwell: int = tortoise.fields.IntField()
-    uramine: int = tortoise.fields.IntField()
-    farm: int = tortoise.fields.IntField()
-    aluminumrefinery: int = tortoise.fields.IntField()
-    munitionsfactory: int = tortoise.fields.IntField()
-    steelmill: int = tortoise.fields.IntField()
-    gasrefinery: int = tortoise.fields.IntField()
-    hospital: int = tortoise.fields.IntField()
-    policestation: int = tortoise.fields.IntField()
-    recyclingcenter: int = tortoise.fields.IntField()
-    subway: int = tortoise.fields.IntField()
-    mall: int = tortoise.fields.IntField()
-    bank: int = tortoise.fields.IntField()
-    supermarket: int = tortoise.fields.IntField()
-    stadium: int = tortoise.fields.IntField()
-    barracks: int = tortoise.fields.IntField()
-    airforcebase: int = tortoise.fields.IntField()
-    drydock: int = tortoise.fields.IntField()
-    factory: int = tortoise.fields.IntField()
-    last_updated: datetime.datetime = tortoise.fields.DatetimeField()
-
-
-class Alliances(tortoise.models.Model):
-    """
-    Alliance index model.
+    Nation alliance history model.
     """
 
-    id: int = tortoise.fields.IntField(pk=True)
-    deleted: bool = tortoise.fields.BooleanField(default=False)
-    name: str = tortoise.fields.TextField()
-    prev_name: str = tortoise.fields.TextField(default="")
-    acronym: str = tortoise.fields.TextField()
-    prev_acr: str = tortoise.fields.TextField(default="")
-    score: int = tortoise.fields.IntField()
-    color: str = tortoise.fields.TextField()
-    flag: str = tortoise.fields.TextField()
-    forum: str = tortoise.fields.TextField()
-    irc: str = tortoise.fields.TextField()
-    last_updated: datetime.datetime = tortoise.fields.DatetimeField()
-
+    id: int = tortoise.fields.IntField(generated=True, pk=True)
+    nation_id: int = tortoise.fields.IntField()
+    alliance_id: int = tortoise.fields.IntField()
+    date_recorded: datetime = tortoise.fields.DatetimeField(auto_now_add=True)

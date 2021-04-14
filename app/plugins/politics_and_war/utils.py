@@ -44,21 +44,6 @@ async def nation_lookup(target: str or int) -> models.Nations:
         q = Q(id=target, snowflake=target, join_type="OR")
 
     else:
-        q = Q(name=target, leader=target, join_type="OR")
+        q = Q(name__iexact=target, leader__iexact=target, join_type="OR")
 
     return await models.Nations.get_or_none(q)
-
-
-async def alliance_lookup(target: str or int) -> models.Alliances:
-    """
-    Look up an alliance using a string. Can be ID, name, or acronym.
-    """
-    target = str(target).lower()
-
-    if target.isnumeric():
-        q = Q(id=target)
-
-    else:
-        q = Q(name=target, acronym=target, join_type="OR")
-
-    return await models.Alliances.get_or_none(q)

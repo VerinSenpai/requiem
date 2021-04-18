@@ -78,7 +78,7 @@ class Scripts:
                     break
 
                 for nation in nations:
-                    future = asyncio.ensure_future(self.process_nation(nation))
+                    future = asyncio.create_task(self.process_nation(nation))
                     futures.append(future)
 
         await asyncio.gather(*futures)
@@ -122,7 +122,7 @@ class Scripts:
         if nation["leader_name"] != entry.leader_name:
             entry.prev_leader_name = entry.prev_leader_name
 
-        if "beige" != nation["color"] != entry.color:
+        if "beige" != nation["color"] != entry.color != "beige":
             asyncio.create_task(self.nation_changed_color(nation))
 
         if nation["vmode"] > entry.vmode == 0:
@@ -157,44 +157,44 @@ class Scripts:
 
     async def nation_applied_alliance(self, nation: dict) -> None:
         channel = self.bot.get_channel(812669787511324692)
-        await channel.send(f"nation applied to join alliance {nation['nation_name']}")
+        await channel.send(f"nation applied to join alliance {nation['nation_name']} {nation['id']}")
 
     async def nation_joined_alliance(self, nation: dict) -> None:
         channel = self.bot.get_channel(812669787511324692)
-        await channel.send(f"nation joined alliance {nation['nation_name']}")
+        await channel.send(f"nation joined alliance {nation['nation_name']} {nation['id']}")
 
     async def nation_changed_color(self, nation: dict) -> None:
         channel = self.bot.get_channel(812669787511324692)
-        await channel.send(f"nation changed color {nation['nation_name']}")
+        await channel.send(f"nation changed color {nation['nation_name']} {nation['id']}")
 
     async def nation_entered_vmode(self, nation: dict) -> None:
         channel = self.bot.get_channel(812669787511324692)
-        await channel.send(f"nation entered vmode {nation['nation_name']}")
+        await channel.send(f"nation entered vmode {nation['nation_name']} {nation['id']}")
 
     async def nation_exited_vmode(self, nation: dict) -> None:
         channel = self.bot.get_channel(812669787511324692)
-        await channel.send(f"nation exited vmode {nation['nation_name']}")
+        await channel.send(f"nation exited vmode {nation['nation_name']} {nation['id']}")
 
     async def nation_entered_beige(self, nation: dict) -> None:
         channel = self.bot.get_channel(812669787511324692)
-        await channel.send(f"nation entered beige {nation['nation_name']}")
+        await channel.send(f"nation entered beige {nation['nation_name']} {nation['id']}")
 
     async def nation_exited_beige(self, nation: dict) -> None:
         channel = self.bot.get_channel(812669787511324692)
-        await channel.send(f"nation exited beige {nation['nation_name']}")
+        await channel.send(f"nation exited beige {nation['nation_name']} {nation['id']}")
 
     async def nation_built_missiles(self, nation: dict) -> None:
         channel = self.bot.get_channel(812669787511324692)
-        await channel.send(f"nation built missile {nation['nation_name']}")
+        await channel.send(f"nation built missile {nation['nation_name']} {nation['id']}")
 
     async def nation_built_nukes(self, nation: dict) -> None:
         channel = self.bot.get_channel(812669787511324692)
-        await channel.send(f"nation built nuke {nation['nation_name']}")
+        await channel.send(f"nation built nuke {nation['nation_name']} {nation['id']}")
 
     async def nation_rerolled(self, nation: dict, entry: models.Nations) -> None:
         channel = self.bot.get_channel(812669787511324692)
-        await channel.send(f"nation rerolled {nation['nation_name']}")
+        await channel.send(f"nation rerolled {nation['nation_name']} {nation['id']}")
 
     async def nation_deleted(self, entry: models.Nations) -> None:
         channel = self.bot.get_channel(812669787511324692)
-        await channel.send(f"nation deleted {entry.nation_name}")
+        await channel.send(f"nation deleted {entry.nation_name} {entry.nation_id}")

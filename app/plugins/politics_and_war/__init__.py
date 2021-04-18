@@ -18,7 +18,9 @@
 from core.bot import Requiem
 
 from .politics_and_war import PoliticsAndWar
+from .public import PublicAccessScripts
 
 
 def setup(bot: Requiem) -> None:
-    bot.add_cog(PoliticsAndWar(bot))
+    bot.add_cog(PublicAccessScripts(bot))
+    bot.add_cog(PoliticsAndWar())

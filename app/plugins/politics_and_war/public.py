@@ -18,13 +18,13 @@
 import aiohttp
 import asyncio
 
-from discord.ext import tasks
+from discord.ext import tasks, commands
 from datetime import datetime
 from core import models
 from . import utils
 
 
-class Scripts:
+class PublicAccessScripts(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot

@@ -16,10 +16,9 @@
 
 
 from discord.ext import commands, tasks
-from .scripts import Scripts
 
 
-class PoliticsAndWar(Scripts, commands.Cog):
+class PoliticsAndWar(commands.Cog):
     """
     Caching and event scripts for Politics and War.
     """

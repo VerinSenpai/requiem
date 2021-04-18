@@ -41,16 +41,19 @@ class Nations(tortoise.models.Model):
     """
 
     nation_id: int = tortoise.fields.IntField(pk=True)
-    alliance_id: int = tortoise.fields.IntField()
-    alliance_position: str = tortoise.fields.TextField()
     nation_name: str = tortoise.fields.TextField()
     prev_nation_name: str = tortoise.fields.TextField(null=True)
     leader_name: str = tortoise.fields.TextField()
     prev_leader_name: str = tortoise.fields.TextField(null=True)
-    color: str = tortoise.fields.TextField()
+    alliance_id: int = tortoise.fields.IntField()
+    alliance_position: str = tortoise.fields.TextField()
+    score: int = tortoise.fields.IntField()
     vmode: int = tortoise.fields.IntField()
     beigeturns: int = tortoise.fields.IntField()
+    color: str = tortoise.fields.TextField()
     date: datetime = tortoise.fields.DatetimeField()
+    missiles: int = tortoise.fields.IntField()
+    nukes: int = tortoise.fields.IntField()
     is_reroll: bool = tortoise.fields.BooleanField(default=False)
     is_deleted: bool = tortoise.fields.BooleanField(default=False)
     last_seen: datetime = tortoise.fields.DatetimeField(auto_now=True)
@@ -65,3 +68,16 @@ class AllianceHistory(tortoise.models.Model):
     nation_id: int = tortoise.fields.IntField()
     alliance_id: int = tortoise.fields.IntField()
     date_recorded: datetime = tortoise.fields.DatetimeField(auto_now_add=True)
+
+
+class Alliances(tortoise.models.Model):
+    """
+    Alliance index model.
+    """
+
+    alliance_id: int = tortoise.fields.IntField(pk=True)
+    acronym: str = tortoise.fields.TextField()
+    name: str = tortoise.fields.TextField()
+    color: str = tortoise.fields.TextField()
+    is_deleted: bool = tortoise.fields.BooleanField(default=False)
+    last_seen: datetime = tortoise.fields.DatetimeField(auto_now=True)

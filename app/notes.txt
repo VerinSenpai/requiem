@@ -1,0 +1,69 @@
+                {
+                    nations(first:200, page: #) {
+                        data {
+                            id
+                            nation_name
+                            leader_name
+                            alliance
+                            alliance_id
+                            alliance_position
+                            score
+                            num_cities
+                            warpolicy
+                            dompolicy
+                            flag
+                            population
+                            vmode
+                            beigeturns
+                            continent
+                            color
+                            date
+                            soldiers
+                            tanks
+                            ships
+                            aircraft
+                            missiles
+                            nukes
+
+                            cities
+
+                            projects
+                            adv_city_planning
+                            adv_engineering_corps
+                            arable_land_agency
+                            armss
+                            bauxitew
+                            city_planning
+                            clinical_research_center
+                            cfce
+                            cia
+                            egr
+                            green_tech
+                            irond
+                            ironw
+                            itc
+                            massirr
+                            mlp
+                            moon_landing
+                            nrf
+                            pirate_economy
+                            propb
+                            recycling_initiative
+                            space_program
+                            specialized_police_training
+                            spy_satellite
+                            telecom_satellite
+                            uap
+                            vds
+
+                            offensive_wars
+                            defensive_wars
+                            received_bankrecs
+                            sent_bankrecs
+
+                            treasures
+
+
+                        }
+                    }
+                }

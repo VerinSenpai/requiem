@@ -1,9 +1,9 @@
 .idea
 *.pyc
-app/plugins/dev_tools.py
-app/db.sqlite3
-app/db.sqlite3-shm
-app/db.sqlite3-wal
-app/config.yaml
+requiem/plugins/dev_tools.py
+requiem/db.sqlite3
+requiem/db.sqlite3-shm
+requiem/db.sqlite3-wal
+requiem/config.yaml
 venv/
 .vscode/

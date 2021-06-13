@@ -15,12 +15,5 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from core.bot import Requiem
-
-from .politics_and_war import PoliticsAndWar
-from .public import PublicAccessScripts
-
-
-def setup(bot: Requiem) -> None:
-    bot.add_cog(PublicAccessScripts(bot))
-    bot.add_cog(PoliticsAndWar())
+__version__ = "3.0.0"
+__author__ = "God Empress Verin"

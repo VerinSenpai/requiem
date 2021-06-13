@@ -15,12 +15,12 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
+from cattr import global_converter
+
+import logging
 import typing
 import attr
 import yaml
-import logging
-
-from cattr import global_converter
 
 
 _LOGGER = logging.getLogger("requiem.config")
@@ -30,16 +30,14 @@ T = typing.TypeVar("T")
 @attr.s(auto_attribs=True)
 class Config:
     """
-    Bot configuration object.
+    Config object.
     """
 
     discord_token: str
     default_prefix: str = "r!"
-    owner_ids: typing.List[int] = attr.ib(factory=list)
-    show_statuses: bool = True
+    owner_ids: list = []
     prefix_on_mention: bool = True
     report_errors: bool = True
-    pnw_api_key: str = ""
     postgres_host: str or int = "localhost"
     postgres_port: int = 5432
     postgres_database: str = "postgres"
@@ -47,16 +45,17 @@ class Config:
     postgres_password: str = ""
 
 
-def load() -> T:
+def get_config() -> T:
     """
-    Loads the bots configuration from the config.yaml file.
+    Fetches config.yaml and returns Config object.
     """
     try:
-        with open("config.yaml") as fs:
-            data = yaml.safe_load(fs)
+        with open("config.yaml") as stream:
+            data = yaml.safe_load(stream)
         return global_converter.structure(data, Config)
 
-    except (TypeError, ValueError, FileNotFoundError):
-        _LOGGER.warning(
-            "requiem is unable to start because you have not filled out the config.yaml file properly!"
-        )
+    except FileNotFoundError:
+        _LOGGER.warning("requiem was unable to find the config.yaml file!")
+
+    except (TypeError, ValueError) as exc:
+        _LOGGER.warning("requiem was unable to read the config.yaml file!")

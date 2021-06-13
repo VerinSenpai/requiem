@@ -19,10 +19,10 @@ from discord import Colour
 
 
 prefix_responses = (
-    lambda p: f"What'd I do? <{p}>",
-    lambda p: f"You called? <{p}>",
-    lambda p: f"Whats up doc? <{p}>",
-    lambda p: f"Now where'd I put that prefix again? Oh! There it is! <{p}>"
+    lambda p: f"What'd I do? {p}",
+    lambda p: f"You called? {p}",
+    lambda p: f"Whats up doc? {p}",
+    lambda p: f"Now where'd I put that prefix again? Oh! There it is! {p}",
 )
 
 

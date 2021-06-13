@@ -65,7 +65,7 @@ class Requiem(commands.AutoShardedBot):
         for plugin in plugins:
             try:
                 self.load_extension(f"plugins.{plugin}")
-                _LOGGER.info("requiem has successfully loaded the plugin <%s>!", plugin)
+                _LOGGER.info("requiem has loaded the plugin <%s>!", plugin)
 
             except Exception as exc:
                 await self.report_error(exc)
@@ -125,7 +125,7 @@ class Requiem(commands.AutoShardedBot):
         """
         prefix = await self.get_string_prefix(message)
         colour = await self.get_colour(message)
-        response = random.choice(constants.prefix_responses)(prefix)
+        response = random.choice(constants.prefix_responses)(f"**{prefix}**")
         embed = discord.Embed(description=response, colour=colour)
         await message.channel.send(embed=embed)
 

@@ -50,13 +50,15 @@ async def setup_database(creds: config.Config) -> None:
         _LOGGER.info("requiem has connected to the postgres server at <%s>!", url)
 
     except (
-            tortoise.exceptions.DBConnectionError,
-            asyncpg.InvalidPasswordError,
-            ConnectionRefusedError,
-            socket.gaierror
+        tortoise.exceptions.DBConnectionError,
+        asyncpg.InvalidPasswordError,
+        ConnectionRefusedError,
+        socket.gaierror,
     ):
         await tortoise.Tortoise.init(db_url="sqlite://db.sqlite3", modules=modules)
-        _LOGGER.warning("requiem was unable to connect to a postgres server! sqlite will be used instead!")
+        _LOGGER.warning(
+            "requiem was unable to connect to a postgres server! sqlite will be used instead!"
+        )
 
     await tortoise.Tortoise.generate_schemas()
 

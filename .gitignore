@@ -7,3 +7,4 @@ requiem/db.sqlite3-wal
 requiem/config.yaml
 venv/
 .vscode/
+requiem/plugins/test.py

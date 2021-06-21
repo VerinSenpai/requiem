@@ -20,7 +20,7 @@ import tortoise
 
 class Guilds(tortoise.models.Model):
     """
-    Guild model.
+    Guild model for basic guild configuration.
     """
 
     snowflake: int = tortoise.fields.BigIntField()

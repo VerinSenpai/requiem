@@ -19,9 +19,9 @@ from discord import Colour
 
 
 prefix_responses = (
-    lambda p: f"What'd I do? {p}",
-    lambda p: f"You called? {p}",
-    lambda p: f"Whats up doc? {p}",
+    lambda p: f"What'd I do? My prefix is {p}",
+    lambda p: f"You called? My prefix is {p}",
+    lambda p: f"Whats up doc? My prefix is {p}",
     lambda p: f"Now where'd I put that prefix again? Oh! There it is! {p}",
 )
 
@@ -68,8 +68,7 @@ unhandled_errors = (
     "The square root of pi is a fish.",
     "Boki touched me.",
     "The cake is a lie.",
-    "Wanna see me do it again?"
-    "I feel like we've been here before.",
+    "Wanna see me do it again?" "I feel like we've been here before.",
     "Lugging a spy satellite to the nearest subway and asking them to toast it.",
     "Damned pagans and their interdimensional space gods!",
     "Roses are red\nsilent as a mouse\nyour door is unlocked\nI'm in your house",
@@ -94,8 +93,7 @@ unhandled_errors = (
     "THIS IS A MIROR YOU ARE A TYPO",
     "Red kinda sus.",
     "Now where did I put that error message?",
-    "That's an error. hold the mayo."
-    "I blame the weebs."
+    "That's an error. hold the mayo." "I blame the weebs.",
 )
 
 

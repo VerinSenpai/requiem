@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from core import config, models, constants
+from core import config, models, constants, context
 from discord.ext import commands
 from aiocache import Cache
 
@@ -80,54 +80,39 @@ class Requiem(commands.AutoShardedBot):
         await super().close()
         await tortoise.Tortoise.close_connections()
 
-    async def get_context(self, message: discord.Message, *, cls=commands.Context) -> commands.Context:
-        """
-        Overwrites default get_context method to insert context colour.
-        """
-        ctx = await super().get_context(message)
-        ctx.colour = await self.get_colour(message)
-        return ctx
-
-    async def get_prefix(self, message: discord.Message) -> str:
-        """
-        Fetches string prefix and determines if a string or mention prefix will be used for command invocation.
-        """
-        string_prefix = await self.get_string_prefix(message)
-        return commands.when_mentioned_or(string_prefix)(self, message)
-
-    async def get_string_prefix(self, message: discord.Message) -> str:
-        """
-        Fetches string prefix using message context.
-        """
-        if message.guild:
-            data = await self.cache.get(message.guild.id, default={"prefix": self.command_prefix})
-            prefix = data["prefix"]
-        else:
-            prefix = self.command_prefix
-
-        return prefix
-
     async def get_colour(self, message: discord.Message) -> discord.Colour:
         """
-        Fetches embed colour using message context.
+        Fetches embed colour based on message context.
         """
         if message.guild:
-            data = await self.cache.get(message.guild.id, default={"colour": "purple"})
-            colour = data["colour"]
+            cache = await self.cache.get(message.guild.id)
+            colour = cache.colour
         else:
             colour = "purple"
 
         return constants.colours[colour]()
 
-    async def state_prefix(self, message: discord.Message) -> None:
+    async def get_prefix(self, message: discord.Message) -> str:
         """
-        States the given prefix using a random satire string.
+        Fetches prefix based on message context.
         """
-        prefix = await self.get_string_prefix(message)
-        colour = await self.get_colour(message)
-        response = random.choice(constants.prefix_responses)(f"**{prefix}**")
-        embed = discord.Embed(description=response, colour=colour)
-        await message.channel.send(embed=embed)
+        if message.guild:
+            cache = await self.cache.get(message.guild.id)
+            prefix = cache.prefix
+        else:
+            prefix = self.command_prefix
+
+        return prefix
+
+    async def get_context(
+        self, message: discord.Message, *, cls=context.Context
+    ) -> context.Context:
+        """
+        Inserts colour into context.
+        """
+        ctx = await super().get_context(message, cls=context.Context)
+        ctx.colour = await self.get_colour(message)
+        return ctx
 
     async def report_error(self, exc: Exception) -> None:
         """
@@ -147,13 +132,7 @@ class Requiem(commands.AutoShardedBot):
                 with contextlib.suppress(discord.Forbidden, discord.NotFound):
                     await owner.send(file=file)
 
-    async def on_command_completion(self, ctx: commands.Context) -> None:
-        """
-        Logs successful command execution to console.
-        """
-        _LOGGER.info("command <%s> executed successfully!", ctx.command)
-
-    async def on_command_error(self, ctx: commands.Context, exc: Exception) -> None:
+    async def on_command_error(self, ctx: context.Context, exc: Exception) -> None:
         """
         Catches and reports or handles unhandled command exceptions.
         """
@@ -195,16 +174,21 @@ class Requiem(commands.AutoShardedBot):
         """
         Responds to prefix requests or calls process commands.
         """
-        bot_mentions = (self.user.mention, '<@!%s>' % self.user.id)
+        bot_mentions = (self.user.mention, "<@!%s>" % self.user.id)
 
         if message.content in bot_mentions:
             if self.credentials.prefix_on_mention:
-                await self.state_prefix(message)
+                ctx = await self.get_context(message)
+                response = random.choice(constants.prefix_responses)(f"**{ctx.prefix}**")
+                embed = discord.Embed(description=response, colour=ctx.colour)
+                await ctx.send(embed=embed)
 
         else:
             await self.process_commands(message)
 
-    async def on_message_edit(self, message: discord.Message, message_edit: discord.Message) -> None:
+    async def on_message_edit(
+        self, message: discord.Message, message_edit: discord.Message
+    ) -> None:
         """
         Calls on_message on message edit.
         """
@@ -217,14 +201,10 @@ class Requiem(commands.AutoShardedBot):
         saved, created = await models.Guilds.get_or_create(
             defaults={"prefix": self.credentials.default_prefix}, snowflake=guild.id
         )
-        data = await self.cache.get(guild.id)
+        await self.cache.set(guild.id, saved)
 
         if created:
             _LOGGER.info("requiem has created a config entry for guild <%s>!", guild.id)
-
-        if not data:
-            data = {"prefix": saved.prefix, "colour": saved.colour}
-            await self.cache.add(guild.id, data)
 
     async def on_guild_available(self, guild: discord.Guild) -> None:
         """

@@ -209,7 +209,7 @@ class Requiem(commands.AutoShardedBot):
         self, message: discord.Message, message_edit: discord.Message
     ) -> None:
         """
-        Calls on_message on message edit.
+        Forwards on_message_edit to on_message.
         """
         await self.on_message(message_edit)
 

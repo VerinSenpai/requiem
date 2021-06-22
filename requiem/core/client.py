@@ -62,7 +62,26 @@ class Requiem(commands.AutoShardedBot):
             if plugin not in ("__init__.py", "__pycache__")
         )
 
-        for plugin in plugins:
+    def load_extension(self, name: str, *, package=None):
+        """
+        Adds logging to extension loading.
+        """
+        super().load_extension(name, package=package)
+        _LOGGER.info("plugin <%s> loaded!", name)
+
+    def unload_extension(self, name: str, *, package=None) -> None:
+        """
+        Adds logging to extension unloading.
+        """
+        super().unload_extension(name, package=package)
+        _LOGGER.info("plugin <%s> unloaded!", name)
+
+    def reload_extension(self, name: str, *, package=None) -> None:
+        """
+        Adds logging to extension reloading.
+        """
+        super().reload_extension(name, package=package)
+        _LOGGER.info("plugin <%s> reloaded!", name)
             try:
                 self.load_extension(f"plugins.{plugin}")
                 _LOGGER.info("requiem has loaded the plugin <%s>!", plugin)

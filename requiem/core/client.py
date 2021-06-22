@@ -24,6 +24,7 @@ import traceback
 import tortoise
 import logging
 import discord
+import typing
 import random
 import sys
 import os

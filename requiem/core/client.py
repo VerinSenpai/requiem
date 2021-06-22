@@ -52,12 +52,10 @@ class Requiem(commands.AutoShardedBot):
 
         self.cache = Cache(Cache.MEMORY)
 
-    async def start(self, *args, **kwargs) -> None:
-        """
-        Inserts plugin loading into start coroutine.
-        """
-        plugins = (
-            plugin.replace(".py", "")
+    @property
+    def all_plugins(self) -> typing.Generator[str, any, None]:
+        return (
+            f"plugins." + plugin.replace(".py", "")
             for plugin in os.listdir("plugins")
             if plugin not in ("__init__.py", "__pycache__")
         )
@@ -82,9 +80,14 @@ class Requiem(commands.AutoShardedBot):
         """
         super().reload_extension(name, package=package)
         _LOGGER.info("plugin <%s> reloaded!", name)
+
+    async def start(self, *args, **kwargs) -> None:
+        """
+        Inserts plugin loading into start coroutine.
+        """
+        for plugin in self.all_plugins:
             try:
-                self.load_extension(f"plugins.{plugin}")
-                _LOGGER.info("requiem has loaded the plugin <%s>!", plugin)
+                self.load_extension(plugin)
 
             except Exception as exc:
                 await self.report_error(exc)

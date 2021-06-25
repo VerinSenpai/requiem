@@ -75,13 +75,6 @@ class Requiem(commands.AutoShardedBot):
         super().unload_extension(name, package=package)
         _LOGGER.info("plugin <%s> unloaded!", name)
 
-    def reload_extension(self, name: str, *, package=None) -> None:
-        """
-        Adds logging to extension reloading.
-        """
-        super().reload_extension(name, package=package)
-        _LOGGER.info("plugin <%s> reloaded!", name)
-
     async def start(self, *args, **kwargs) -> None:
         """
         Inserts plugin loading into start coroutine.

@@ -63,9 +63,9 @@ async def setup_database(creds: config.Config) -> None:
     await tortoise.Tortoise.generate_schemas()
 
 
-def setup_logger() -> None:
+def setup_logging() -> None:
     """
-    Sets up logging config and removes exc_info from discord logging. (I can do my own exception handling thanks)
+    Setup logging basicConfig and add discord logging filters.
     """
     colorlog.basicConfig(
         level=logging.INFO,
@@ -73,20 +73,21 @@ def setup_logger() -> None:
                "%(thin)s%(message)s%(reset)s",
     )
 
-    class DiscordLoggingFilter(logging.Filter):
-        def filter(self, record):
+    class ShardLogFilter(logging.Filter):
+        def filter(self, record) -> bool:
             record.exc_info = None
             return True
 
-    dsl = colorlog.getLogger("discord.shard")
-    dsl.addFilter(DiscordLoggingFilter())
+    shard_logger = colorlog.getLogger("discord.shard")
+    shard_logger.addFilter(ShardLogFilter())
 
 
 def main() -> None:
     """
-    Fetches credentials. Connects  to database. Starts Requiem. Ensures Requiem closes out properly.
+    Runs pre-run setup and starts Requiem.
     """
-    setup_logger()
+    setup_logging()
+
     loop = asyncio.get_event_loop()
     creds = config.get_config()
     requiem = client.Requiem(creds)

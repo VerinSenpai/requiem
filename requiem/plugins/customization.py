@@ -33,10 +33,10 @@ class Customization(commands.Cog, name="customization"):
         """
         Set the command prefix for this guild.
         """
-        gcc = await models.Guilds.get(snowflake=ctx.guild.id)
+        guild_config = await models.Guilds.get(snowflake=ctx.guild.id)
         prefix = prefix or ctx.bot.command_prefix
 
-        if gcc.prefix == prefix:
+        if guild_config.prefix == prefix:
             output = f"The prefix is already set to <{prefix}>!"
 
         elif len(prefix) > 4:
@@ -44,9 +44,9 @@ class Customization(commands.Cog, name="customization"):
 
         else:
             output = f"Alright! The prefix is set to <{prefix}>!"
-            gcc.prefix = prefix
-            await gcc.save()
-            await ctx.bot.cache.set(ctx.guild.id, gcc)
+            guild_config.prefix = prefix
+            await guild_config.save()
+            await ctx.bot.cache.set(ctx.guild.id, guild_config)
 
         embed = discord.Embed(description=output, colour=ctx.colour)
         await ctx.send(embed=embed)
@@ -58,11 +58,11 @@ class Customization(commands.Cog, name="customization"):
         """
         Set the embed colour for this guild.
         """
-        gcc = await models.Guilds.get(snowflake=ctx.guild.id)
+        guild_config = await models.Guilds.get(snowflake=ctx.guild.id)
         colour = colour or "purple"
         available_colours = constants.colours.keys()
 
-        if gcc.colour == colour:
+        if guild_config.colour == colour:
             output = f"The embed colour is already set to <{colour}>!"
 
         elif colour not in available_colours:
@@ -74,9 +74,9 @@ class Customization(commands.Cog, name="customization"):
         else:
             output = f"Alright! The embed colour is set to <{colour}>!\n" \
                      f"The change will take affect in the next embed!"
-            gcc.colour = colour
-            await gcc.save()
-            await ctx.bot.cache.set(ctx.guild.id, gcc)
+            guild_config.colour = colour
+            await guild_config.save()
+            await ctx.bot.cache.set(ctx.guild.id, guild_config)
 
         embed = discord.Embed(description=output, colour=ctx.colour)
         await ctx.send(embed=embed)

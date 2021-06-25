@@ -39,11 +39,10 @@ class Developer(commands.Cog, name="developer"):
         if ctx.invoked_subcommand:
             return
 
-        all_plugins = tuple(ctx.bot.all_plugins)
         loaded_plugins = ctx.bot.extensions.keys()
         plugin_states = []
 
-        for plugin in all_plugins:
+        for plugin in tuple(ctx.bot.all_plugins):
             if plugin == self.last_plugin:
                 plugin += " (Most Recent)"
 
@@ -61,60 +60,75 @@ class Developer(commands.Cog, name="developer"):
 
     @plugins.command(brief="Load a given plugin.", aliases=("l",))
     @commands.is_owner()
-    async def load(self, ctx: context.Context, plugin: str) -> None:
+    async def load(self, ctx: context.Context, plugin: str = None) -> None:
         """
         Load a given plugin.
         """
-        try:
-            ctx.bot.load_extension(plugin)
-            self.last_plugin = plugin
-            output = "The plugin <%s> has been loaded successfully!" % plugin
+        plugin = plugin or self.last_plugin
 
-        except commands.ExtensionNotFound:
-            output = "The plugin <%s> does not exist!" % plugin
+        if plugin:
+            try:
+                ctx.bot.load_extension(plugin)
+                self.last_plugin = plugin
+                output = "The plugin <%s> has been loaded successfully!" % plugin
 
-        except commands.ExtensionAlreadyLoaded:
-            output = "The plugin <%s> is already loaded!" % plugin
+            except commands.ExtensionNotFound:
+                output = "The plugin <%s> does not exist!" % plugin
+
+            except commands.ExtensionAlreadyLoaded:
+                output = "The plugin <%s> is already loaded!" % plugin
+        else:
+            output = "No plugin was specified!"
 
         embed = discord.Embed(description=output, colour=ctx.colour)
         await ctx.send(embed=embed)
 
     @plugins.command(brief="Unload a given plugin.", aliases=("ul",))
     @commands.is_owner()
-    async def unload(self, ctx: context.Context, plugin: str) -> None:
+    async def unload(self, ctx: context.Context, plugin: str = None) -> None:
         """
         Unload a given plugin.
         """
-        try:
-            ctx.bot.unload_extension(plugin)
-            self.last_plugin = plugin
-            output = "The plugin <%s> has been unloaded successfully!" % plugin
+        plugin = plugin or self.last_plugin
 
-        except commands.ExtensionNotFound:
-            output = "The plugin <%s> does not exist!" % plugin
+        if plugin:
+            try:
+                ctx.bot.unload_extension(plugin)
+                self.last_plugin = plugin
+                output = "The plugin <%s> has been unloaded successfully!" % plugin
 
-        except commands.ExtensionNotLoaded:
-            output = "The plugin <%s> is not loaded!" % plugin
+            except commands.ExtensionNotFound:
+                output = "The plugin <%s> does not exist!" % plugin
+
+            except commands.ExtensionNotLoaded:
+                output = "The plugin <%s> is not loaded!" % plugin
+        else:
+            output = "No plugin was specified!"
 
         embed = discord.Embed(description=output, colour=ctx.colour)
         await ctx.send(embed=embed)
 
     @plugins.command(brief="Reload a given plugin.", aliases=("rl",))
     @commands.is_owner()
-    async def reload(self, ctx: context.Context, plugin: str) -> None:
+    async def reload(self, ctx: context.Context, plugin: str = None) -> None:
         """
         Reload a given plugin.
         """
-        try:
-            ctx.bot.reload_extension(plugin)
-            self.last_plugin = plugin
-            output = "The plugin <%s> has been reloaded successfully!" % plugin
+        plugin = plugin or self.last_plugin
 
-        except commands.ExtensionNotFound:
-            output = "The plugin <%s> does not exist!" % plugin
+        if plugin:
+            try:
+                ctx.bot.reload_extension(plugin)
+                self.last_plugin = plugin
+                output = "The plugin <%s> has been reloaded successfully!" % plugin
 
-        except commands.ExtensionNotLoaded:
-            output = "The plugin <%s> is not loaded!" % plugin
+            except commands.ExtensionNotFound:
+                output = "The plugin <%s> does not exist!" % plugin
+
+            except commands.ExtensionNotLoaded:
+                output = "The plugin <%s> is not loaded!" % plugin
+        else:
+            output = "No plugin was specified!"
 
         embed = discord.Embed(description=output, colour=ctx.colour)
         await ctx.send(embed=embed)

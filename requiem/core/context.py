@@ -23,6 +23,6 @@ class Context(commands.Context):
     For now this is only used to silence type checking.
     """
 
-    def __init__(self,  **attrs):
-        self.colour = attrs.pop('colour', None)
+    def __init__(self, **attrs):
+        self.colour = attrs.pop("colour", None)
         super().__init__(**attrs)

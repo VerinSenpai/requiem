@@ -194,13 +194,12 @@ class Requiem(commands.AutoShardedBot):
         """
         Responds to prefix requests or calls process commands.
         """
-        bot_mentions = (self.user.mention, "<@!%s>" % self.user.id)
-
-        if message.content in bot_mentions:
+        if self.user.mentioned_in(message):
             if self.credentials.prefix_on_mention:
                 ctx = await self.get_context(message)
+                prefix = await self.get_prefix(message)
                 response = random.choice(constants.prefix_responses)(
-                    f"**{ctx.prefix}**"
+                    f"**{prefix}**"
                 )
                 embed = discord.Embed(description=response, colour=ctx.colour)
                 await ctx.send(embed=embed)

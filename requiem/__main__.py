@@ -70,7 +70,7 @@ def setup_logging() -> None:
     colorlog.basicConfig(
         level=logging.INFO,
         format="%(log_color)s%(bold)s%(levelname)-1.1s%(thin)s %(asctime)23.23s %(bold)s%(name)s: "
-               "%(thin)s%(message)s%(reset)s",
+        "%(thin)s%(message)s%(reset)s",
     )
 
     class ShardLogFilter(logging.Filter):

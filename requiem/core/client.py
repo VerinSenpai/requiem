@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from core import config, models, constants, context
+from core import config, models, constants, context, help
 from discord.ext import commands
 from aiocache import Cache
 
@@ -47,7 +47,11 @@ class Requiem(commands.AutoShardedBot):
         intents = discord.Intents.all()
         intents.members = True
 
-        super().__init__(command_prefix=credentials.default_prefix, intents=intents)
+        super().__init__(
+            command_prefix=credentials.default_prefix,
+            intents=intents,
+            help_command=help.HelpCommand(),
+        )
 
         self.credentials = credentials
 
@@ -195,7 +199,9 @@ class Requiem(commands.AutoShardedBot):
         if message.content in bot_mentions:
             if self.credentials.prefix_on_mention:
                 ctx = await self.get_context(message)
-                response = random.choice(constants.prefix_responses)(f"**{ctx.prefix}**")
+                response = random.choice(constants.prefix_responses)(
+                    f"**{ctx.prefix}**"
+                )
                 embed = discord.Embed(description=response, colour=ctx.colour)
                 await ctx.send(embed=embed)
 

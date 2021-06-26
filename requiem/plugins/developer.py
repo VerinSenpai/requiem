@@ -54,7 +54,7 @@ class Developer(commands.Cog, name="developer"):
         embed = discord.Embed(
             title="Available Plugins",
             description="\n".join(plugin_states),
-            colour=ctx.colour
+            colour=ctx.colour,
         )
         await ctx.send(embed=embed)
 

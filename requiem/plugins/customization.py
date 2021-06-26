@@ -67,13 +67,17 @@ class Customization(commands.Cog, name="customization"):
 
         elif colour not in available_colours:
             available_colours_string = "\n".join(available_colours)
-            output = f"Please specify a valid embed colour!\n" \
-                     f"The following colours are available:\n" \
-                     f"{available_colours_string}"
+            output = (
+                f"Please specify a valid embed colour!\n"
+                f"The following colours are available:\n"
+                f"{available_colours_string}"
+            )
 
         else:
-            output = f"Alright! The embed colour is set to <{colour}>!\n" \
-                     f"The change will take affect in the next embed!"
+            output = (
+                f"Alright! The embed colour is set to <{colour}>!\n"
+                f"The change will take affect in the next embed!"
+            )
             guild_config.colour = colour
             await guild_config.save()
             await ctx.bot.cache.set(ctx.guild.id, guild_config)

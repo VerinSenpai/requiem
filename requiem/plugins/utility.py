@@ -27,13 +27,10 @@ class Utility(commands.Cog, name="utility"):
     Informational tools for users, guilds, and Requiem.
     """
 
-    @commands.command(brief="View my heartbeat and rest pings.")
+    @commands.command(brief="View rest and heartbeat ping times.")
     async def ping(self, ctx: context.Context) -> None:
         """
-        Provides the current Heartbeat and Rest pings.
-
-        Heartbeat: Time taken between sending a heartbeat and receiving an acknowledgement.
-        Rest: Time taken between performing a request and receiving a response.
+        Check the heartbeat and rest api ping times.
         """
         start = time.monotonic()
         await ctx.fetch_message(ctx.message.id)

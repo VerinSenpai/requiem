@@ -93,7 +93,9 @@ unhandled_errors = (
     "THIS IS A MIROR YOU ARE A TYPO",
     "Red kinda sus.",
     "Now where did I put that error message?",
-    "That's an error. hold the mayo." "I blame the weebs.",
+    "That's an error. hold the mayo.",
+    "I blame the weebs.",
+    "Actually if you don't mind, it's just The Doctor."
 )
 
 

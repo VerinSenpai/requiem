@@ -19,100 +19,140 @@ from discord.ext import commands
 from core import menus
 
 import discord
+import typing
 
 
 class HelpCommand(commands.HelpCommand):
     """
-    Custom Requiem specific help command.
+    Custom embedded HelpCommand.
     """
 
-    async def command_callback(
-        self, ctx: commands.Context, *, command: str = None
-    ) -> None:
-        """Overwrites command_callback to implement case_insensitive searching."""
-        command = command.lower() if command else command
-        await super().command_callback(ctx, command=command)
-
-    async def send_pages(self, pages):
+    async def send_pages(self, pages: typing.List[discord.Embed]) -> None:
         """
-        Sends embed pages using paginator.
+        Sends prepared pages.
         """
-        await menus.UniversalPaginator(pages).start(self.context)
+        paginator = menus.Paginator(pages)
+        await paginator.start(self.context)
 
-    async def create_cog_page(self, cog: commands.Cog):
+    async def send_bot_help(self, mapping: typing.Dict[commands.Cog, typing.List[commands.Command]]) -> None:
         """
-        Creates command pages for a given cog.
+        Generates pages containing cogs with available commands.
         """
-        _commands = await self.filter_commands(cog.get_commands())
+        cog_pages = []
+        cog_page = discord.Embed(colour=self.context.colour)
 
-        if not _commands:
-            return
+        for cog, _commands in mapping.items():
+            if not cog:
+                continue
 
-        command_page = discord.Embed(
-            title=cog.qualified_name.title(),
-            description=cog.description,
-            colour=discord.Colour.purple(),
-        )
+            filtered = await self.filter_commands(_commands)
 
-        for command in sorted(_commands, key=lambda c: c.name):
-            if not command.hidden:
-                command_page.add_field(
-                    name=command.name, value=command.brief, inline=False
-                )
+            if not filtered:
+                continue
 
-        return command_page
+            if len(cog_page.fields) > 10:
+                cog_pages.append(cog_page)
+                cog_page = discord.Embed(colour=self.context.colour)
 
-    async def send_bot_help(self, mapping: dict) -> None:
-        """
-        Overwrites send_bot_help to implement Requiem specific behavior.
-        """
-        category_page = discord.Embed(
-            title="Categories", colour=discord.Colour.purple()
-        )
-        pages = [category_page]
+            cog_page.add_field(
+                name=cog.qualified_name.title(),
+                value=cog.description,
+                inline=False
+            )
 
-        for _, cog in self.context.bot.cogs.items():
-            if cog_page := await self.create_cog_page(cog):
-                category_page.add_field(
-                    name=cog.qualified_name.title(), value=cog.description, inline=False
-                )
-                pages.append(cog_page)
+        if cog_page not in cog_pages:
+            cog_pages.append(cog_page)
 
-        await self.send_pages(pages)
+        await self.send_pages(cog_pages)
 
     async def send_cog_help(self, cog: commands.Cog) -> None:
         """
-        Overwrites send_cog_help to implement Requiem specific behavior.
+        Generates pages containing commands for a specified cog.
         """
-        page = await self.create_cog_page(cog)
+        def create_page() -> discord.Embed:
+            return discord.Embed(
+                title=cog.qualified_name.title(),
+                description=cog.description,
+                colour=self.context.colour
+            )
 
-        if not page:
+        _commands = cog.get_commands()
+        filtered = await self.filter_commands(_commands, sort=True)
+
+        if not filtered:
             return
 
-        await self.send_pages((page,))
+        command_pages = []
+        command_page = create_page()
+
+        for command in filtered:
+            if len(command_page.fields) > 10:
+                command_pages.append(command_page)
+                command_page = create_page()
+
+            command_page.add_field(
+                name=command.name,
+                value=command.brief,
+                inline=False
+            )
+
+        if command_page not in command_pages:
+            command_pages.append(command_page)
+
+        await self.send_pages(command_pages)
+
+    async def send_group_help(self, group: commands.Group) -> None:
+        """
+        Generates pages containing commands for a specified group.
+        """
+        filtered = await self.filter_commands(group.commands, sort=True)
+
+        if not filtered:
+            return
+
+        group_pages = []
+        group_page = discord.Embed(colour=self.context.colour)
+
+        group_page.add_field(name=group.name, value=group.help)
+
+        for command in filtered:
+            if len(group_page.fields) > 10:
+                group_pages.append(group_page)
+                group_page = discord.Embed(colour=self.context.colour)
+
+            group_page.add_field(
+                name=command.name,
+                value=command.brief,
+                inline=False
+            )
+
+        if group_page not in group_pages:
+            group_pages.append(group_page)
+
+        await self.send_pages(group_pages)
 
     async def send_command_help(self, command: commands.Command) -> None:
         """
-        Overwrites send_command_help to implement requiem specific behavior.
+        Sends command help.
         """
-        ctx = self.context
-
-        await command.can_run(ctx)
-
+        usage = self.get_command_signature(command)
         embed = discord.Embed(
-            title=command.name, description=command.help, colour=discord.Colour.purple()
+            title=command.name,
+            description=command.help,
+            colour=self.context.colour
         )
+        embed.set_footer(text=usage)
+        await self.context.send(embed=embed)
 
-        parent = command.full_parent_name
-        alias = f"{parent} {command.name}" if parent else command.name
+    def command_not_found(self, string: str) -> str:
+        """
+        Returns command_not_found string.
+        """
+        return f"No command or cog called **{string}** exists!"
 
-        embed.add_field(
-            name="Usage",
-            value=f"{self.clean_prefix}{alias} {command.signature}",
-            inline=False,
-        )
-
-        await ctx.send(embed=embed)
-
-    async def send_error_message(self, error: str):
-        return
+    async def send_error_message(self, error: str) -> None:
+        """
+        Sends an error message.
+        """
+        embed = discord.Embed(description=error, colour=self.context.colour)
+        await self.context.send(embed=embed)

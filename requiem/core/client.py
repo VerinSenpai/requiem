@@ -50,6 +50,7 @@ class Requiem(commands.AutoShardedBot):
         super().__init__(
             command_prefix=credentials.default_prefix,
             intents=intents,
+            owner_ids=credentials.owner_ids,
             help_command=help.HelpCommand(),
         )
 

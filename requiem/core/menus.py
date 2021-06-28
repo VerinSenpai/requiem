@@ -16,11 +16,12 @@
 
 
 from discord.ext import menus, commands
+from core import context
 
 import discord
 
 
-class UniversalPaginator(menus.Menu):
+class Paginator(menus.Menu):
     """
     Embed page menu built using dpy menus lib.
     """
@@ -29,6 +30,15 @@ class UniversalPaginator(menus.Menu):
         super().__init__(*args, **kwargs)
         self.pages = pages
         self.current_page = 0
+
+    async def start(self, ctx: context.Context, *, channel: discord.TextChannel = None, wait: bool = False) -> None:
+        """
+        Ensures there are multiple pages before attempting to paginate.
+        """
+        if len(self.pages) > 1:
+            await super().start(ctx, channel=channel, wait=wait)
+        else:
+            await self.send_initial_message(ctx, ctx.channel)
 
     async def send_initial_message(
         self, ctx: commands.Context, channel: discord.TextChannel

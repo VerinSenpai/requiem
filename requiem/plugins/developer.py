@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from core import context, client
+from core import context, client, menus
 from discord.ext import commands
 
 import discord
@@ -37,23 +37,33 @@ class Developer(commands.Cog, name="developer"):
         Display available plugins and their respective status.
         """
         loaded_plugins = ctx.bot.extensions.keys()
-        plugin_states = []
+        pages = []
+        page = discord.Embed(colour=ctx.colour)
 
         for plugin in tuple(ctx.bot.all_plugins):
-            if plugin == self.last_plugin:
-                plugin += " (Most Recent)"
-
             if plugin in loaded_plugins:
-                plugin_states.append(f"{plugin} loaded")
+                state = "loaded"
             else:
-                plugin_states.append(f"{plugin} not loaded")
+                state = "not loaded"
 
-        embed = discord.Embed(
-            title="Available Plugins",
-            description="\n".join(plugin_states),
-            colour=ctx.colour,
-        )
-        await ctx.send(embed=embed)
+            if plugin == self.last_plugin:
+                state += " (Most Recently Managed)"
+
+            if len(page.fields) > 10:
+                pages.append(page)
+                page = discord.Embed(colour=ctx.colour)
+
+            page.add_field(
+                name=plugin,
+                value=state,
+                inline=False
+            )
+
+        if page not in pages:
+            pages.append(page)
+
+        paginator = menus.Paginator(pages)
+        await paginator.start(ctx)
 
     @commands.command(brief="Load a given plugin.", aliases=("l",))
     @commands.is_owner()

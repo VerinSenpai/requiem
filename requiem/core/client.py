@@ -55,11 +55,13 @@ class Requiem(commands.AutoShardedBot):
         )
 
         self.credentials = credentials
-
         self.cache = Cache(Cache.MEMORY)
 
     @property
     def all_plugins(self) -> typing.Generator[str, any, None]:
+        """
+        Returns generator of plugin names from plugins folder.
+        """
         return (
             f"plugins." + plugin.replace(".py", "")
             for plugin in os.listdir("plugins")
@@ -101,39 +103,13 @@ class Requiem(commands.AutoShardedBot):
         await super().close()
         await tortoise.Tortoise.close_connections()
 
-    async def get_colour(self, message: discord.Message) -> discord.Colour:
-        """
-        Fetches embed colour based on message context.
-        """
-        if message.guild:
-            cache = await self.cache.get(message.guild.id)
-            colour = cache.colour
-        else:
-            colour = "purple"
-
-        return constants.colours[colour]()
-
     async def get_prefix(self, message: discord.Message) -> str:
         """
-        Fetches prefix based on message context.
+        Fetches prefix and embed colour based on message context.
         """
         if message.guild:
-            cache = await self.cache.get(message.guild.id)
-            prefix = cache.prefix
-        else:
-            prefix = self.command_prefix
-
-        return prefix
-
-    async def get_context(
-        self, message: discord.Message, *, cls=context.Context
-    ) -> context.Context:
-        """
-        Inserts colour into context.
-        """
-        ctx = await super().get_context(message, cls=context.Context)
-        ctx.colour = await self.get_colour(message)
-        return ctx
+            guild_config = await models.Guilds.get(snowflake=message.guild.id)
+            pr
 
     async def report_error(self, exc: Exception) -> None:
         """
@@ -198,9 +174,8 @@ class Requiem(commands.AutoShardedBot):
         if self.user.mentioned_in(message):
             if self.credentials.prefix_on_mention:
                 ctx = await self.get_context(message)
-                prefix = await self.get_prefix(message)
                 response = random.choice(constants.prefix_responses)(
-                    f"**{prefix}**"
+                    f"**{ctx.prefix}**"
                 )
                 embed = discord.Embed(description=response, colour=ctx.colour)
                 await ctx.send(embed=embed)

@@ -39,7 +39,7 @@ class HelpCommand(commands.HelpCommand):
         Generates pages containing cogs with available commands.
         """
         cog_pages = []
-        cog_page = discord.Embed(colour=self.context.colour)
+        cog_page = discord.Embed(colour=discord.Colour.purple())
 
         for cog, _commands in mapping.items():
             if not cog:
@@ -52,7 +52,7 @@ class HelpCommand(commands.HelpCommand):
 
             if len(cog_page.fields) > 10:
                 cog_pages.append(cog_page)
-                cog_page = discord.Embed(colour=self.context.colour)
+                cog_page = discord.Embed(colour=discord.Colour.purple())
 
             cog_page.add_field(
                 name=cog.qualified_name.title(),
@@ -73,7 +73,7 @@ class HelpCommand(commands.HelpCommand):
             return discord.Embed(
                 title=cog.qualified_name.title(),
                 description=cog.description,
-                colour=self.context.colour
+                colour=discord.Colour.purple()
             )
 
         _commands = cog.get_commands()
@@ -111,14 +111,14 @@ class HelpCommand(commands.HelpCommand):
             return
 
         group_pages = []
-        group_page = discord.Embed(colour=self.context.colour)
+        group_page = discord.Embed(colour=discord.Colour.purple())
 
         group_page.add_field(name=group.name, value=group.help)
 
         for command in filtered:
             if len(group_page.fields) > 10:
                 group_pages.append(group_page)
-                group_page = discord.Embed(colour=self.context.colour)
+                group_page = discord.Embed(colour=discord.Colour.purple())
 
             group_page.add_field(
                 name=command.name,
@@ -139,7 +139,7 @@ class HelpCommand(commands.HelpCommand):
         embed = discord.Embed(
             title=command.name,
             description=command.help,
-            colour=self.context.colour
+            colour=discord.Colour.purple()
         )
         embed.set_footer(text=usage)
         await self.context.send(embed=embed)
@@ -154,5 +154,5 @@ class HelpCommand(commands.HelpCommand):
         """
         Sends an error message.
         """
-        embed = discord.Embed(description=error, colour=self.context.colour)
+        embed = discord.Embed(description=error, colour=discord.Colour.purple())
         await self.context.send(embed=embed)

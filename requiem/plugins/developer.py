@@ -30,15 +30,12 @@ class Developer(commands.Cog, name="developer"):
         super().__init__()
         self.last_plugin = None
 
-    @commands.group(brief="View and manage plugins.", aliases=("pls",))
+    @commands.command(brief="View and manage plugins.")
     @commands.is_owner()
     async def plugins(self, ctx: context.Context) -> None:
         """
         Display available plugins and their respective status.
         """
-        if ctx.invoked_subcommand:
-            return
-
         loaded_plugins = ctx.bot.extensions.keys()
         plugin_states = []
 
@@ -58,7 +55,7 @@ class Developer(commands.Cog, name="developer"):
         )
         await ctx.send(embed=embed)
 
-    @plugins.command(brief="Load a given plugin.", aliases=("l",))
+    @commands.command(brief="Load a given plugin.", aliases=("l",))
     @commands.is_owner()
     async def load(self, ctx: context.Context, plugin: str = None) -> None:
         """
@@ -83,7 +80,7 @@ class Developer(commands.Cog, name="developer"):
         embed = discord.Embed(description=output, colour=ctx.colour)
         await ctx.send(embed=embed)
 
-    @plugins.command(brief="Unload a given plugin.", aliases=("ul",))
+    @commands.command(brief="Unload a given plugin.", aliases=("ul",))
     @commands.is_owner()
     async def unload(self, ctx: context.Context, plugin: str = None) -> None:
         """
@@ -108,7 +105,7 @@ class Developer(commands.Cog, name="developer"):
         embed = discord.Embed(description=output, colour=ctx.colour)
         await ctx.send(embed=embed)
 
-    @plugins.command(brief="Reload a given plugin.", aliases=("rl",))
+    @commands.command(brief="Reload a given plugin.", aliases=("rl",))
     @commands.is_owner()
     async def reload(self, ctx: context.Context, plugin: str = None) -> None:
         """

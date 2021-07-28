@@ -16,7 +16,6 @@
 
 
 from discord.ext import menus, commands
-from core import context
 
 import discord
 
@@ -31,7 +30,7 @@ class Paginator(menus.Menu):
         self.pages = pages
         self.current_page = 0
 
-    async def start(self, ctx: context.Context, *, channel: discord.TextChannel = None, wait: bool = False) -> None:
+    async def start(self, ctx, *, channel: discord.TextChannel = None, wait: bool = False) -> None:
         """
         Ensures there are multiple pages before attempting to paginate.
         """

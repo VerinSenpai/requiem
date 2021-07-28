@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from core import config, models, constants, context, help
+from core import config, models, constants, help
 from discord.ext import commands
 from aiocache import Cache
 
@@ -109,7 +109,6 @@ class Requiem(commands.AutoShardedBot):
         """
         if message.guild:
             guild_config = await models.Guilds.get(snowflake=message.guild.id)
-            pr
 
     async def report_error(self, exc: Exception) -> None:
         """
@@ -129,7 +128,7 @@ class Requiem(commands.AutoShardedBot):
                 with contextlib.suppress(discord.Forbidden, discord.NotFound):
                     await owner.send(file=file)
 
-    async def on_command_error(self, ctx: context.Context, exc: Exception) -> None:
+    async def on_command_error(self, ctx, exc: Exception) -> None:
         """
         Catches and reports or handles unhandled command exceptions.
         """

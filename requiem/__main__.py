@@ -90,37 +90,39 @@ def main() -> None:
 
     loop = asyncio.get_event_loop()
     creds = config.get_config()
-    requiem = client.Requiem(creds)
-    loop.run_until_complete(setup_database(creds))
 
-    try:
-        requiem.run(creds.discord_token)
+    if creds:
+        requiem = client.Requiem(creds)
+        loop.run_until_complete(setup_database(creds))
 
-    except KeyboardInterrupt:
-        _LOGGER.error("requiem was closed out with a keyboard interrupt!")
+        try:
+            requiem.run(creds.discord_token)
 
-    except aiohttp.ClientConnectionError:
-        _LOGGER.error(
-            "requiem is unable to connect to discord because of a connection issue!"
-        )
+        except KeyboardInterrupt:
+            _LOGGER.error("requiem was closed out with a keyboard interrupt!")
 
-    except discord.PrivilegedIntentsRequired as exc:
-        _LOGGER.error(
-            "requiem is unable to connect to discord because of missing privileged intents!"
-        )
+        except aiohttp.ClientConnectionError:
+            _LOGGER.error(
+                "requiem is unable to connect to discord because of a connection issue!"
+            )
 
-    except discord.LoginFailure:
-        _LOGGER.error(
-            "requiem is unable to connect to discord because of an invalid token!"
-        )
+        except discord.PrivilegedIntentsRequired as exc:
+            _LOGGER.error(
+                "requiem is unable to connect to discord because of missing privileged intents!"
+            )
 
-    except Exception as exc:
-        _LOGGER.error(
-            "requiem encountered a critical exception and crashed!", exc_info=exc
-        )
+        except discord.LoginFailure:
+            _LOGGER.error(
+                "requiem is unable to connect to discord because of an invalid token!"
+            )
 
-    if not requiem.is_closed():
-        loop.run_until_complete(requiem.close())
+        except Exception as exc:
+            _LOGGER.error(
+                "requiem encountered a critical exception and crashed!", exc_info=exc
+            )
+
+        if not requiem.is_closed():
+            loop.run_until_complete(requiem.close())
 
     _LOGGER.info("requiem has closed!")
     input()

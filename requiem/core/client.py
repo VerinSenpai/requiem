@@ -124,9 +124,13 @@ class Requiem(commands.AutoShardedBot):
         file = discord.File(fp=string_io, filename="error_report.txt")
 
         for owner_id in self.owner_ids:
-            if owner := self.get_user(owner_id):
-                with contextlib.suppress(discord.Forbidden, discord.NotFound):
-                    await owner.send(file=file)
+            owner = self.get_user(owner_id)
+
+            if not owner:
+                continue
+
+            with contextlib.suppress(discord.Forbidden, discord.NotFound):
+                await owner.send(file=file)
 
     async def on_command_error(self, ctx, exc: Exception) -> None:
         """

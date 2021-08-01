@@ -82,51 +82,50 @@ def setup_logging() -> None:
     shard_logger.addFilter(ShardLogFilter())
 
 
-def main() -> None:
+def start(creds: config.Config):
     """
-    Runs pre-run setup and starts Requiem.
+    Connects to database and starts Requiem. Identifies and logs any errors raised within Requiem.
     """
-    setup_logging()
-
     loop = asyncio.get_event_loop()
-    creds = config.get_config()
+    loop.run_until_complete(setup_database(creds))
+    requiem = client.Requiem(creds)
 
-    if creds:
-        requiem = client.Requiem(creds)
-        loop.run_until_complete(setup_database(creds))
+    try:
+        requiem.run(creds.discord_token)
 
-        try:
-            requiem.run(creds.discord_token)
+    except KeyboardInterrupt:
+        _LOGGER.error("requiem was closed out with a keyboard interrupt!")
 
-        except KeyboardInterrupt:
-            _LOGGER.error("requiem was closed out with a keyboard interrupt!")
+    except aiohttp.ClientConnectionError:
+        _LOGGER.error(
+            "requiem is unable to connect to discord because of a connection issue!"
+        )
 
-        except aiohttp.ClientConnectionError:
-            _LOGGER.error(
-                "requiem is unable to connect to discord because of a connection issue!"
-            )
+    except discord.PrivilegedIntentsRequired as exc:
+        _LOGGER.error(
+            "requiem is unable to connect to discord because of missing privileged intents!"
+        )
 
-        except discord.PrivilegedIntentsRequired as exc:
-            _LOGGER.error(
-                "requiem is unable to connect to discord because of missing privileged intents!"
-            )
+    except discord.LoginFailure:
+        _LOGGER.error(
+            "requiem is unable to connect to discord because of an invalid token!"
+        )
 
-        except discord.LoginFailure:
-            _LOGGER.error(
-                "requiem is unable to connect to discord because of an invalid token!"
-            )
+    except Exception as exc:
+        _LOGGER.error(
+            "requiem encountered a critical exception and crashed!", exc_info=exc
+        )
 
-        except Exception as exc:
-            _LOGGER.error(
-                "requiem encountered a critical exception and crashed!", exc_info=exc
-            )
-
-        if not requiem.is_closed():
-            loop.run_until_complete(requiem.close())
-
-    _LOGGER.info("requiem has closed!")
-    input()
+    if not requiem.is_closed():
+        loop.run_until_complete(requiem.close())
 
 
 if __name__ == "__main__":
-    main()
+    setup_logging()
+    creds = config.get_config()
+
+    if creds:
+        start(creds)
+
+    _LOGGER.info("requiem has closed!")
+    input()

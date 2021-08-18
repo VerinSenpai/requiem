@@ -15,12 +15,12 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from core import config, models, constants, help
+from core import config, models, responses, help
 from discord.ext import commands
-from aiocache import Cache
 
 import contextlib
 import traceback
+import aiocache
 import tortoise
 import logging
 import discord
@@ -31,7 +31,8 @@ import os
 import io
 
 
-_LOGGER = logging.getLogger("requiem.client")
+LOGGER = logging.getLogger("requiem.client")
+CACHE = aiocache.SimpleMemoryCache()
 
 
 class Requiem(commands.AutoShardedBot):
@@ -41,7 +42,7 @@ class Requiem(commands.AutoShardedBot):
 
     def __init__(self, credentials: config.Credentials) -> None:
         """
-        Inits Requiem. Sets up required intents.
+        Sets up required intents.
         """
 
         intents = discord.Intents.all()
@@ -55,7 +56,6 @@ class Requiem(commands.AutoShardedBot):
         )
 
         self.credentials = credentials
-        self.cache = Cache(Cache.MEMORY)
 
     @property
     def all_plugins(self) -> typing.Generator[str, any, None]:
@@ -73,14 +73,14 @@ class Requiem(commands.AutoShardedBot):
         Adds logging to extension loading.
         """
         super().load_extension(name, package=package)
-        _LOGGER.info("plugin <%s> loaded!", name)
+        LOGGER.info("plugin <%s> loaded!", name)
 
     def unload_extension(self, name: str, *, package=None) -> None:
         """
         Adds logging to extension unloading.
         """
         super().unload_extension(name, package=package)
-        _LOGGER.info("plugin <%s> unloaded!", name)
+        LOGGER.info("plugin <%s> unloaded!", name)
 
     async def start(self, *args, **kwargs) -> None:
         """
@@ -99,22 +99,15 @@ class Requiem(commands.AutoShardedBot):
         """
         Shuts the bot down and closes connection to tortoise.
         """
-        _LOGGER.info("requiem is shutting down!")
+        LOGGER.info("requiem is shutting down!")
         await super().close()
         await tortoise.Tortoise.close_connections()
-
-    async def get_prefix(self, message: discord.Message) -> str:
-        """
-        Fetches prefix and embed colour based on message context.
-        """
-        if message.guild:
-            guild_config = await models.Guilds.get(snowflake=message.guild.id)
 
     async def report_error(self, exc: Exception) -> None:
         """
         Reports error occurrences to owners and console.
         """
-        _LOGGER.error("requiem has encountered an exception!", exc_info=exc)
+        LOGGER.error("requiem has encountered an exception!", exc_info=exc)
 
         if not self.credentials.report_errors:
             return
@@ -146,10 +139,10 @@ class Requiem(commands.AutoShardedBot):
 
         elif isinstance(exc, commands.CommandInvokeError):
             await self.report_error(exc)
-            response = random.choice(constants.unhandled_errors)
+            response = random.choice(responses.unhandled_errors)
 
-        elif exc_name in constants.handled_errors:
-            response = constants.handled_errors.get(exc_name)(ctx, exc)
+        elif exc_name in responses.handled_errors:
+            response = responses.handled_errors.get(exc_name)(ctx, exc)
 
         else:
             return
@@ -168,7 +161,7 @@ class Requiem(commands.AutoShardedBot):
         """
         Logs ready state to console.
         """
-        _LOGGER.info("requiem is logged in as <%s:%s>!", self.user.name, self.user.id)
+        LOGGER.info("requiem is logged in as <%s:%s>!", self.user.name, self.user.id)
 
     async def on_message(self, message: discord.Message) -> None:
         """
@@ -177,7 +170,7 @@ class Requiem(commands.AutoShardedBot):
         if self.user.mentioned_in(message):
             if self.credentials.prefix_on_mention:
                 ctx = await self.get_context(message)
-                response = random.choice(constants.prefix_responses)(
+                response = random.choice(responses.prefix_responses)(
                     f"**{ctx.prefix}**"
                 )
                 embed = discord.Embed(description=response, colour=ctx.colour)
@@ -201,10 +194,9 @@ class Requiem(commands.AutoShardedBot):
         saved, created = await models.Guilds.get_or_create(
             defaults={"prefix": self.credentials.default_prefix}, snowflake=guild.id
         )
-        await self.cache.set(guild.id, saved)
 
         if created:
-            _LOGGER.info("requiem has created a config entry for guild <%s>!", guild.id)
+            LOGGER.info("requiem has created a config entry for guild <%s>!", guild.id)
 
     async def on_guild_available(self, guild: discord.Guild) -> None:
         """

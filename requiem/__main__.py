@@ -31,17 +31,17 @@ import yarl
 _LOGGER = logging.getLogger("requiem.main")
 
 
-async def setup_database(creds: config.Config) -> None:
+async def setup_database(credentials: config.Credentials) -> None:
     """
-    Establishes connection to postgres or sqlite database.
+    Attempts a connection to a postgresql server. Falls back to using sqlite.
     """
     url = yarl.URL.build(
         scheme="postgres",
-        host=creds.postgres_host,
-        port=creds.postgres_port,
-        user=creds.postgres_user,
-        password=creds.postgres_password,
-        path=f"/{creds.postgres_database}",
+        host=credentials.postgres_host,
+        port=credentials.postgres_port,
+        user=credentials.postgres_user,
+        password=credentials.postgres_password,
+        path=f"/{credentials.postgres_database}",
     )
     modules = {"models": ["core.models"]}
 
@@ -65,7 +65,7 @@ async def setup_database(creds: config.Config) -> None:
 
 def setup_logging() -> None:
     """
-    Setup logging basicConfig and add discord logging filters.
+    Sets up logging with a basic config. Removes error log spam from shard logging.
     """
     colorlog.basicConfig(
         level=logging.INFO,
@@ -73,25 +73,32 @@ def setup_logging() -> None:
         "%(thin)s%(message)s%(reset)s",
     )
 
-    class ShardLogFilter(logging.Filter):
+    class ErrorSpamFilter(logging.Filter):
+        """
+        Removes exc_info from a logging entry.
+        """
         def filter(self, record) -> bool:
             record.exc_info = None
             return True
 
     shard_logger = colorlog.getLogger("discord.shard")
-    shard_logger.addFilter(ShardLogFilter())
+    shard_logger.addFilter(ErrorSpamFilter())
 
 
-def start(creds: config.Config):
-    """
-    Connects to database and starts Requiem. Identifies and logs any errors raised within Requiem.
-    """
+def start():
+    """"""
+    setup_logging()
+    credentials = config.get_config()
+
+    if not credentials:
+        return
+
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(setup_database(creds))
-    requiem = client.Requiem(creds)
+    loop.run_until_complete(setup_database(credentials))
+    requiem = client.Requiem(credentials)
 
     try:
-        requiem.run(creds.discord_token)
+        requiem.run(credentials.discord_token)
 
     except KeyboardInterrupt:
         _LOGGER.error("requiem was closed out with a keyboard interrupt!")
@@ -120,12 +127,14 @@ def start(creds: config.Config):
         loop.run_until_complete(requiem.close())
 
 
-if __name__ == "__main__":
-    setup_logging()
-    creds = config.get_config()
-
-    if creds:
-        start(creds)
-
+def main():
+    """
+    Calls start method. Halts terminal on exit so user can read logs.
+    """
+    start()
     _LOGGER.info("requiem has closed!")
     input()
+
+
+if __name__ == "__main__":
+    main()

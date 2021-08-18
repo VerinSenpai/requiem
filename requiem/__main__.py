@@ -28,7 +28,7 @@ import socket
 import yarl
 
 
-_LOGGER = logging.getLogger("requiem.main")
+LOGGER = logging.getLogger("requiem.main")
 
 
 async def setup_database(credentials: config.Credentials) -> None:
@@ -47,7 +47,7 @@ async def setup_database(credentials: config.Credentials) -> None:
 
     try:
         await tortoise.Tortoise.init(db_url=str(url), modules=modules)
-        _LOGGER.info("requiem has connected to the postgres server at <%s>!", url)
+        LOGGER.info("requiem has connected to the postgres server at <%s>!", url)
 
     except (
         tortoise.exceptions.DBConnectionError,
@@ -56,7 +56,7 @@ async def setup_database(credentials: config.Credentials) -> None:
         socket.gaierror,
     ):
         await tortoise.Tortoise.init(db_url="sqlite://db.sqlite3", modules=modules)
-        _LOGGER.warning(
+        LOGGER.warning(
             "requiem was unable to connect to a postgres server! sqlite will be used instead!"
         )
 
@@ -81,8 +81,8 @@ def setup_logging() -> None:
             record.exc_info = None
             return True
 
-    shard_logger = colorlog.getLogger("discord.shard")
-    shard_logger.addFilter(ErrorSpamFilter())
+    shardLOGGER = colorlog.getLogger("discord.shard")
+    shardLOGGER.addFilter(ErrorSpamFilter())
 
 
 def start():
@@ -101,25 +101,25 @@ def start():
         requiem.run(credentials.discord_token)
 
     except KeyboardInterrupt:
-        _LOGGER.error("requiem was closed out with a keyboard interrupt!")
+        LOGGER.error("requiem was closed out with a keyboard interrupt!")
 
     except aiohttp.ClientConnectionError:
-        _LOGGER.error(
+        LOGGER.error(
             "requiem is unable to connect to discord because of a connection issue!"
         )
 
     except discord.PrivilegedIntentsRequired as exc:
-        _LOGGER.error(
+        LOGGER.error(
             "requiem is unable to connect to discord because of missing privileged intents!"
         )
 
     except discord.LoginFailure:
-        _LOGGER.error(
+        LOGGER.error(
             "requiem is unable to connect to discord because of an invalid token!"
         )
 
     except Exception as exc:
-        _LOGGER.error(
+        LOGGER.error(
             "requiem encountered a critical exception and crashed!", exc_info=exc
         )
 
@@ -132,7 +132,7 @@ def main():
     Calls start method. Halts terminal on exit so user can read logs.
     """
     start()
-    _LOGGER.info("requiem has closed!")
+    LOGGER.info("requiem has closed!")
     input()
 
 

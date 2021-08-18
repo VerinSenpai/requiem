@@ -23,7 +23,7 @@ import attr
 import yaml
 
 
-_LOGGER = logging.getLogger("requiem.config")
+LOGGER = logging.getLogger("requiem.config")
 T = typing.TypeVar("T")
 
 
@@ -55,7 +55,7 @@ def get_config() -> T:
         return global_converter.structure(data, Credentials)
 
     except FileNotFoundError:
-        _LOGGER.warning("requiem was unable to find the config.yaml file!")
+        LOGGER.warning("requiem was unable to find the config.yaml file!")
 
     except (TypeError, ValueError) as exc:
-        _LOGGER.warning("requiem was unable to read the config.yaml file!")
+        LOGGER.warning("requiem was unable to read the config.yaml file!")

@@ -15,41 +15,12 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from discord import Colour
-
-
 prefix_responses = (
     lambda p: f"What'd I do? My prefix is {p}",
     lambda p: f"You called? My prefix is {p}",
     lambda p: f"Whats up doc? My prefix is {p}",
     lambda p: f"Now where'd I put that prefix again? Oh! There it is! {p}",
 )
-
-
-colours = {
-    "dark_blue": Colour.dark_blue,
-    "dark_gold": Colour.dark_gold,
-    "dark_green": Colour.dark_green,
-    "dark_magenta": Colour.dark_magenta,
-    "dark_orange": Colour.dark_orange,
-    "dark_purple": Colour.dark_purple,
-    "dark_red": Colour.dark_red,
-    "dark_teal": Colour.dark_teal,
-    "dark_grey": Colour.dark_grey,
-    "darker_grey": Colour.darker_grey,
-    "lighter_grey": Colour.lighter_grey,
-    "light_grey": Colour.light_grey,
-    "blue": Colour.blue,
-    "gold": Colour.gold,
-    "green": Colour.green,
-    "magenta": Colour.magenta,
-    "orange": Colour.orange,
-    "purple": Colour.purple,
-    "red": Colour.red,
-    "teal": Colour.teal,
-    "greyple": Colour.greyple,
-    "random": Colour.random,
-}
 
 
 unhandled_errors = (

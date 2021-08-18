@@ -39,7 +39,7 @@ class Requiem(commands.AutoShardedBot):
     Custom Requiem client based on <discord.ext.commands.AutoShardedBot>.
     """
 
-    def __init__(self, credentials: config.Config) -> None:
+    def __init__(self, credentials: config.Credentials) -> None:
         """
         Inits Requiem. Sets up required intents.
         """

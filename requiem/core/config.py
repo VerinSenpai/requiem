@@ -28,7 +28,7 @@ T = typing.TypeVar("T")
 
 
 @attr.s(auto_attribs=True)
-class Config:
+class Credentials:
     """
     Config object.
     """
@@ -52,7 +52,7 @@ def get_config() -> T:
     try:
         with open("config.yaml") as stream:
             data = yaml.safe_load(stream)
-        return global_converter.structure(data, Config)
+        return global_converter.structure(data, Credentials)
 
     except FileNotFoundError:
         _LOGGER.warning("requiem was unable to find the config.yaml file!")

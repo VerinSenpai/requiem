@@ -21,7 +21,7 @@ Instructions for how to do so can be found on [dcacademy](https://dcacademy.gitl
 Do not give your token to anybody. These tokens are powerful. Requiem is not liable for any damages that occur as a
 result of you negligently leaking your bot token.
 
-Enter into the console. Any console that can access python will do. I personally recommend [Terminus](https://eugeny.github.io/terminus/).
+Enter into the console. Any console that can access python will do. I personally recommend [Tabby](https://tabby.sh/).
 Change into the bots directory and run `pip install -r requirements.txt`. Assuming python is in path (windows) or pip is
 installed (linux) python should install the bots requirements. If you encounter an error saying pip is not a recognized
 command, you should make sure python is in path (windows) or that pip is installed (linux).

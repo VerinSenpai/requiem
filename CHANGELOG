@@ -1,14 +1,8 @@
 3.0.0
-- xlr senpai wanted me to add type checking and such for code completion. it is done.
-- the paginator has been drastically simplified. i have removed lock from the paginator though it may return
-at a future date.
-- removed the update handler. implemented with a well functioning dev process, it would have been nice to have, but this
-is requiem and this is miror you are typo.
-- revised config setup. to reduce complexity, its no longer self creating.
-- replaced lists with tuples in a lot of areas for that sweet sweet memory consumption tho.
-- the error handler has been drastically revised. aside from reports being sent as a file instead of paginated and
-dumped to owner dms, no functionality has been lost.
-- requiem no longer features a wrapper of any commands to restart/terminate the script.
+- type checking added (only applies to tests)
+- the paginator has been drastically simplified.
+- removed the update handler.
+- removed config setup
+- the error handler has been drastically revised.
+- requiem no longer features a wrapper or any commands to restart/terminate the script.
 - i've relented and wrote the help command as a subclass of helpcommand.
-- requiem has been written in such a way that makes it easier to "tweak" to work with hikari when it is finished.
-- command on mention removed to cut back complexity in prefix checking and prefix on mention

@@ -1,8 +1,0 @@
-3.0.0
-- type checking added (only applies to tests)
-- the paginator has been drastically simplified.
-- removed the update handler.
-- removed config setup
-- the error handler has been drastically revised.
-- requiem no longer features a wrapper or any commands to restart/terminate the script.
-- i've relented and wrote the help command as a subclass of helpcommand.

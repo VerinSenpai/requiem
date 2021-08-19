@@ -45,7 +45,7 @@ class Credentials:
     postgres_password: str = ""
 
 
-def get_config() -> T:
+def get_credentials() -> T:
     """
     Fetches config.yaml and returns Config object.
     """

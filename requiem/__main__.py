@@ -81,14 +81,14 @@ def setup_logging() -> None:
             record.exc_info = None
             return True
 
-    shardLOGGER = colorlog.getLogger("discord.shard")
-    shardLOGGER.addFilter(ErrorSpamFilter())
+    shard_logger = colorlog.getLogger("discord.shard")
+    shard_logger.addFilter(ErrorSpamFilter())
 
 
 def start():
     """"""
     setup_logging()
-    credentials = config.get_config()
+    credentials = config.get_credentials()
 
     if not credentials:
         return

@@ -13,9 +13,10 @@
 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+import aiocache
 
-
-from core import config, models, responses, help
+from core import config, models, constants, help, context
+from discord.ext.commands import view
 from discord.ext import commands
 
 import contextlib
@@ -32,7 +33,6 @@ import io
 
 
 LOGGER = logging.getLogger("requiem.client")
-CACHE = aiocache.SimpleMemoryCache()
 
 
 class Requiem(commands.AutoShardedBot):
@@ -56,6 +56,7 @@ class Requiem(commands.AutoShardedBot):
         )
 
         self.credentials = credentials
+        self.cache = aiocache.SimpleMemoryCache()
 
     @property
     def all_plugins(self) -> typing.Generator[str, any, None]:
@@ -139,10 +140,10 @@ class Requiem(commands.AutoShardedBot):
 
         elif isinstance(exc, commands.CommandInvokeError):
             await self.report_error(exc)
-            response = random.choice(responses.unhandled_errors)
+            response = random.choice(constants.unhandled_errors)
 
-        elif exc_name in responses.handled_errors:
-            response = responses.handled_errors.get(exc_name)(ctx, exc)
+        elif exc_name in constants.handled_errors:
+            response = constants.handled_errors.get(exc_name)(ctx, exc)
 
         else:
             return
@@ -167,17 +168,14 @@ class Requiem(commands.AutoShardedBot):
         """
         Responds to prefix requests or calls process commands.
         """
-        if self.user.mentioned_in(message):
-            if self.credentials.prefix_on_mention:
-                ctx = await self.get_context(message)
-                response = random.choice(responses.prefix_responses)(
-                    f"**{ctx.prefix}**"
-                )
-                embed = discord.Embed(description=response, colour=ctx.colour)
-                await ctx.send(embed=embed)
-
-        else:
+        if message.content == f"<@!{self.user.id}>":
             await self.process_commands(message)
+
+        elif self.credentials.prefix_on_mention:
+            ctx = await self.get_context(message)
+            response = random.choice(constants.prefix_responses)(f"**{ctx.prefix}**")
+            embed = discord.Embed(description=response, colour=ctx.colour)
+            await ctx.send(embed=embed)
 
     async def on_message_edit(
         self, message: discord.Message, message_edit: discord.Message
@@ -203,3 +201,39 @@ class Requiem(commands.AutoShardedBot):
         Handles guild config creation for missed guilds on bot start.
         """
         await self.on_guild_join(guild)
+
+    async def set_prefix_and_colour(self, guild_config: models.Guilds) -> None:
+        """
+        Updates guild prefix and colour in cache.
+        """
+        values = (guild_config.prefix, guild_config.colour)
+        await self.cache.set(guild_config.snowflake, values)
+
+    async def get_prefix_and_colour(self, message: discord.Message) -> typing.Tuple[str, str]:
+        """
+        Retrieve prefix and colour based on context from defaults, database, or cache.
+        """
+        if not message.guild:
+            return self.command_prefix, "purple"
+
+        cached = await self.cache.get(message.guild.id)
+        if cached:
+            return cached
+
+        guild_config = await models.Guilds.get(snowflake=message.guild.id)
+        await self.set_prefix_and_colour(guild_config)
+        return guild_config.prefix, guild_config.colour
+
+    async def get_context(self, message: discord.Message, *, cls=context.Context) -> context.Context:
+        """
+        Overwrites default get_context coroutine removing many checks and adding colour.
+        """
+        string_view = view.StringView(message.content)
+        prefix, colour = await self.get_prefix_and_colour(message)
+        colour = constants.colours.get(colour)()
+        ctx = cls(prefix=prefix, colour=colour, string_view=string_view, bot=self, message=message)
+        command = string_view.get_word()
+        ctx.invoked_with = command
+        ctx.prefix = prefix
+        ctx.command = self.all_commands.get(command)
+        return ctx

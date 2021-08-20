@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from core import client, config
+from core import bot, config
 
 import tortoise
 import colorlog
@@ -95,7 +95,7 @@ def start():
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(setup_database(credentials))
-    requiem = client.Requiem(credentials)
+    requiem = bot.Requiem(credentials)
 
     try:
         requiem.run(credentials.discord_token)

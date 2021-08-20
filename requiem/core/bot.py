@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import aiocache
 
-from core import config, models, constants, help, context
+from core import config, models, constants, help
 from discord.ext.commands import view
 from discord.ext import commands
 
@@ -33,6 +33,16 @@ import io
 
 
 LOGGER = logging.getLogger("requiem.client")
+
+
+class Context(commands.Context):
+    """
+    Subclass of commands.Context implementing Requiem specific methods and attributes.
+    """
+
+    def __init__(self, **attrs):
+        super().__init__(**attrs)
+        self.colour = attrs.pop("colour")
 
 
 class Requiem(commands.AutoShardedBot):
@@ -168,7 +178,7 @@ class Requiem(commands.AutoShardedBot):
         """
         Responds to prefix requests or calls process commands.
         """
-        if message.content == f"<@!{self.user.id}>":
+        if not message.content == f"<@!{self.user.id}>":
             await self.process_commands(message)
 
         elif self.credentials.prefix_on_mention:
@@ -224,16 +234,23 @@ class Requiem(commands.AutoShardedBot):
         await self.set_prefix_and_colour(guild_config)
         return guild_config.prefix, guild_config.colour
 
-    async def get_context(self, message: discord.Message, *, cls=context.Context) -> context.Context:
+    async def get_context(self, message: discord.Message, *, cls=Context) -> Context:
         """
         Overwrites default get_context coroutine removing unnecessary checks and adding colour to the context.
         """
         string_view = view.StringView(message.content)
         prefix, colour = await self.get_prefix_and_colour(message)
         colour = constants.colours.get(colour)()
-        ctx = cls(prefix=prefix, colour=colour, string_view=string_view, bot=self, message=message)
-        command = string_view.get_word()
-        ctx.invoked_with = command
-        ctx.prefix = prefix
-        ctx.command = self.all_commands.get(command)
+        string_view.skip_string(prefix)
+        invoker = string_view.get_word()
+        command = self.all_commands.get(invoker)
+        ctx = cls(
+            prefix=prefix,
+            colour=colour,
+            invoker=invoker,
+            command=command,
+            view=string_view,
+            bot=self,
+            message=message
+        )
         return ctx

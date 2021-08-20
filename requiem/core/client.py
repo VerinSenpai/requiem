@@ -226,7 +226,7 @@ class Requiem(commands.AutoShardedBot):
 
     async def get_context(self, message: discord.Message, *, cls=context.Context) -> context.Context:
         """
-        Overwrites default get_context coroutine removing many checks and adding colour.
+        Overwrites default get_context coroutine removing unnecessary checks and adding colour to the context.
         """
         string_view = view.StringView(message.content)
         prefix, colour = await self.get_prefix_and_colour(message)

@@ -105,10 +105,10 @@ def setup_logging() -> None:
     shard_logger.addFilter(ErrorSpamFilter())
 
 
-def start():
+def main():
     """
     Performs all pre-run tasks and starts Requiem.
-    Also catches and logs any errors so the host has a chance to review them.
+    Attempts to ensure Requiem closes out properly.
     """
     setup_logging()
     credentials = get_credentials()
@@ -150,15 +150,9 @@ def start():
         loop.run_until_complete(requiem.close())
 
     LOGGER.info("requiem has closed!")
-
-
-def main():
-    """
-    Calls start method. Halts terminal on exit so host can review logs.
-    """
-    start()
     input()
 
 
 if __name__ == "__main__":
     main()
+

@@ -75,7 +75,7 @@ class Requiem(commands.AutoShardedBot):
         Returns generator of plugin names from extensions folder.
         """
         return (
-            f"extensions." + plugin.replace(".py", "")
+            plugin.replace(".py", "")
             for plugin in os.listdir("extensions")
             if plugin not in ("__init__.py", "__pycache__")
         )
@@ -84,14 +84,14 @@ class Requiem(commands.AutoShardedBot):
         """
         Adds logging to extension loading.
         """
-        super().load_extension(name, package=package)
+        super().load_extension(f"extensions.{name}", package=package)
         LOGGER.info("plugin <%s> loaded!", name)
 
     def unload_extension(self, name: str, *, package=None) -> None:
         """
         Adds logging to extension unloading.
         """
-        super().unload_extension(name, package=package)
+        super().unload_extension(f"extensions.{name}", package=package)
         LOGGER.info("plugin <%s> unloaded!", name)
 
     async def start(self, *args, **kwargs) -> None:

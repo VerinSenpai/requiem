@@ -15,8 +15,9 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 import aiocache
 
-from core import config, models, constants, help
-from discord.ext.commands import view
+
+from discord.ext.commands.view import StringView
+from core import models, constants, help
 from discord.ext import commands
 
 import contextlib
@@ -33,6 +34,7 @@ import io
 
 
 LOGGER = logging.getLogger("requiem.client")
+CACHE = aiocache.SimpleMemoryCache()
 
 
 class Context(commands.Context):
@@ -50,7 +52,7 @@ class Requiem(commands.AutoShardedBot):
     Custom Requiem client based on <discord.ext.commands.AutoShardedBot>.
     """
 
-    def __init__(self, credentials: config.Credentials) -> None:
+    def __init__(self, credentials: models.Credentials) -> None:
         """
         Sets up required intents.
         """
@@ -66,16 +68,15 @@ class Requiem(commands.AutoShardedBot):
         )
 
         self.credentials = credentials
-        self.cache = aiocache.SimpleMemoryCache()
 
     @property
     def all_plugins(self) -> typing.Generator[str, any, None]:
         """
-        Returns generator of plugin names from plugins folder.
+        Returns generator of plugin names from extensions folder.
         """
         return (
-            f"plugins." + plugin.replace(".py", "")
-            for plugin in os.listdir("plugins")
+            f"extensions." + plugin.replace(".py", "")
+            for plugin in os.listdir("extensions")
             if plugin not in ("__init__.py", "__pycache__")
         )
 
@@ -176,14 +177,14 @@ class Requiem(commands.AutoShardedBot):
 
     async def on_message(self, message: discord.Message) -> None:
         """
-        Responds to prefix requests or calls process commands.
+        Pass messages to process_commands or respond to prefix requests.
         """
-        if not message.content == f"<@!{self.user.id}>":
+        if not message.content == f"<!@{self.user.id}>":
             await self.process_commands(message)
 
         elif self.credentials.prefix_on_mention:
             ctx = await self.get_context(message)
-            response = random.choice(constants.prefix_responses)(f"**{ctx.prefix}**")
+            response = random.choice(constants.prefix_responses)(ctx.prefix)
             embed = discord.Embed(description=response, colour=ctx.colour)
             await ctx.send(embed=embed)
 
@@ -206,51 +207,82 @@ class Requiem(commands.AutoShardedBot):
         if created:
             LOGGER.info("requiem has created a config entry for guild <%s>!", guild.id)
 
-    async def on_guild_available(self, guild: discord.Guild) -> None:
+    @staticmethod
+    async def set_colour(snowflake: discord.Guild.id, colour: str = None) -> str:
         """
-        Handles guild config creation for missed guilds on bot start.
+        Looks up or updates a guild prefix. Sets the prefix in cache and returns it.
         """
-        await self.on_guild_join(guild)
+        guild_config = await models.Guilds.get(snowflake=snowflake)
 
-    async def set_prefix_and_colour(self, guild_config: models.Guilds) -> None:
-        """
-        Updates guild prefix and colour in cache.
-        """
-        values = (guild_config.prefix, guild_config.colour)
-        await self.cache.set(guild_config.snowflake, values)
+        if colour:
+            guild_config.colour = colour
+            await guild_config.save()
+        else:
+            colour = guild_config.colour
 
-    async def get_prefix_and_colour(self, message: discord.Message) -> typing.Tuple[str, str]:
-        """
-        Retrieve prefix and colour based on context from defaults, database, or cache.
-        """
-        if not message.guild:
-            return self.command_prefix, "purple"
+        await CACHE.set(f"{snowflake}:colour", colour)
 
-        cached = await self.cache.get(message.guild.id)
-        if cached:
-            return cached
+        return colour
 
-        guild_config = await models.Guilds.get(snowflake=message.guild.id)
-        await self.set_prefix_and_colour(guild_config)
-        return guild_config.prefix, guild_config.colour
+    async def get_colour(self, message: discord.Message) -> discord.Colour:
+        """
+        Fetches and returns a command prefix.
+        """
+        if message.guild:
+            colour = CACHE.get(f"{message.guild.id}:colour")
 
-    async def get_context(self, message: discord.Message, *, cls=Context) -> Context:
+            if not colour:
+                colour = await self.set_colour(message.guild.id)
+
+        else:
+            colour = self.command_prefix
+
+        colour = constants.colours.get(colour)
+
+        return colour()
+
+    @staticmethod
+    async def set_prefix(snowflake: discord.Guild.id, prefix: str = None) -> str:
         """
-        Overwrites default get_context coroutine removing unnecessary checks and adding colour to the context.
+        Looks up or updates a guild prefix. Sets the prefix in cache and returns it.
         """
-        string_view = view.StringView(message.content)
-        prefix, colour = await self.get_prefix_and_colour(message)
-        colour = constants.colours.get(colour)()
-        string_view.skip_string(prefix)
-        invoker = string_view.get_word()
+        guild_config = await models.Guilds.get(snowflake=snowflake)
+
+        if prefix:
+            guild_config.prefix = prefix
+            await guild_config.save()
+        else:
+            prefix = guild_config.prefix
+
+        await CACHE.set(f"{snowflake}:prefix", prefix)
+
+        return prefix
+
+    async def get_prefix(self, message: discord.Message) -> str:
+        """
+        Fetches and returns a command prefix.
+        """
+        if message.guild:
+            prefix = CACHE.get(f"{message.guild.id}:prefix")
+
+            if not prefix:
+                prefix = await self.set_prefix(message.guild.id)
+
+        else:
+            prefix = self.command_prefix
+
+        return prefix
+
+    async def get_context(self, message: discord.Message, *, cls=Context):
+        """
+        Prepares context for command and background use.
+        """
+        view = StringView(message.content)
+        prefix = await self.get_prefix(message)
+        colour = await self.get_colour(message)
+        view.skip_string(prefix)
+        invoker = view.get_word()
         command = self.all_commands.get(invoker)
-        ctx = cls(
-            prefix=prefix,
-            colour=colour,
-            invoker=invoker,
-            command=command,
-            view=string_view,
-            bot=self,
-            message=message
-        )
+        ctx = cls(prefix=prefix, colour=colour, command=command,  view=view, bot=self, message=message)
         return ctx
+

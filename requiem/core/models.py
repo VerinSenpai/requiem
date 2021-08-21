@@ -16,6 +16,7 @@
 
 
 import tortoise
+import attr
 
 
 class Guilds(tortoise.models.Model):
@@ -26,3 +27,21 @@ class Guilds(tortoise.models.Model):
     snowflake: int = tortoise.fields.BigIntField()
     prefix: str = tortoise.fields.TextField()
     colour: str = tortoise.fields.TextField(default="purple")
+
+
+@attr.s(auto_attribs=True)
+class Credentials:
+    """
+    Config object.
+    """
+
+    discord_token: str
+    default_prefix: str = "r!"
+    owner_ids: list = []
+    prefix_on_mention: bool = True
+    report_errors: bool = True
+    postgres_host: str or int = "localhost"
+    postgres_port: int = 5432
+    postgres_database: str = "postgres"
+    postgres_user: str = "postgres"
+    postgres_password: str = ""

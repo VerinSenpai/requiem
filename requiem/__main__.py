@@ -15,9 +15,12 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from core import bot, config
+from cattr import global_converter
+from core import bot, models
 
 import tortoise
+import yaml
+import typing
 import colorlog
 import discord
 import logging
@@ -29,9 +32,26 @@ import yarl
 
 
 LOGGER = logging.getLogger("requiem.main")
+T = typing.TypeVar("T")
 
 
-async def setup_database(credentials: config.Credentials) -> None:
+def get_credentials() -> T:
+    """
+    Fetches config.yaml and returns Config object.
+    """
+    try:
+        with open("config.yaml") as stream:
+            data = yaml.safe_load(stream)
+        return global_converter.structure(data, models.Credentials)
+
+    except FileNotFoundError:
+        LOGGER.warning("requiem was unable to find the config.yaml file!")
+
+    except (TypeError, ValueError) as exc:
+        LOGGER.warning("requiem was unable to read the config.yaml file!")
+
+
+async def setup_database(credentials: models.Credentials) -> None:
     """
     Attempts a connection to a postgresql server. Falls back to using sqlite.
     """
@@ -86,9 +106,12 @@ def setup_logging() -> None:
 
 
 def start():
-    """"""
+    """
+    Performs all pre-run tasks and starts Requiem.
+    Also catches and logs any errors so the host has a chance to review them.
+    """
     setup_logging()
-    credentials = config.get_credentials()
+    credentials = get_credentials()
 
     if not credentials:
         return
@@ -126,13 +149,14 @@ def start():
     if not requiem.is_closed():
         loop.run_until_complete(requiem.close())
 
+    LOGGER.info("requiem has closed!")
+
 
 def main():
     """
-    Calls start method. Halts terminal on exit so user can read logs.
+    Calls start method. Halts terminal on exit so host can review logs.
     """
     start()
-    LOGGER.info("requiem has closed!")
     input()
 
 

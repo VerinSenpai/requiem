@@ -70,9 +70,9 @@ class Requiem(commands.AutoShardedBot):
         self.credentials = credentials
 
     @property
-    def all_plugins(self) -> typing.Generator[str, any, None]:
+    def all_extension(self) -> typing.Generator[str, any, None]:
         """
-        Returns generator of plugin names from extensions folder.
+        Returns generator of extension names from extensions folder.
         """
         return (
             plugin.replace(".py", "")
@@ -85,20 +85,20 @@ class Requiem(commands.AutoShardedBot):
         Adds logging to extension loading.
         """
         super().load_extension(f"extensions.{name}", package=package)
-        LOGGER.info("plugin <%s> loaded!", name)
+        LOGGER.info("extension <%s> loaded!", name)
 
     def unload_extension(self, name: str, *, package=None) -> None:
         """
         Adds logging to extension unloading.
         """
         super().unload_extension(f"extensions.{name}", package=package)
-        LOGGER.info("plugin <%s> unloaded!", name)
+        LOGGER.info("extension <%s> unloaded!", name)
 
     async def start(self, *args, **kwargs) -> None:
         """
-        Inserts plugin loading into start coroutine.
+        Inserts extension loading into start coroutine.
         """
-        for plugin in self.all_plugins:
+        for plugin in self.all_extension:
             try:
                 self.load_extension(plugin)
 
@@ -229,7 +229,7 @@ class Requiem(commands.AutoShardedBot):
         Fetches and returns a command prefix.
         """
         if message.guild:
-            colour = CACHE.get(f"{message.guild.id}:colour")
+            colour = await CACHE.get(f"{message.guild.id}:colour")
 
             if not colour:
                 colour = await self.set_colour(message.guild.id)
@@ -263,7 +263,7 @@ class Requiem(commands.AutoShardedBot):
         Fetches and returns a command prefix.
         """
         if message.guild:
-            prefix = CACHE.get(f"{message.guild.id}:prefix")
+            prefix = await CACHE.get(f"{message.guild.id}:prefix")
 
             if not prefix:
                 prefix = await self.set_prefix(message.guild.id)

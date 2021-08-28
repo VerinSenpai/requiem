@@ -17,16 +17,59 @@
 
 import tortoise
 import attr
+import enum
 
 
 class Guilds(tortoise.models.Model):
     """
     Guild model for basic guild configuration.
     """
-
-    snowflake: int = tortoise.fields.BigIntField()
+    snowflake: int = tortoise.fields.BigIntField(pk=True)
     prefix: str = tortoise.fields.TextField()
     colour: str = tortoise.fields.TextField(default="purple")
+
+
+class PWNS(tortoise.models.Model):
+    """
+    PWNS config model.
+    """
+    snowflake: int = tortoise.fields.BigIntField()
+    target: int = tortoise.fields.IntField()
+    is_nation: bool = tortoise.fields.BooleanField(default=False)
+    defensive_war: int = tortoise.fields.BigIntField(default=0)
+    defensive_war_battle: int = tortoise.fields.BigIntField(default=0)
+    offensive_war: int = tortoise.fields.BigIntField(default=0)
+    offensive_war_battle: int = tortoise.fields.BigIntField(default=0)
+    defensive_nuke: int = tortoise.fields.BigIntField(default=0)
+    offensive_nuke: int = tortoise.fields.BigIntField(default=0)
+    defensive_missile: int = tortoise.fields.BigIntField(default=0)
+    offensive_missile: int = tortoise.fields.BigIntField(default=0)
+    enters_beige: int = tortoise.fields.BigIntField(default=0)
+    gains_beige: int = tortoise.fields.BigIntField(default=0)
+    exits_beige: int = tortoise.fields.BigIntField(default=0)
+    enters_vmode: int = tortoise.fields.BigIntField(default=0)
+    gains_vmode: int = tortoise.fields.BigIntField(default=0)
+    exits_vmode: int = tortoise.fields.BigIntField(default=0)
+    changed_colours: int = tortoise.fields.BigIntField(default=0)
+    has_deleted: int = tortoise.fields.BigIntField(default=0)
+    has_rerolled: int = tortoise.fields.BigIntField(default=0)
+
+
+class NationsIndex(tortoise.models.Model):
+    """
+    Nation index model.
+    """
+    id: str = tortoise.fields.TextField()
+    name: str = tortoise.fields.TextField()
+    leader: str = tortoise.fields.TextField()
+    original_creation_date: str = tortoise.fields.TextField()
+    latest_creation_date: str = tortoise.fields.TextField()
+    alliance: int = tortoise.fields.IntField()
+    alliance_position: int = tortoise.fields.IntField()
+    snowflake: str = tortoise.fields.TextField()
+    vacation: int = tortoise.fields.IntField()
+    beige: int = tortoise.fields.IntField()
+    color: str = tortoise.fields.TextField()
 
 
 @attr.s(auto_attribs=True)
@@ -45,3 +88,7 @@ class Credentials:
     postgres_database: str = "postgres"
     postgres_user: str = "postgres"
     postgres_password: str = ""
+    pw_api_key: str = ""
+
+
+

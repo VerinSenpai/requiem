@@ -23,7 +23,7 @@ import discord
 
 class Owner(commands.Cog, name="owner"):
     """
-    Owner only commands for managing and testing Requiem.
+    Owner only commands for managing Requiem.
     """
 
     def __init__(self):
@@ -89,7 +89,7 @@ class Owner(commands.Cog, name="owner"):
                 exc = exc
 
         else:
-            output = "You did not specify an extension to be loaded!"
+            output = "You did not specify an extension to be unloaded!"
 
         embed = discord.Embed(description=output, colour=ctx.colour)
         await ctx.send(embed=embed)

@@ -1,4 +1,4 @@
 /venv/
 /.idea/
 /requiem/credentials.yaml
-.pyc
+*.pyc

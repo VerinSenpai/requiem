@@ -1,0 +1,6 @@
+hikari-lightbulb
+hikari
+aiohttp
+cattrs
+yarl
+pyyaml

@@ -19,11 +19,14 @@ from cattr import global_converter
 from hikari.internal import ux
 from lib import client, models
 
+import lightbulb
+import __init__
 import logging
 import aiohttp
 import hikari
 import typing
 import yaml
+import sys
 
 
 _LOGGER = logging.getLogger("requiem.main")
@@ -53,37 +56,46 @@ def get_credentials() -> T:
         _LOGGER.warning("requiem was unable to read the credentials.yaml file!")
 
 
-def failsafe_start(credentials: models.Credentials) -> None:
+def start_requiem_failsafe() -> None:
     """
     Starts Requiem. Ensures any and all exceptions that reach this point are logged neatly.
     """
+    credentials = get_credentials()
+
+    if not credentials:
+        return
+
     try:
         requiem = client.Requiem(credentials)
         requiem.run()
 
     except aiohttp.ClientConnectionError:
-        _LOGGER.error("requiem was unable to connect to discord! check your internet connection and try again!")
+        _LOGGER.error(
+            "requiem was unable to connect to discord! check your internet connection and try again!"
+        )
 
     except hikari.errors.UnauthorizedError:
-        _LOGGER.error("requiem was unable to login because the provided token is invalid!")
+        _LOGGER.error(
+            "requiem was unable to login because the provided token is invalid!"
+        )
 
     except Exception as exc:
-        _LOGGER.critical("requiem has encountered a critical exception and crashed!", exc_info=exc)
-
-
-def main() -> None:
-    """
-    Setup logging and fetch credentials. Call failsafe_start to start Requiem.
-    """
-    ux.init_logging("INFO", True, False)
-    credentials = get_credentials()
-
-    if credentials:
-        failsafe_start(credentials)
-
-    _LOGGER.info("requiem has closed!")
-    input()
+        _LOGGER.critical(
+            "requiem has encountered a critical exception and crashed!", exc_info=exc
+        )
 
 
 if __name__ == "__main__":
-    main()
+    ux.init_logging("INFO", True, False)
+
+    _LOGGER.info(
+        "client and major dependency versions\n"
+        f"{'python     ' + sys.version: >129}\n"
+        f"{'hikari     ' + hikari.__version__: >63}\n"
+        f"{'lightbulb  ' + lightbulb.__version__: >56}\n"
+        f"{'requiem    ' + __init__.__version__: >56}"
+    )
+
+    start_requiem_failsafe()
+    _LOGGER.info("requiem has closed!")
+    input()

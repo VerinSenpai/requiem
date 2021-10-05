@@ -19,14 +19,11 @@ from cattr import global_converter
 from hikari.internal import ux
 from lib import client, models
 
-import lightbulb
-import __init__
 import logging
 import aiohttp
 import hikari
 import typing
 import yaml
-import sys
 
 
 _LOGGER = logging.getLogger("requiem.main")
@@ -87,15 +84,6 @@ def start_requiem_failsafe() -> None:
 
 if __name__ == "__main__":
     ux.init_logging("INFO", True, False)
-
-    _LOGGER.info(
-        "client and major dependency versions\n"
-        f"{'python     ' + sys.version: >129}\n"
-        f"{'hikari     ' + hikari.__version__: >63}\n"
-        f"{'lightbulb  ' + lightbulb.__version__: >56}\n"
-        f"{'requiem    ' + __init__.__version__: >56}"
-    )
-
     start_requiem_failsafe()
     _LOGGER.info("requiem has closed!")
     input()

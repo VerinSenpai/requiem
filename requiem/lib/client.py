@@ -15,6 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
+from lightbulb import slash_commands
 from lib.models import Credentials
 
 import lightbulb
@@ -36,8 +37,8 @@ class Requiem(lightbulb.Bot, abc.ABC):
     def __init__(self, credentials: Credentials) -> None:
         super().__init__(token=credentials.token, slash_commands_only=True, banner=None)
 
-        self.subscribe(hikari.ExceptionEvent, self.on_exception_event)
         self.subscribe(hikari.StartingEvent, self.on_starting_event)
+        self.subscribe(hikari.StoppingEvent, self.on_stopping_event)
 
     @property
     def all_extensions(self) -> typing.Generator[str, any, None]:
@@ -66,9 +67,17 @@ class Requiem(lightbulb.Bot, abc.ABC):
             f"successfully loaded {len(self.extensions)} extension(s) and {len(self.slash_commands)} command(s)!"
         )
 
-    async def on_exception_event(self, event: hikari.ExceptionEvent) -> None:
+    async def on_stopping_event(self, event: hikari.StoppingEvent) -> None:
         """
-        Handles any exceptions raised by events, tasks, and other bot methods.
+        Handles extension unloading and cleanup while Requiem is closing.
         """
-        if not self.is_alive:
-            return
+        _LOGGER.info("requiem is cleaning up!")
+
+        for extension in self.extensions:
+            try:
+                self.unload_extension(extension)
+
+            except Exception as exc:
+                print(exc)
+
+        _LOGGER.info("requiem has finished cleanup!")

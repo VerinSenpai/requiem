@@ -15,18 +15,16 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from extensions.developer import commands
+from extensions.verins_lunchbox import commands
 
 from lib import client
 
 
 def load(requiem: client.Requiem) -> None:
-    """
-    Attaches all developer commands to Requiem.
-    """
+    requiem.add_slash_command(commands.Neko, create=True)
+    requiem.add_slash_command(commands.FoxGirl, create=True)
 
 
 def unload(requiem: client.Requiem) -> None:
-    """
-    Removes all developer commands from Requiem.
-    """
+    requiem.remove_slash_command("neko")
+    requiem.remove_slash_command("foxgirl")

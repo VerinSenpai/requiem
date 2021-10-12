@@ -25,3 +25,4 @@ class Credentials:
     """
 
     token: str
+    enabled_guilds: list = []

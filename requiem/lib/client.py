@@ -66,7 +66,10 @@ class Requiem(lightbulb.Bot, abc.ABC):
                 self.load_extension(f"extensions.{extension}")
 
             except Exception as exc:
-                _LOGGER.error(f"encountered an exception while attempting to load {extension}!", exc_info=exc)
+                _LOGGER.error(
+                    f"encountered an exception while attempting to load {extension}!",
+                    exc_info=exc,
+                )
 
         _LOGGER.info(
             f"successfully loaded {len(self.extensions)} extension(s) and {len(self.slash_commands)} command(s)!"
@@ -83,6 +86,9 @@ class Requiem(lightbulb.Bot, abc.ABC):
                 self.unload_extension(extension)
 
             except Exception as exc:
-                _LOGGER.error(f"encountered an exception while attempting to unload {extension}!", exc_info=exc)
+                _LOGGER.error(
+                    f"encountered an exception while attempting to unload {extension}!",
+                    exc_info=exc,
+                )
 
         _LOGGER.info("requiem has finished cleanup!")

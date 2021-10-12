@@ -21,7 +21,9 @@ from lib import client
 
 def load(bot: client.Requiem):
     bot.add_slash_command(commands.Ping)
+    bot.add_slash_command(commands.UserInfo)
 
 
 def unload(bot: client.Requiem):
     bot.remove_slash_command("ping")
+    bot.remove_slash_command("userinfo")

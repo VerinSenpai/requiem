@@ -35,7 +35,12 @@ class Requiem(lightbulb.Bot, abc.ABC):
     """
 
     def __init__(self, credentials: Credentials) -> None:
-        super().__init__(token=credentials.token, slash_commands_only=True, banner=None)
+        super().__init__(
+            token=credentials.token,
+            slash_commands_only=True,
+            banner=None,
+            default_enabled_guilds=credentials.enabled_guilds,
+        )
 
         self.subscribe(hikari.StartingEvent, self.on_starting_event)
         self.subscribe(hikari.StoppingEvent, self.on_stopping_event)
@@ -61,7 +66,7 @@ class Requiem(lightbulb.Bot, abc.ABC):
                 self.load_extension(f"extensions.{extension}")
 
             except Exception as exc:
-                print(exc)
+                _LOGGER.error(f"encountered an exception while attempting to load {extension}!", exc_info=exc)
 
         _LOGGER.info(
             f"successfully loaded {len(self.extensions)} extension(s) and {len(self.slash_commands)} command(s)!"
@@ -78,6 +83,6 @@ class Requiem(lightbulb.Bot, abc.ABC):
                 self.unload_extension(extension)
 
             except Exception as exc:
-                print(exc)
+                _LOGGER.error(f"encountered an exception while attempting to unload {extension}!", exc_info=exc)
 
         _LOGGER.info("requiem has finished cleanup!")

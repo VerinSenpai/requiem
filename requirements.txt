@@ -1,4 +1,6 @@
 hikari-lightbulb
+tortoise-orm
+asyncpg
 hikari
 aiohttp
 cattrs

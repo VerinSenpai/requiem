@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from extensions.politics_and_war import commands
+from extensions.politics_and_war import commands, background
 from lib import client
 
 
@@ -23,9 +23,13 @@ def load(bot: client.Requiem) -> None:
     bot.add_slash_command(commands.InfraCost)
     bot.add_slash_command(commands.LandCost)
     bot.add_slash_command(commands.CityCost)
+    bot.add_slash_command(commands.NationInfo)
+    bot.add_plugin(background.Background(bot))
 
 
 def unload(bot: client.Requiem) -> None:
     bot.remove_slash_command("infracost")
     bot.remove_slash_command("landcost")
     bot.remove_slash_command("citycost")
+    bot.remove_slash_command("nationinfo")
+    bot.remove_plugin("background")

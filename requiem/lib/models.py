@@ -15,6 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
+import tortoise
 import attr
 
 
@@ -26,3 +27,27 @@ class Credentials:
 
     token: str
     enabled_guilds: list = []
+    pnw_api_key: str = ""
+    postgres_host: str or int = "localhost"
+    postgres_port: int = 5432
+    postgres_database: str = "postgres"
+    postgres_user: str = "postgres"
+    postgres_password: str = ""
+
+
+class NationsIndex(tortoise.Model):
+    """
+    NationsIndex tortoise model object.
+    """
+    id: int = tortoise.fields.IntField(pk=True)
+    name: str = tortoise.fields.TextField()
+    leader: str = tortoise.fields.TextField()
+    creation_date: str = tortoise.fields.TextField()
+
+
+class AlliancesIndex(tortoise.Model):
+    """
+    AlliancesIndex tortoise model object.
+    """
+    id: int = tortoise.fields.IntField(pk=True)
+    name: str = tortoise.fields.TextField()

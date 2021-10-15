@@ -21,21 +21,34 @@ import hikari
 import nekos
 
 
+async def failsafe_neko(reference: str, ctx: slash_commands.SlashCommandContext) -> None:
+    """
+    A function to assist in sending of nekos.life payloads and handling NothingFound errors.
+    """
+    embed = hikari.Embed()
+    attempts = 0
+
+    while attempts < 3:
+        try:
+            image = nekos.img(reference)
+            embed.set_image(image)
+            break
+
+        except nekos.errors.NothingFound:
+            pass
+
+    if attempts == 3:
+        embed.description = "There was a problem connecting to nekos.life!"
+
+    await ctx.respond(embed=embed)
+
+
 class Neko(slash_commands.SlashCommand):
 
     description = "Photos of cat girls. My most useful feature."
 
     async def callback(self, ctx: slash_commands.SlashCommandContext) -> None:
-        embed = hikari.Embed()
-
-        try:
-            image = nekos.img("neko")
-            embed.set_image(image)
-
-        except nekos.errors.NothingFound:
-            embed.description = "There was a problem connecting to nekos.life!"
-
-        await ctx.respond(embed=embed)
+        await failsafe_neko("neko", ctx)
 
 
 class FoxGirl(slash_commands.SlashCommand):
@@ -43,13 +56,4 @@ class FoxGirl(slash_commands.SlashCommand):
     description = "Second only to cat girls, we've got photos of fox girls."
 
     async def callback(self, ctx: slash_commands.SlashCommandContext) -> None:
-        embed = hikari.Embed()
-
-        try:
-            image = nekos.img("fox_girl")
-            embed.set_image(image)
-
-        except nekos.errors.NothingFound:
-            embed.description = "There was a problem connecting to nekos.life!"
-
-        await ctx.respond(embed=embed)
+        await failsafe_neko("fox_girl", ctx)

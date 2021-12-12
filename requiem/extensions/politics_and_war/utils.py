@@ -18,6 +18,32 @@
 from tortoise.query_utils import Q
 from lib import models
 
+import hikari
+
+
+def build_nation_info_fields(nation: dict, embed: hikari.Embed) -> None:
+    embed.add_field(name="Name", value=nation["nation_name"])
+    embed.add_field(name="Leader", value=nation["leader_name"])
+    embed.add_field(name="Score", value=f"{nation['score']:,}")
+
+    if nation["alliance"]:
+        embed.add_field(name="Alliance", value=nation["alliance"]["name"])
+        embed.add_field(name="Alliance Score", value=f"{nation['alliance']['score']:,}")
+        embed.add_field(name="Alliance Position", value=nation["alliance_position"].title())
+
+    embed.add_field(name="War Policy", value=nation["warpolicy"])
+    embed.add_field(name="Domestic Policy", value=nation["dompolicy"])
+    embed.add_field(name="Color", value=nation["color"].title())
+    embed.add_field(name="Cities", value=nation["num_cities"])
+    embed.add_field(name="Espionage Available", value=nation["espionage_available"])
+    embed.add_field(name="Soldiers", value=f"{nation['soldiers']:,}")
+    embed.add_field(name="Tanks", value=f"{nation['tanks']:,}")
+    embed.add_field(name="Aircraft", value=f"{nation['aircraft']:,}")
+    embed.add_field(name="Ships", value=f"{nation['ships']:,}")
+    embed.add_field(name="Missiles", value=f"{nation['missiles']:,}")
+    embed.add_field(name="Nukes", value=f"{nation['nukes']:,}")
+    embed.set_thumbnail(nation["flag"])
+
 
 async def lookup_nation(target: str or int) -> int:
     """

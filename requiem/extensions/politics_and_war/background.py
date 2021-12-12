@@ -18,87 +18,62 @@
 from extensions.politics_and_war import queries
 from pwpy import api, exceptions
 from lib import client, models
-from lightbulb import plugins
 
 import logging
 import asyncio
-import time
 
 
-_LOGGER = logging.getLogger("requiem.extensions.pnw")
+_LOGGER = logging.getLogger("requiem.extensions.politics_and_war.background")
 
 
-class Background(plugins.Plugin):
-
+async def generate_identity_queries(query: api.BulkQueryHandler) -> None:
     """
-    Handles various background processes for politics and war ranging from stowing identifying information to
-    dispatching war notifications.
+    Fetches page count for nations and alliances.
+    Generates subsequent queries for identifying data.
     """
-    def __init__(self, bot: client.Requiem) -> None:
-        super().__init__()
-        self.bot = bot
-        self.key = bot.credentials.pnw_api_key
-        self.main_task = asyncio.create_task(self.gather_and_run_indexing_queries())
 
-    def cog_unload(self) -> None:
-        self.main_task.cancel()
+    response = await api.fetch_query(api_key, queries.pages_query)
 
-    async def generate_identity_queries(self, query: api.BulkQueryHandler) -> None:
-        """
-        Fetches page count for nations and alliances.
-        Generates subsequent queries for identifying data.
-        """
+    nations_pages = response["nations"]["paginatorInfo"]["lastPage"]
+    for page_number in range(nations_pages):
+        nations_query = queries.nations_identity_query.format(str(page_number + 1))
+        query.add_query(nations_query)
 
-        response = await api.fetch_query(self.key, queries.pages_query)
+    alliances_pages = response["alliances"]["paginatorInfo"]["lastPage"]
+    for page_number in range(alliances_pages):
+        alliances_query = queries.alliances_identity_query.format(str(page_number + 1))
+        query.add_query(alliances_query)
 
-        nations_pages = response["nations"]["paginatorInfo"]["lastPage"]
-        for page_number in range(nations_pages):
-            nations_query = queries.nations_identity_query.format(str(page_number + 1))
-            query.add_query(nations_query)
 
-        alliances_pages = response["alliances"]["paginatorInfo"]["lastPage"]
-        for page_number in range(alliances_pages):
-            alliances_query = queries.alliances_identity_query.format(str(page_number + 1))
-            query.add_query(alliances_query)
+async def gather_and_run_queries(bot: client.Requiem) -> None:
+    """
+    Calls for all queries to be created, fetches queries, and starts processing.
+    """
+    try:
+        while not bot.is_alive:
+            await asyncio.sleep(10)
 
-    @staticmethod
-    async def generate_event_watch_queries(query: api.BulkQueryHandler) -> None:
-        """
-        Pulls all watch targets from database and calls respective methods to build queries.
-        """
+        query = api.BulkQueryHandler(api_key)
 
-    async def gather_and_run_indexing_queries(self) -> None:
-        """
-        Calls for all queries to be created, fetches queries, and starts processing.
-        """
-        try:
-            while not self.bot.is_alive:
-                await asyncio.sleep(10)
+        operations = (
+            asyncio.create_task(generate_identity_queries(query)),
+        )
 
-            query = api.BulkQueryHandler(self.key)
+        await asyncio.gather(*operations)
 
-            operations = (
-                asyncio.create_task(self.generate_identity_queries(query)),
-            )
+        response = await query.fetch_query()
 
-            await asyncio.gather(*operations)
+        for key, group in response.items():
+            for item in group["data"]:
+                if key.startswith("N"):
+                    defaults = {
+                        "name": item["nation_name"].lower(),
+                        "leader": item["leader_name"].lower(),
+                    }
+                    await models.NationsIndex.get_or_create(id=int(item["id"]), defaults=defaults)
 
-            response = await query.fetch_query()
+    except exceptions.InvalidToken as exc:
+        _LOGGER.warning(exc)
 
-            for key, group in response.items():
-                for item in group["data"]:
-                    if key.startswith("N"):
-                        defaults = {"name": item["nation_name"].lower(),
-                                    "leader": item["leader_name"].lower(),
-                                    "date": item["date"]}
-                        await models.NationsIndex.get_or_create(id=item["id"], defaults=defaults)
-
-                    elif key.startswith("A"):
-                        defaults = {"name": item["name"].lower()}
-                        await models.AlliancesIndex.get_or_create(id=item["id"], defaults=defaults)
-
-        except exceptions.InvalidToken as exc:
-            _LOGGER.error(exc)
-
-        except Exception as exc:
-            _LOGGER.error("gather and run queries encountered an unhandled exception.", exc_info=exc)
+    except Exception as exc:
+        _LOGGER.error("gather and run indexing queries encountered an unhandled exception.", exc_info=exc)

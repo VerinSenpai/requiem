@@ -18,12 +18,17 @@
 from extensions.utility import commands
 from lib import client
 
+import lightbulb
+
+
+plugin = lightbulb.Plugin("Utility")
+plugin.command(commands.ping)
+plugin.command(commands.userinfo)
+
 
 def load(bot: client.Requiem):
-    bot.add_slash_command(commands.Ping)
-    bot.add_slash_command(commands.UserInfo)
+    bot.add_plugin(plugin)
 
 
 def unload(bot: client.Requiem):
-    bot.remove_slash_command("ping")
-    bot.remove_slash_command("userinfo")
+    bot.remove_plugin(plugin)

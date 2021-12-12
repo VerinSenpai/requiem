@@ -15,13 +15,12 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from lightbulb import slash_commands
-
+import lightbulb
 import hikari
 import nekos
 
 
-async def failsafe_neko(reference: str, ctx: slash_commands.SlashCommandContext) -> None:
+async def failsafe_neko(reference: str, ctx: lightbulb.Context) -> None:
     """
     A function to assist in sending of nekos.life payloads and handling NothingFound errors.
     """
@@ -43,17 +42,13 @@ async def failsafe_neko(reference: str, ctx: slash_commands.SlashCommandContext)
     await ctx.respond(embed=embed)
 
 
-class Neko(slash_commands.SlashCommand):
-
-    description = "Photos of cat girls. My most useful feature."
-
-    async def callback(self, ctx: slash_commands.SlashCommandContext) -> None:
-        await failsafe_neko("neko", ctx)
+@lightbulb.command("neko", "Photos of cat girls. My most useful feature.")
+@lightbulb.implements(lightbulb.SlashCommand)
+async def neko(ctx: lightbulb.Context):
+    await failsafe_neko("neko", ctx)
 
 
-class FoxGirl(slash_commands.SlashCommand):
-
-    description = "Second only to cat girls, we've got photos of fox girls."
-
-    async def callback(self, ctx: slash_commands.SlashCommandContext) -> None:
-        await failsafe_neko("fox_girl", ctx)
+@lightbulb.command("foxgirl", "Second only to cat girls, we've got photos of fox girls.")
+@lightbulb.implements(lightbulb.SlashCommand)
+async def foxgirl(ctx: lightbulb.Context):
+    await failsafe_neko("fox_girl", ctx)

@@ -16,15 +16,19 @@
 
 
 from extensions.verins_lunchbox import commands
-
 from lib import client
+
+import lightbulb
+
+
+plugin = lightbulb.Plugin("VerinsLunchbox")
+plugin.command(commands.neko)
+plugin.command(commands.foxgirl)
 
 
 def load(requiem: client.Requiem) -> None:
-    requiem.add_slash_command(commands.Neko, create=True)
-    requiem.add_slash_command(commands.FoxGirl, create=True)
+    requiem.add_plugin(plugin)
 
 
 def unload(requiem: client.Requiem) -> None:
-    requiem.remove_slash_command("neko")
-    requiem.remove_slash_command("foxgirl")
+    requiem.remove_plugin(plugin)

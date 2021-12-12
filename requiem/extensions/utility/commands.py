@@ -15,70 +15,61 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from lightbulb import slash_commands
-
+import lightbulb
 import hikari
-import typing
 import time
 
 
-class Ping(slash_commands.SlashCommand):
+@lightbulb.command("ping", "View current ping times for Requiem.")
+@lightbulb.implements(lightbulb.SlashCommand)
+async def ping(ctx: lightbulb.Context):
+    embed = hikari.Embed(description="Pinging...")
 
-    description: str = "View the current ACK time for a message send and edit and Requiem's heartbeat timing."
+    start = time.monotonic()
+    message = await ctx.respond(embed=embed)
 
-    async def callback(self, ctx: slash_commands.SlashCommandContext) -> None:
-        embed = hikari.Embed(description="Pinging...")
+    millis = (time.monotonic() - start) * 1000
+    heartbeat = ctx.bot.heartbeat_latency * 1000
 
-        start = time.monotonic()
-        await ctx.respond(embed=embed)
+    embed.description = ""
+    embed.add_field(name="Heartbeat", value=f"{round(heartbeat, 2)}ms")
+    embed.add_field(name="ACK", value=f"{int(millis)}ms")
 
-        millis = (time.monotonic() - start) * 1000
-        heartbeat = ctx.bot.heartbeat_latency * 1000
-
-        embed.description = ""
-        embed.add_field(name="Heartbeat", value=f"{round(heartbeat, 2)}ms")
-        embed.add_field(name="ACK", value=f"{int(millis)}ms")
-
-        await ctx.edit_response(embed=embed)
+    await message.edit(embed=embed)
 
 
-class UserInfo(slash_commands.SlashCommand):
+@lightbulb.option("target", "A user to be looked up. Leave blank to lookup yourself.")
+@lightbulb.command("userinfo", "View info about a specified user.")
+@lightbulb.implements(lightbulb.SlashCommand)
+async def userinfo(ctx: lightbulb.Context):
+    user = ctx.options.target
 
-    description: str = "View information about a specified user or yourself."
+    if user:
+        member = ctx.resolved.members[user]
 
-    target: hikari.User = slash_commands.Option(
-        "The user to lookup. If None, you will be looked up.", required=False
-    )
+    else:
+        member = ctx.member
 
-    async def callback(self, ctx: slash_commands.SlashCommandContext) -> None:
-        user = ctx.options.target
+    embed = hikari.Embed()
 
-        if user:
-            member = ctx.resolved.members[user]
+    embed.add_field(name="Username", value=member.username)
 
-        else:
-            member = ctx.member
+    if member.nickname and member.nickname != member.username:
+        embed.add_field(name="Nickname", value=member.nickname)
 
-        embed = hikari.Embed()
+    embed.add_field(name="Snowflake", value=str(member.id))
 
-        embed.add_field(name="Username", value=member.username)
+    created_at = member.created_at.strftime("%A %B %d, %Y")
+    embed.add_field(name="Account Created On", value=created_at)
 
-        if member.nickname and member.nickname != member.username:
-            embed.add_field(name="Nickname", value=member.nickname)
+    joined_at = member.joined_at.strftime("%A %B %d, %Y")
+    embed.add_field(name="Member Joined On:", value=joined_at)
 
-        embed.add_field(name="Snowflake", value=str(member.id))
+    embed.add_field(name="Roles", value=str(len(member.role_ids)))
 
-        created_at = member.created_at.strftime("%A %B %d, %Y")
-        embed.add_field(name="Account Created On", value=created_at)
+    top_role = member.get_top_role()
+    embed.add_field(name="Top Role", value=str(top_role))
 
-        joined_at = member.joined_at.strftime("%A %B %d, %Y")
-        embed.add_field(name="Member Joined On:", value=joined_at)
+    embed.set_thumbnail(member.avatar_url)
 
-        embed.add_field(name="Roles", value=str(len(member.role_ids)))
-
-        top_role = member.get_top_role()
-        embed.add_field(name="Top Role", value=str(top_role))
-
-        embed.set_thumbnail(member.avatar_url)
-
-        await ctx.respond(embed=embed)
+    await ctx.respond(embed=embed)

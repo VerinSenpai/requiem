@@ -15,7 +15,6 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from lightbulb import slash_commands
 from lib.models import Credentials
 
 import lightbulb
@@ -33,15 +32,14 @@ import os
 _LOGGER = logging.getLogger("requiem.client")
 
 
-class Requiem(lightbulb.Bot, abc.ABC):
+class Requiem(lightbulb.BotApp, abc.ABC):
     """
-    Custom Requiem client based on lightbulb.Bot that overwrites and implements Requiem specific methods.
+    Custom Requiem client based on lightbulb.BotApp that overwrites and implements Requiem specific methods.
     """
 
     def __init__(self, credentials: Credentials) -> None:
         super().__init__(
             token=credentials.token,
-            slash_commands_only=True,
             banner=None,
             default_enabled_guilds=credentials.enabled_guilds,
         )
@@ -103,7 +101,7 @@ class Requiem(lightbulb.Bot, abc.ABC):
 
         for extension in self.all_extensions:
             try:
-                self.load_extension(f"extensions.{extension}")
+                self.load_extensions(f"extensions.{extension}")
 
             except Exception as exc:
                 _LOGGER.error(
@@ -123,7 +121,7 @@ class Requiem(lightbulb.Bot, abc.ABC):
 
         for extension in self.extensions:
             try:
-                self.unload_extension(extension)
+                self.unload_extensions(extension)
 
             except Exception as exc:
                 _LOGGER.error(
@@ -142,4 +140,3 @@ class Requiem(lightbulb.Bot, abc.ABC):
         Adds successful command execution logging to console.
         """
         _LOGGER.info(f"successfully executed command {event.command.name} in guild {event.context.guild_id}!")
-

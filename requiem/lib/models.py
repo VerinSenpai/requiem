@@ -21,10 +21,6 @@ import attr
 
 @attr.s(auto_attribs=True)
 class Credentials:
-    """
-    Config object.
-    """
-
     token: str
     enabled_guilds: list = []
     pnw_api_key: str = ""
@@ -35,19 +31,19 @@ class Credentials:
     postgres_password: str = ""
 
 
+class Guilds(tortoise.Model):
+    id: int = tortoise.fields.BigIntField(pk=True)
+    pnw_ticket_aa: int = tortoise.fields.IntField(default=0)
+    accept_tickets: int = tortoise.fields.BooleanField(default=False)
+
+
 class NationsIndex(tortoise.Model):
-    """
-    NationsIndex tortoise model object.
-    """
     id: int = tortoise.fields.IntField(pk=True)
     name: str = tortoise.fields.TextField()
     leader: str = tortoise.fields.TextField()
-    creation_date: str = tortoise.fields.TextField()
 
 
 class AlliancesIndex(tortoise.Model):
-    """
-    AlliancesIndex tortoise model object.
-    """
     id: int = tortoise.fields.IntField(pk=True)
     name: str = tortoise.fields.TextField()
+    acronym: str = tortoise.fields.TextField()

@@ -77,7 +77,7 @@ async def landcost(ctx: lightbulb.Context) -> None:
 
 
 @lightbulb.option("city", "The city to be purchased.", int, default=2)
-@lightbulb.command("landcost", "Calculate the cost to purchase a city.")
+@lightbulb.command("citycost", "Calculate the cost to purchase a city.")
 @lightbulb.implements(lightbulb.SlashCommand)
 async def citycost(ctx: lightbulb.Context) -> None:
     city = ctx.options.city

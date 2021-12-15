@@ -26,9 +26,9 @@ plugin.command(commands.neko)
 plugin.command(commands.foxgirl)
 
 
-def load(requiem: client.Requiem) -> None:
-    requiem.add_plugin(plugin)
+def load(bot: client.Requiem):
+    bot.add_plugin(plugin)
 
 
-def unload(requiem: client.Requiem) -> None:
-    requiem.remove_plugin(plugin)
+def unload(bot: client.Requiem):
+    bot.remove_plugin(plugin)

@@ -38,16 +38,13 @@ async def ping(ctx: lightbulb.Context):
     await message.edit(embed=embed)
 
 
-@lightbulb.option("target", "A user to be looked up. Leave blank to lookup yourself.")
+@lightbulb.option("target", "A user to be looked up. Leave blank to lookup yourself.", type=hikari.Member, required=False)
 @lightbulb.command("userinfo", "View info about a specified user.")
 @lightbulb.implements(lightbulb.SlashCommand)
 async def userinfo(ctx: lightbulb.Context):
-    user = ctx.options.target
+    member = ctx.options.target
 
-    if user:
-        member = ctx.resolved.members[user]
-
-    else:
+    if not member:
         member = ctx.member
 
     embed = hikari.Embed()

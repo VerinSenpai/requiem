@@ -23,7 +23,7 @@ import logging
 import asyncio
 
 
-_LOGGER = logging.getLogger("requiem.extensions.politics_and_war.background")
+_LOGGER = logging.getLogger("requiem.extensions.politics_and_war")
 
 
 async def generate_identity_queries(api_key: str, query: api.BulkQueryHandler) -> None:

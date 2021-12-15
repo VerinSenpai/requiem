@@ -30,7 +30,7 @@ alliances(first: 50) {
 
 
 nations_identity_query = """
-N_{0}: nations(first: 500, page: {0}) {{
+NATIONS_{0}: nations(first: 500, page: {0}) {{
     data {{
         nation_name
         leader_name
@@ -42,7 +42,7 @@ N_{0}: nations(first: 500, page: {0}) {{
 
 
 alliances_identity_query = """
-A_{0}: alliances(first: 50, page: {0}) {{
+ALLIANCES_{0}: alliances(first: 50, page: {0}) {{
     data {{
         name
         id

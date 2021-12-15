@@ -67,7 +67,7 @@ async def gather_and_run_queries(bot: client.Requiem) -> None:
 
         for key, group in response.items():
             for item in group["data"]:
-                if key.startswith("N"):
+                if key.startswith("NATIONS"):
                     defaults = {
                         "name": item["nation_name"].lower(),
                         "leader": item["leader_name"].lower(),

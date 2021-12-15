@@ -28,7 +28,6 @@ class Task:
         self._coro = coro
         self._sleep_time = time
         self._task = None
-        self._sleep_task = None
 
     def start(self, *args, **kwargs):
         self._task = asyncio.create_task(self._loop(*args, **kwargs))

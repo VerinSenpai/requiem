@@ -39,19 +39,11 @@ class Task:
 
         self._task.cancel()
 
-        if self._sleep_task:
-            self._sleep_task.cancel()
-
-    async def _sleep(self):
-        coro = asyncio.sleep(self._sleep_time)
-        self.sleep_task = task = asyncio.create_task(coro)
-        await task
-
     async def _loop(self, *args, **kwargs):
         try:
             while True:
                 await self._coro(*args, **kwargs)
-                await self._sleep()
+                await asyncio.sleep(self._sleep_time)
 
         except Exception as exc:
             _LOGGER.error("requiem encountered an exception while handling a task!", exc_info=exc)

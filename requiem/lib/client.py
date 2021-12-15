@@ -119,7 +119,7 @@ class Requiem(lightbulb.BotApp, abc.ABC):
         """
         _LOGGER.info("requiem is cleaning up!")
 
-        for extension in self.extensions:
+        for extension in self.extensions[::]:
             try:
                 self.unload_extensions(extension)
 

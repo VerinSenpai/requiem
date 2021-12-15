@@ -16,8 +16,8 @@
 
 
 from extensions.politics_and_war import queries
+from lib import client, models, tasks
 from pwpy import api, exceptions
-from lib import client, models
 
 import logging
 import asyncio
@@ -26,7 +26,7 @@ import asyncio
 _LOGGER = logging.getLogger("requiem.extensions.politics_and_war.background")
 
 
-async def generate_identity_queries(query: api.BulkQueryHandler) -> None:
+async def generate_identity_queries(api_key: str, query: api.BulkQueryHandler) -> None:
     """
     Fetches page count for nations and alliances.
     Generates subsequent queries for identifying data.
@@ -45,6 +45,7 @@ async def generate_identity_queries(query: api.BulkQueryHandler) -> None:
         query.add_query(alliances_query)
 
 
+@tasks.loop(minutes=5)
 async def gather_and_run_queries(bot: client.Requiem) -> None:
     """
     Calls for all queries to be created, fetches queries, and starts processing.
@@ -53,10 +54,11 @@ async def gather_and_run_queries(bot: client.Requiem) -> None:
         while not bot.is_alive:
             await asyncio.sleep(10)
 
+        api_key = bot.credentials.pnw_api_key
         query = api.BulkQueryHandler(api_key)
 
         operations = (
-            asyncio.create_task(generate_identity_queries(query)),
+            asyncio.create_task(generate_identity_queries(api_key, query)),
         )
 
         await asyncio.gather(*operations)

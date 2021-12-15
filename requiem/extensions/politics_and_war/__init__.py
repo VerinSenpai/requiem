@@ -29,8 +29,10 @@ plugin.command(commands.nationinfo)
 
 
 def load(bot: client.Requiem) -> None:
+    background.gather_and_run_queries.start(bot)
     bot.add_plugin(plugin)
 
 
 def unload(bot: client.Requiem) -> None:
+    background.gather_and_run_queries.stop()
     bot.remove_plugin(plugin)

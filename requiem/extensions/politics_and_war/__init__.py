@@ -26,6 +26,7 @@ plugin.command(commands.infracost)
 plugin.command(commands.landcost)
 plugin.command(commands.citycost)
 plugin.command(commands.nationinfo)
+plugin.command(commands.raids)
 
 
 def load(bot: client.Requiem) -> None:

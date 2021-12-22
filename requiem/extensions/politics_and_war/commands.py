@@ -17,6 +17,7 @@
 
 from extensions.politics_and_war import utils, queries
 from pwpy import calc, api
+from lightbulb.utils import nav
 
 import lightbulb
 import hikari
@@ -130,3 +131,71 @@ async def nationinfo(ctx: lightbulb.Context) -> None:
         embed.description = "No such nation could be found! Please check your query and try again!"
 
     await ctx.respond(embed=embed)
+
+
+@lightbulb.option("score", "The score to use for looking up targets.", type=float, required=False)
+@lightbulb.option("nation", "The nation to use for looking up targets.", required=False)
+@lightbulb.command("raids", "View all raid targets for a given score or nation.")
+@lightbulb.implements(lightbulb.SlashCommand)
+async def raids(ctx: lightbulb.Context) -> None:
+    key = ctx.bot.credentials.pnw_api_key
+    score = ctx.options.score
+    nation = ctx.options.nation
+    embed = hikari.Embed()
+
+    if score and nation:
+        embed.description = "You can only specify either score or nation, not both!"
+
+    elif not nation and not score:
+        embed.description = "You must specify a valid score value or a valid nation name/id/leader!"
+
+    elif nation:
+        fetched = await utils.lookup_nation(nation.lower())
+
+        if fetched:
+            query = queries.nation_score_query.format(fetched)
+            data = await api.fetch_query(key, query)
+            nations_data = data["nations"]["data"]
+
+            if nations_data:
+                score = nations_data[0]["score"]
+
+            else:
+                embed.description = "The nation specified appears to have been deleted!"
+
+        else:
+            embed.description = "No such nation could be found! Please check your query and try again!"
+
+    if score:
+        targets = await api.within_war_range(key, score)
+
+        if targets:
+            pages = []
+            in_page = 0
+            page = hikari.Embed()
+
+            for target in targets:
+                if in_page > 10:
+                    pages.append(page)
+                    page = hikari.Embed()
+                    in_page = 0
+
+                page.add_field(
+                    name=f"{target['nation_name']} {target['leader_name']}",
+                    value=target["score"],
+                )
+                in_page += 1
+
+            if page not in pages:
+                pages.append(page)
+
+            navigator = nav.ButtonNavigator(pages)
+            await navigator.run(ctx)
+            return
+
+        else:
+            embed.description = "There were no targets found for that nation/score!"
+
+    await ctx.respond(embed=embed)
+
+

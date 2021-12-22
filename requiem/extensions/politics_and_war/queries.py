@@ -51,6 +51,15 @@ ALLIANCES_{0}: alliances(first: 50, page: {0}) {{
 """
 
 
+nation_score_query = """
+nations(first: 1, id: {0}) {{
+    data {{
+        score
+    }}
+}}
+"""
+
+
 nation_lookup_query = """
 nations(first: 1, id: {0}) {{
     data {{

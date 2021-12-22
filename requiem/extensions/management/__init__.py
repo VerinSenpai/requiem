@@ -23,8 +23,6 @@ import lightbulb
 
 plugin = lightbulb.Plugin("Management")
 plugin.command(commands.terminate)
-plugin.command(commands.unload)
-plugin.command(commands.load)
 
 
 def load(requiem: client.Requiem):

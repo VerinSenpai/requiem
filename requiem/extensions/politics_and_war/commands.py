@@ -122,7 +122,28 @@ async def nationinfo(ctx: lightbulb.Context) -> None:
 
         if nations_data:
             nation = nations_data[0]
-            utils.build_nation_info_fields(nation, embed)
+
+            embed.add_field(name="Name", value=nation["nation_name"])
+            embed.add_field(name="Leader", value=nation["leader_name"])
+            embed.add_field(name="Score", value=f"{nation['score']:,}")
+
+            if nation["alliance"]:
+                embed.add_field(name="Alliance", value=nation["alliance"]["name"])
+                embed.add_field(name="Alliance Score", value=f"{nation['alliance']['score']:,}")
+                embed.add_field(name="Alliance Position", value=nation["alliance_position"].title())
+
+            embed.add_field(name="War Policy", value=nation["warpolicy"])
+            embed.add_field(name="Domestic Policy", value=nation["dompolicy"])
+            embed.add_field(name="Color", value=nation["color"].title())
+            embed.add_field(name="Cities", value=nation["num_cities"])
+            embed.add_field(name="Espionage Available", value=nation["espionage_available"])
+            embed.add_field(name="Soldiers", value=f"{nation['soldiers']:,}")
+            embed.add_field(name="Tanks", value=f"{nation['tanks']:,}")
+            embed.add_field(name="Aircraft", value=f"{nation['aircraft']:,}")
+            embed.add_field(name="Ships", value=f"{nation['ships']:,}")
+            embed.add_field(name="Missiles", value=f"{nation['missiles']:,}")
+            embed.add_field(name="Nukes", value=f"{nation['nukes']:,}")
+            embed.set_thumbnail(nation["flag"])
 
         else:
             embed.description = "The nation specified appears to have been deleted!"
@@ -171,22 +192,29 @@ async def raids(ctx: lightbulb.Context) -> None:
 
         if targets:
             pages = []
-            in_page = 0
-            page = hikari.Embed()
+            count = 0
 
             for target in targets:
-                if in_page > 10:
-                    pages.append(page)
-                    page = hikari.Embed()
-                    in_page = 0
+                count += 1
 
-                page.add_field(
-                    name=f"{target['nation_name']} {target['leader_name']}",
-                    value=target["score"],
-                )
-                in_page += 1
+                nation_name = f"[{target['nation_name']}]({utils.NATION_URL}{target['id']})"
+                leader_name = f"[{target['leader_name']}]({utils.MESSAGE_URL}{target['leader_name']})"
+                page = hikari.Embed(description=f"{nation_name} - {leader_name}")
 
-            if page not in pages:
+                page.add_field(name="Score", value=target["score"])
+                cities = target["num_cities"]
+                page.add_field(name="Cities", value=cities)
+                page.add_field(name="Soldiers", value=f"{target['soldiers']}/{15000 * cities}")
+                page.add_field(name="Tanks", value=f"{target['tanks']}/{1250 * cities}")
+                page.add_field(name="Aircraft", value=f"{target['aircraft']}/{75 * cities}")
+                page.add_field(name="Ships", value=f"{target['ships']}/{15 * cities}")
+                page.add_field(name="Missiles", value=f"{target['missiles']}")
+                page.add_field(name="Nukes", value=f"{target['nukes']}")
+
+                if target["espionage_available"]:
+                    page.add_field(name="Espionage Available", value="This nation can be spied on!")
+
+                page.set_footer(text=f"Page {count} of {len(targets)}")
                 pages.append(page)
 
             navigator = nav.ButtonNavigator(pages)

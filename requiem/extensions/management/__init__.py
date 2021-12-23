@@ -26,6 +26,8 @@ plugin = lightbulb.Plugin("Management")
 plugin.add_checks(lightbulb.owner_only)
 plugin.command(commands.terminate)
 plugin.command(commands.reload)
+plugin.command(commands.load)
+plugin.command(commands.unload)
 
 
 def load(requiem: client.Requiem):

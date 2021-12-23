@@ -19,9 +19,6 @@ from tortoise.expressions import Q
 from lib import models
 
 
-import hikari
-
-
 ALLIANCE_URL = "https://politicsandwar.com/alliance/id="
 MESSAGE_URL = "https://politicsandwar.com/inbox/message/receiver="
 NATION_URL = "https://politicsandwar.com/nation/id="
@@ -36,12 +33,22 @@ async def lookup_nation(target: str or int) -> int:
 
     except ValueError:
         fetched = await models.NationsIndex.get_or_none(
-            Q(Q(name=target), Q(leader=target), join_type="OR")
+            Q(name=target) | Q(leader=target)
         )
 
     return fetched.id if fetched else None
 
 
+async def lookup_alliance(target: str or int) -> int:
+    """
+    Search through the database for a given alliance.
+    """
+    try:
+        fetched = await models.AlliancesIndex.get_or_none(id=int(target))
 
+    except ValueError:
+        fetched = await models.AlliancesIndex.get_or_none(
+            Q(name=target) | Q(acronym=target)
+        )
 
-
+    return fetched.id if fetched else None

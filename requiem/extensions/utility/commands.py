@@ -38,7 +38,12 @@ async def ping(ctx: lightbulb.Context):
     await message.edit(embed=embed)
 
 
-@lightbulb.option("target", "A user to be looked up. Leave blank to lookup yourself.", type=hikari.Member, required=False)
+@lightbulb.option(
+    "target",
+    "A user to be looked up. Leave blank to lookup yourself.",
+    type=hikari.Member,
+    required=False
+)
 @lightbulb.command("userinfo", "View info about a specified user.")
 @lightbulb.implements(lightbulb.SlashCommand)
 async def userinfo(ctx: lightbulb.Context):

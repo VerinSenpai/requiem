@@ -197,6 +197,90 @@ async def nationinfo(ctx: lightbulb.Context) -> None:
     await ctx.respond(embed=embed)
 
 
+@lightbulb.option("alliance", "The alliance to be viewed. Can be an alliance name, acronym, or id.")
+@lightbulb.command("allianceinfo", "View information about a specified alliance.")
+@lightbulb.implements(lightbulb.SlashCommand)
+async def allianceinfo(ctx: lightbulb.Context) -> None:
+    alliance = ctx.options.alliance
+    fetched = await helpers.lookup_alliance(alliance.lower())
+    embed = hikari.Embed()
+
+    if fetched:
+        query = """
+        alliances(first: 1, id: {0}) {{
+            data {{
+                color
+                flag
+                id
+                acronym
+                irclink
+                name
+                score
+                nations {{
+                    num_cities
+                    soldiers
+                    tanks
+                    aircraft
+                    ships
+                    missiles
+                    nukes
+                }}
+            }}
+        }}
+        """.format(fetched)
+        key = ctx.bot.credentials.pnw_api_key
+        data = await api.fetch_query(key, query)
+        alliances_data = data["alliances"]["data"]
+
+        if alliances_data:
+            alliance = alliances_data[0]
+
+            acr = f" ({alliance['acronym']})" if alliance["acronym"] else ""
+            header = f"[{alliance['name']}{acr}]({helpers.ALLIANCE_URL}{alliance['id']})"
+
+            if alliance["irclink"]:
+                header += f" - [Discord]({alliance['irclink']})"
+
+            embed.description = header
+
+            embed.add_field(name="Score", value=f"{alliance['score']:,}", inline=True)
+            embed.add_field(name="Color", value=alliance["color"].title(), inline=True)
+            embed.add_field(name="Members", value=str(len(alliance["nations"])), inline=True)
+
+            cities = 0
+            soldiers = 0
+            tanks = 0
+            aircraft = 0
+            ships = 0
+            missiles = 0
+            nukes = 0
+
+            for nation in alliance["nations"]:
+                cities += nation["num_cities"]
+                soldiers += nation["soldiers"]
+                tanks += nation["tanks"]
+                aircraft += nation["aircraft"]
+                ships += nation["ships"]
+                missiles += nation["missiles"]
+                nukes += nation["nukes"]
+
+            embed.add_field(name="Soldiers", value=f"{soldiers:,}/{15000 * cities:,}", inline=True)
+            embed.add_field(name="Tanks", value=f"{tanks:,}/{1250 * cities:,}", inline=True)
+            embed.add_field(name="Aircraft", value=f"{aircraft:,}/{75 * cities:,}", inline=True)
+            embed.add_field(name="Ships", value=f"{ships:,}/{15 * cities:,}", inline=True)
+            embed.add_field(name="Missiles", value=f"{missiles:,}", inline=True)
+            embed.add_field(name="Nukes", value=f"{nukes:,}", inline=True)
+            embed.set_thumbnail(alliance["flag"])
+
+        else:
+            embed.description = "The alliance specified appears to have been deleted!"
+
+    else:
+        embed.description = "No such alliance could be found! Please check your query and try again!"
+
+    await ctx.respond(embed=embed)
+
+
 @lightbulb.option("score", "The score to use for looking up targets.", float, required=False)
 @lightbulb.option("nation", "The nation to use for looking up targets.", required=False)
 @lightbulb.option("alliance", "Narrow search to a specific alliance.", int, required=False, default=0)

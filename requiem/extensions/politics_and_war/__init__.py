@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from extensions.politics_and_war import commands, background
+from extensions.politics_and_war import commands, background, helpers
 from lib import client
 
 import lightbulb
@@ -28,6 +28,7 @@ plugin.command(commands.landcost)
 plugin.command(commands.citycost)
 plugin.command(commands.nationinfo)
 plugin.command(commands.raids)
+plugin.command(commands.allianceinfo)
 
 
 def load(bot: client.Requiem) -> None:
@@ -40,3 +41,4 @@ def unload(bot: client.Requiem) -> None:
     bot.remove_plugin(plugin)
     del sys.modules[commands.__name__]
     del sys.modules[background.__name__]
+    del sys.modules[helpers.__name__]

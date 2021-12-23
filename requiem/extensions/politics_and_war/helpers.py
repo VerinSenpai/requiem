@@ -15,8 +15,9 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from tortoise.query_utils import Q
+from tortoise.expressions import Q
 from lib import models
+
 
 import hikari
 

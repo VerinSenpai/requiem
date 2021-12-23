@@ -15,7 +15,6 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from extensions.politics_and_war import queries
 from lib import client, models, tasks
 from pwpy import api, exceptions
 
@@ -26,23 +25,50 @@ import asyncio
 _LOGGER = logging.getLogger("requiem.extensions.politics_and_war")
 
 
-async def generate_identity_queries(api_key: str, query: api.BulkQueryHandler) -> None:
+async def generate_identity_queries(api_key: str, query_handler: api.BulkQueryHandler) -> None:
     """
     Fetches page count for nations and alliances.
     Generates subsequent queries for identifying data.
     """
-
-    response = await api.fetch_query(api_key, queries.pages_query)
+    query = """
+    nations(first: 500) {
+        paginatorInfo {
+            lastPage
+        }
+    }
+    alliances(first: 50) {
+        paginatorInfo {
+            lastPage
+        }
+    }
+    """
+    response = await api.fetch_query(api_key, query)
 
     nations_pages = response["nations"]["paginatorInfo"]["lastPage"]
     for page_number in range(nations_pages):
-        nations_query = queries.nations_identity_query.format(str(page_number + 1))
-        query.add_query(nations_query)
+        query = """
+        NATIONS_{0}: nations(first: 500, page: {0}) {{
+            data {{
+                nation_name
+                leader_name
+                id
+                date
+            }}
+        }}
+        """.format(str(page_number + 1))
+        query_handler.add_query(query)
 
     alliances_pages = response["alliances"]["paginatorInfo"]["lastPage"]
     for page_number in range(alliances_pages):
-        alliances_query = queries.alliances_identity_query.format(str(page_number + 1))
-        query.add_query(alliances_query)
+        query = """
+        ALLIANCES_{0}: alliances(first: 50, page: {0}) {{
+            data {{
+                name
+                id
+            }}
+        }}
+        """.format(str(page_number + 1))
+        query_handler.add_query(query)
 
 
 @tasks.loop(minutes=5)

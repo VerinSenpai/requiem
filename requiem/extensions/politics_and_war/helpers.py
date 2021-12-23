@@ -21,13 +21,14 @@ from lib import models
 import hikari
 
 
+ALLIANCE_URL = "https://politicsandwar.com/alliance/id="
 MESSAGE_URL = "https://politicsandwar.com/inbox/message/receiver="
 NATION_URL = "https://politicsandwar.com/nation/id="
 
 
 async def lookup_nation(target: str or int) -> int:
     """
-    Before you ask why i'm doing it like this, don't.
+    Search through the database for a given nation.
     """
     try:
         fetched = await models.NationsIndex.get_or_none(id=int(target))
@@ -38,4 +39,8 @@ async def lookup_nation(target: str or int) -> int:
         )
 
     return fetched.id if fetched else None
+
+
+
+
 

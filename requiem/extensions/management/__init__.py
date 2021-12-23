@@ -19,10 +19,12 @@ from extensions.management import commands
 from lib import client
 
 import lightbulb
+import sys
 
 
 plugin = lightbulb.Plugin("Management")
 plugin.command(commands.terminate)
+plugin.command(commands.reload)
 
 
 def load(requiem: client.Requiem):
@@ -31,3 +33,4 @@ def load(requiem: client.Requiem):
 
 def unload(requiem: client.Requiem):
     requiem.remove_plugin(plugin)
+    del sys.modules[commands.__name__]

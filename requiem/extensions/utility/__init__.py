@@ -19,6 +19,7 @@ from extensions.utility import commands
 from lib import client
 
 import lightbulb
+import sys
 
 
 plugin = lightbulb.Plugin("Utility")
@@ -32,3 +33,4 @@ def load(bot: client.Requiem):
 
 def unload(bot: client.Requiem):
     bot.remove_plugin(plugin)
+    del sys.modules[commands.__name__]

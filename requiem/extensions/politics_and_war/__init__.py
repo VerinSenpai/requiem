@@ -19,6 +19,7 @@ from extensions.politics_and_war import commands, background
 from lib import client
 
 import lightbulb
+import sys
 
 
 plugin = lightbulb.Plugin("PoliticsAndWar")
@@ -37,3 +38,5 @@ def load(bot: client.Requiem) -> None:
 def unload(bot: client.Requiem) -> None:
     background.gather_and_run_queries.stop()
     bot.remove_plugin(plugin)
+    del sys.modules[commands.__name__]
+    del sys.modules[background.__name__]

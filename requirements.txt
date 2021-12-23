@@ -1,4 +1,4 @@
-git+https://github.com/GodEmpressVerin/pwpy.git
+pwpy
 hikari-lightbulb
 tortoise-orm
 asyncpg

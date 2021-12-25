@@ -26,6 +26,7 @@ plugin = lightbulb.Plugin("Utility")
 plugin.command(commands.ping)
 plugin.command(commands.userinfo)
 plugin.command(commands.about)
+plugin.command(commands.avatar)
 
 
 def load(bot: client.Requiem):

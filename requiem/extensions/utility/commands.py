@@ -42,7 +42,7 @@ async def ping(ctx: lightbulb.Context):
 
 
 @lightbulb.option(
-    "target",
+    "user",
     "A user to be looked up. Leave blank to lookup yourself.",
     type=hikari.Member,
     required=False
@@ -50,7 +50,7 @@ async def ping(ctx: lightbulb.Context):
 @lightbulb.command("userinfo", "View info about a specified user.")
 @lightbulb.implements(lightbulb.SlashCommand)
 async def userinfo(ctx: lightbulb.Context):
-    member = ctx.options.target
+    member = ctx.options.user
 
     if not member:
         member = ctx.member
@@ -92,6 +92,8 @@ async def about(ctx: lightbulb.Context) -> None:
     convenient and easy to use package. Requiem is, always has been, and
     always will be free to use for everyone. Have a feature request or an
     issue to report? Consider dropping by the Requiem [support server](https://discord.gg/uTXdx7J)!
+    Want to take a look at my inner workings or fork Requiem? Take a look
+    at my [repo](https://github.com/GodEmpressVerin/requiem)!
     """
 
     embed.add_field(name="Requiem Version", value=__init__.__version__, inline=True)
@@ -102,3 +104,25 @@ async def about(ctx: lightbulb.Context) -> None:
     embed.add_field(name="About Requiem", value=description)
 
     await ctx.respond(embed=embed)
+
+
+@lightbulb.option(
+    "user",
+    "A user to be looked up. Leave blank to lookup yourself.",
+    type=hikari.Member,
+    required=False
+)
+@lightbulb.command("avatar", "View the avatar of a specified user.")
+@lightbulb.implements(lightbulb.SlashCommand)
+async def avatar(ctx: lightbulb.Context) -> None:
+    member = ctx.options.user
+
+    if not member:
+        member = ctx.member
+
+    embed = hikari.Embed()
+    embed.set_thumbnail(member.avatar_url)
+
+    await ctx.respond(embed=embed)
+
+

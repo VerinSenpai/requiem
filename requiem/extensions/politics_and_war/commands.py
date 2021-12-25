@@ -306,27 +306,27 @@ async def alliance_info(ctx: lightbulb.Context) -> None:
 
         if fetched:
             query = """
-                alliances(first: 1, id: {0}) {{
-                    data {{
-                        color
-                        flag
-                        id
-                        acronym
-                        irclink
-                        name
-                        score
-                        nations {{
-                            num_cities
-                            soldiers
-                            tanks
-                            aircraft
-                            ships
-                            missiles
-                            nukes
-                        }}
+            alliances(first: 1, id: {0}) {{
+                data {{
+                    color
+                    flag
+                    id
+                    acronym
+                    irclink
+                    name
+                    score
+                    nations {{
+                        num_cities
+                        soldiers
+                        tanks
+                        aircraft
+                        ships
+                        missiles
+                        nukes
                     }}
                 }}
-                """.format(alliance)
+            }}
+            """.format(fetched)
             data = await pwpy.api.fetch_query(key, query)
             alliance = data["alliances"]["data"]
 
@@ -342,7 +342,7 @@ async def alliance_info(ctx: lightbulb.Context) -> None:
     await ctx.respond(embed=embed)
 
 
-async def generate_raids_pages(targets: list) -> list:
+def generate_raids_pages(targets: list) -> list:
     pages = []
     page_num = 0
 
@@ -441,7 +441,7 @@ async def raids(ctx: lightbulb.Context) -> None:
                     omit_alliance=nation_data["alliance_id"]
                 )
                 if targets:
-                    targets = await generate_raids_pages(targets)
+                    targets = generate_raids_pages(targets)
 
                 else:
                     embed.description = "No raid targets were found for that nation!"
@@ -460,7 +460,7 @@ async def raids(ctx: lightbulb.Context) -> None:
             powered=powered
         )
         if targets:
-            targets = await generate_raids_pages(targets)
+            targets = generate_raids_pages(targets)
 
         else:
             embed.description = "No raid targets were found for that score!"

@@ -46,10 +46,12 @@ class Requiem(lightbulb.BotApp, abc.ABC):
         )
 
         self.credentials = credentials
+        self.executed_commands = 0
 
         self.subscribe(hikari.StartingEvent, self.handle_starting_operations)
         self.subscribe(hikari.StartedEvent, self.handle_started_operations)
         self.subscribe(hikari.StoppingEvent, self.handle_stopping_operations)
+        self.subscribe(lightbulb.SlashCommandCompletionEvent, self.handle_command_completion)
 
     async def handle_starting_operations(self, _) -> None:
         """
@@ -102,6 +104,11 @@ class Requiem(lightbulb.BotApp, abc.ABC):
         await tortoise.Tortoise.close_connections()
 
         _LOGGER.info("requiem has finished cleanup!")
+
+    async def handle_command_completion(self, event: lightbulb.SlashCommandCompletionEvent) -> None:
+        self.executed_commands += 1
+
+        _LOGGER.info("command %s executed successfully!", event.command.name)
 
 
 async def setup_database(credentials: models.Credentials) -> None:

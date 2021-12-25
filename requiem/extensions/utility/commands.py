@@ -15,9 +15,12 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
+from lib import client
+
 import lightbulb
 import hikari
 import time
+import __init__
 
 
 @lightbulb.command("ping", "View current ping times for Requiem.")
@@ -73,5 +76,29 @@ async def userinfo(ctx: lightbulb.Context):
     embed.add_field(name="Top Role", value=str(top_role))
 
     embed.set_thumbnail(member.avatar_url)
+
+    await ctx.respond(embed=embed)
+
+
+@lightbulb.command("about", "View information about Requiem.")
+@lightbulb.implements(lightbulb.SlashCommand)
+async def about(ctx: lightbulb.Context) -> None:
+    bot = ctx.bot
+    embed = hikari.Embed()
+
+    description = """
+    Requiem is a specially crafted discord bot built to provide the largest
+    number of tools and resources for the politics and war community in a
+    convenient and easy to use package. Requiem is, always has been, and
+    always will be free to use for everyone. Have a feature request or an
+    issue to report? Consider dropping by the Requiem [support server](https://discord.gg/uTXdx7J)!
+    """
+
+    embed.add_field(name="Requiem Version", value=__init__.__version__, inline=True)
+    embed.add_field(name="Hikari Version", value=hikari.__version__, inline=True)
+    embed.add_field(name="Lightbulb Version", value=lightbulb.__version__, inline=True)
+    embed.add_field(name="Commands Executed", value=bot.executed_commands, inline=True)
+    embed.add_field(name="Time Alive", value="N/A", inline=True)
+    embed.add_field(name="About Requiem", value=description)
 
     await ctx.respond(embed=embed)

@@ -35,7 +35,7 @@ async def terminate(ctx: lightbulb.Context) -> None:
 @lightbulb.command("reload", "Attempt to reload an extension.")
 @lightbulb.implements(lightbulb.SlashCommand)
 async def reload(ctx: lightbulb.Context) -> None:
-    extension = ctx.options.extension
+    extension = ctx.options.extension.replace(" ", "_")
     embed = hikari.Embed()
 
     try:
@@ -60,7 +60,7 @@ async def reload(ctx: lightbulb.Context) -> None:
 @lightbulb.command("unload", "Attempt to unload an extension.")
 @lightbulb.implements(lightbulb.SlashCommand)
 async def unload(ctx: lightbulb.Context) -> None:
-    extension = ctx.options.extension
+    extension = ctx.options.extension.replace(" ", "_")
     embed = hikari.Embed()
 
     try:
@@ -85,7 +85,7 @@ async def unload(ctx: lightbulb.Context) -> None:
 @lightbulb.command("load", "Attempt to load an extension.")
 @lightbulb.implements(lightbulb.SlashCommand)
 async def load(ctx: lightbulb.Context) -> None:
-    extension = ctx.options.extension
+    extension = ctx.options.extension.replace(" ", "_")
     embed = hikari.Embed()
 
     try:

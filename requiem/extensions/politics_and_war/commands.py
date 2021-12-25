@@ -201,7 +201,7 @@ async def nation_info(ctx: lightbulb.Context) -> None:
     await ctx.respond(embed=embed)
 
 
-def process_alliance_selection(key: str, alliance: str or int, embed: hikari.Embed) -> None:
+async def process_alliance_selection(key: str, alliance: str or int, embed: hikari.Embed) -> None:
     fetched = await helpers.lookup_alliance(alliance.lower())
 
     if fetched:
@@ -306,7 +306,7 @@ async def alliance_info(ctx: lightbulb.Context) -> None:
             nation_data = data["nations"]["data"][0]
 
             if nation_data:
-                process_alliance_selection(key, nation["alliance_id"], embed)
+                await process_alliance_selection(key, nation["alliance_id"], embed)
 
             else:
                 embed.description = "The nation specified appears to have been deleted!"
@@ -315,12 +315,12 @@ async def alliance_info(ctx: lightbulb.Context) -> None:
             embed.description = "No such nation could be found! Please check your query and try again!"
 
     else:
-        process_alliance_selection(key, alliance, embed)
+        await process_alliance_selection(key, alliance, embed)
 
     await ctx.respond(embed=embed)
 
 
-async def generate_targets_pages(targets: list) -> list:
+async def generate_raids_pages(targets: list) -> list:
     pages = []
 
     for target in targets:
@@ -414,7 +414,7 @@ async def raids(ctx: lightbulb.Context) -> None:
                     omit_alliance=nation_data["alliance_id"]
                 )
                 if targets:
-                    targets = await generate_targets_pages(targets)
+                    targets = await generate_raids_pages(targets)
 
                 else:
                     embed.description = "No raid targets were found for that nation!"
@@ -433,7 +433,7 @@ async def raids(ctx: lightbulb.Context) -> None:
             powered=powered
         )
         if targets:
-            targets = await generate_targets_pages(targets)
+            targets = await generate_raids_pages(targets)
 
         else:
             embed.description = "No raid targets were found for that score!"

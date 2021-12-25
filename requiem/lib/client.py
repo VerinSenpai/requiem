@@ -15,11 +15,12 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from lib.models import Credentials
+from lib import tasks, models
 
 import lightbulb
 import tortoise
 import logging
+import random
 import asyncpg
 import socket
 import typing
@@ -37,7 +38,7 @@ class Requiem(lightbulb.BotApp, abc.ABC):
     Custom Requiem client based on lightbulb.BotApp that overwrites and implements Requiem specific methods.
     """
 
-    def __init__(self, credentials: Credentials) -> None:
+    def __init__(self, credentials: models.Credentials) -> None:
         super().__init__(
             token=credentials.token,
             banner=None,
@@ -46,60 +47,23 @@ class Requiem(lightbulb.BotApp, abc.ABC):
 
         self.credentials = credentials
 
-        self.subscribe(hikari.StartingEvent, self.setup_database)
-        self.subscribe(hikari.StartingEvent, self.load_extensions_on_start)
-        self.subscribe(hikari.StoppingEvent, self.clean_up_on_closing)
-        self.subscribe(lightbulb.SlashCommandCompletionEvent, self.log_successful_command_invoke)
+        self.subscribe(hikari.StartingEvent, self.handle_starting_operations)
+        self.subscribe(hikari.StartedEvent, self.handle_started_operations)
+        self.subscribe(hikari.StoppingEvent, self.handle_stopping_operations)
 
-    @property
-    def all_extensions(self) -> typing.Generator[str, any, None]:
+    async def handle_starting_operations(self, _) -> None:
         """
-        Returns generator of extension names from extensions folder.
+        Prepares the database and loads extensions.
         """
-        return (
+        await setup_database(self.credentials)
+
+        extensions = (
             plugin
             for plugin in os.listdir("extensions")
             if plugin not in ("__init__.py", "__pycache__")
         )
 
-    async def setup_database(self, event: hikari.StartingEvent) -> None:
-        """
-        Attempts a connection to a postgresql server. Falls back to using sqlite.
-        """
-        url = yarl.URL.build(
-            scheme="postgres",
-            host=self.credentials.postgres_host,
-            port=self.credentials.postgres_port,
-            user=self.credentials.postgres_user,
-            password=self.credentials.postgres_password,
-            path=f"/{self.credentials.postgres_database}",
-        )
-        modules = {"models": ["lib.models"]}
-
-        try:
-            await tortoise.Tortoise.init(db_url=str(url), modules=modules)
-            _LOGGER.info("requiem has connected to the postgres server at <%s>!", url)
-
-        except (
-                tortoise.exceptions.DBConnectionError,
-                asyncpg.InvalidPasswordError,
-                ConnectionRefusedError,
-                socket.gaierror,
-        ):
-            await tortoise.Tortoise.init(db_url="sqlite://db.sqlite3", modules=modules)
-            _LOGGER.warning(
-                "requiem was unable to connect to a postgres server! sqlite will be used instead!"
-            )
-
-        await tortoise.Tortoise.generate_schemas()
-
-    async def load_extensions_on_start(self, event: hikari.StartingEvent) -> None:
-        """
-        Loads extensions prior to Requiem connecting to discord.
-        Logs number of extensions loaded and number of commands gathered.
-        """
-
-        for extension in self.all_extensions:
+        for extension in extensions:
             try:
                 self.load_extensions(f"extensions.{extension}")
 
@@ -113,9 +77,15 @@ class Requiem(lightbulb.BotApp, abc.ABC):
             f"successfully loaded {len(self.extensions)} extension(s) and {len(self.slash_commands)} command(s)!"
         )
 
-    async def clean_up_on_closing(self, event: hikari.StoppingEvent) -> None:
+    async def handle_started_operations(self, _) -> None:
         """
-        Handles extension unloading and cleanup while Requiem is closing.
+        Starts any post-start tasks
+        """
+        handle_presence.start(self)
+
+    async def handle_stopping_operations(self, _) -> None:
+        """
+        Unloads extensions and closes the database while Requiem is closing.
         """
         _LOGGER.info("requiem is cleaning up!")
 
@@ -129,14 +99,49 @@ class Requiem(lightbulb.BotApp, abc.ABC):
                     exc_info=exc,
                 )
 
-        _LOGGER.info("successfully unloaded all extensions and commands!")
-
         await tortoise.Tortoise.close_connections()
 
         _LOGGER.info("requiem has finished cleanup!")
 
-    async def log_successful_command_invoke(self, event: lightbulb.SlashCommandCompletionEvent) -> None:
-        """
-        Adds successful command execution logging to console.
-        """
-        _LOGGER.info(f"successfully executed command {event.command.name} in guild {event.context.guild_id}!")
+
+async def setup_database(credentials: models.Credentials) -> None:
+    """
+    Attempts a connection to a postgresql server. Falls back to using sqlite.
+    """
+    url = yarl.URL.build(
+        scheme="postgres",
+        host=credentials.postgres_host,
+        port=credentials.postgres_port,
+        user=credentials.postgres_user,
+        password=credentials.postgres_password,
+        path=f"/{credentials.postgres_database}",
+    )
+    modules = {"models": ["lib.models"]}
+
+    try:
+        await tortoise.Tortoise.init(db_url=str(url), modules=modules)
+        _LOGGER.info("requiem has connected to the postgres server at <%s>!", url)
+
+    except (
+            tortoise.exceptions.DBConnectionError,
+            asyncpg.InvalidPasswordError,
+            ConnectionRefusedError,
+            socket.gaierror,
+    ):
+        await tortoise.Tortoise.init(db_url="sqlite://db.sqlite3", modules=modules)
+        _LOGGER.warning(
+            "requiem was unable to connect to a postgres server! sqlite will be used instead!"
+        )
+
+    await tortoise.Tortoise.generate_schemas()
+
+
+@tasks.loop(minutes=5)
+async def handle_presence(bot: Requiem) -> None:
+    possible = (
+        "Listening for Slash Commands",
+        "Waiting for something to do",
+        "Grinding gears"
+    )
+    activity = hikari.Activity(name=random.choice(possible))
+    await bot.update_presence(activity=activity)

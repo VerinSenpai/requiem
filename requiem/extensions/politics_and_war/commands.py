@@ -240,8 +240,8 @@ def generate_alliance_embed(alliance: dict, embed: hikari.Embed) -> None:
     embed.set_thumbnail(alliance["flag"])
 
 
-@lightbulb.option("alliance", "The alliance to be viewed. Can be an alliance name, acronym, or id.")
-@lightbulb.option("nation", "Lookup an alliance by a nation. Can be a nation name, leader, or id.")
+@lightbulb.option("alliance", "The alliance to be viewed. Can be an alliance name, acronym, or id.", required=False)
+@lightbulb.option("nation", "Lookup an alliance by a nation. Can be a nation name, leader, or id.", required=False)
 @lightbulb.command("allianceinfo", "View information about a specified alliance.")
 @lightbulb.implements(lightbulb.SlashCommand)
 async def alliance_info(ctx: lightbulb.Context) -> None:
@@ -253,6 +253,9 @@ async def alliance_info(ctx: lightbulb.Context) -> None:
 
     if alliance and nation:
         embed.description = "You can only specify an alliance or a nation, not both!"
+
+    elif not alliance and not nation:
+        embed.description = "You must specify a valid alliance name/id/acronym or a valid nation name/id/leader!"
 
     elif nation:
         fetched = await helpers.lookup_nation(nation.lower())

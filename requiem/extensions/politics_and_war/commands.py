@@ -289,8 +289,8 @@ async def alliance_info(ctx: lightbulb.Context) -> None:
             nation_data = data["nations"]["data"][0]
 
             if nation_data:
-                if nation["alliance"]:
-                    generate_alliance_embed(alliance, embed)
+                if nation_data["alliance"]:
+                    generate_alliance_embed(nation_data["alliance"], embed)
 
                 else:
                     embed.description = "The nation specified is not in an alliance!"

@@ -1,5 +1,5 @@
 # REQUIEM
-###Free, Powerful, Flexible
+### Free, Powerful, Flexible
 ***
 #### About Requiem
 Requiem is a specially crafted discord bot built to provide the largest number of tools and resources to help the

@@ -1,7 +1,4 @@
-# REQUIEM
-### Free, Powerful, Flexible
-***
-#### About Requiem
+# About Requiem
 Requiem is a specially crafted discord bot built to provide the largest number of tools and resources to help the
 politics and war community in a convenient and easy to use package. Requiem has been rewritten from the ground up for
 stability, ease of use, and readability, so those who wish to modify Requiem for their own purposes can do so easily.
@@ -13,17 +10,17 @@ made easier than ever thanks to the bot being capable of running on a sqlite dat
 applications be installed besides python. If you need help self-hosting, wish to submit a bug report, or request a new
 feature, feel free to join Requiem's [discord server](https://discord.gg/uTXdx7J).
 ***
-#### Adding Requiem to your guild
+# Adding Requiem to your guild
 Adding Requiem to your server is easy. Simply follow this [invite link](https://discord.com/oauth2/authorize?client_id=406643604019347456&scope=bot).
 Select the desired server from the dropdown list and click authorize. Note how there are no permission toggles on the 
 interface. Requiem requires **NO** permissions to perform any of its basic operations or politics and war operations.
 ***
-#### Self-hosting Requiem
+# Self-hosting Requiem
 Self-hosting Requiem requires a bit more from you. To start, you'll need to create a bot application with discord.
 Follow [this tutorial](https://tutorials.discordcoding.academy/starting/making-the-bot.html) to create your bot
 application. Note that you **do not** need any of the privileged intents for Requiem to function.
 
-#### Windows
+### Windows
 
 * Step 1 - Install Required Applications
   * For basic functionality, Requiem only requires [Python 3.10](https://python.org) making sure to tick the 
@@ -56,9 +53,30 @@ application. Note that you **do not** need any of the privileged intents for Req
   * Requiem should now be starting up. Note that it may take a while to process commands (add the commands to discord)
   if you have not specified enabled_guilds in the credentials.yaml file
 
-#### Linux
+### Setting Up Credentials
+Requiem uses a credentials.yaml file stored in the Requiem directory to handle the initial configuration. Note that
+changes to these fields post-start will not show up within Requiem as the credentials file is only checked and processed
+on launch. If you wish to make a change to your credentials.yaml file, you will need to restart the bot afterwards for
+the changes to take effect.
 
-* Steps for Linux coming soon...
+Below is a list of valid fields for the credentials.yaml fields as well as their type, defaults, and descriptions. Note
+that if you wish to leave a field default, you simply omit it from the credentials.yaml file.
+~~~
+token             | REQUIRED | TEXT |                       | the token to use for connection to discord
+enabled_guilds    | OPTIONAL | LIST | defaults to None      | list of guilds to enable commands in (must be snowflake)
+pnw_api_key       | OPTIONAL | TEXT | defaults to None      | sets the key that requiem will use for politics and war
+postgres_host     | OPTIONAL | TEXT | defaults to localhost | sets the host url/ip for the postgres server
+postgres_port     | OPTIONAL | INT  | defaults to 5432      | sets the port for the postgres server
+postgres_database | OPTIONAL | TEXT | defaults to postgres  | sets the database for the postgres server
+postgres_user     | OPTIONAL | TEXT | defaults to postgres  | sets the user for the postgres server
+postgres_password | OPTIONAL | TEXT | defaults to None      | sets the password for the postgres server
+~~~
+Below is an example of how the fields in a credentials.yaml file should look.
+~~~
+token: YourDiscord.Token.Here
+enabled_guilds: [123456789101112131415]
+pnw_api_key: SomeValidAPIKey
+~~~
 
 Should you encounter any problems getting Requiem running, or need help getting the postgresql database setup, please
 ask for help in Requiem's [discord server](https://discord.gg/uTXdx7J)

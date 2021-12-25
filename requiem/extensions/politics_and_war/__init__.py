@@ -23,12 +23,12 @@ import sys
 
 
 plugin = lightbulb.Plugin("PoliticsAndWar")
-plugin.command(commands.infracost)
-plugin.command(commands.landcost)
-plugin.command(commands.citycost)
-plugin.command(commands.nationinfo)
+plugin.command(commands.infra_cost)
+plugin.command(commands.land_cost)
+plugin.command(commands.city_cost)
+plugin.command(commands.nation_info)
 plugin.command(commands.raids)
-plugin.command(commands.allianceinfo)
+plugin.command(commands.alliance_info)
 
 
 def load(bot: client.Requiem) -> None:

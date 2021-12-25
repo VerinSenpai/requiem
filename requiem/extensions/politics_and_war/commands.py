@@ -29,7 +29,7 @@ import hikari
 @lightbulb.option("cities", "The number of cities to multiply the cost by.", int, default=1)
 @lightbulb.command("infracost", "Calculate the cost to purchase or sell infrastructure.")
 @lightbulb.implements(lightbulb.SlashCommand)
-async def infracost(ctx: lightbulb.Context) -> None:
+async def infra_cost(ctx: lightbulb.Context) -> None:
     starting = ctx.options.starting
     ending = ctx.options.ending
     cities = ctx.options.cities
@@ -56,7 +56,7 @@ async def infracost(ctx: lightbulb.Context) -> None:
 @lightbulb.option("cities", "The number of cities to multiply the cost by.", int, default=1)
 @lightbulb.command("landcost", "Calculate the cost to purchase or sell land.")
 @lightbulb.implements(lightbulb.SlashCommand)
-async def landcost(ctx: lightbulb.Context) -> None:
+async def land_cost(ctx: lightbulb.Context) -> None:
     starting = ctx.options.starting
     ending = ctx.options.ending
     cities = ctx.options.cities
@@ -81,7 +81,7 @@ async def landcost(ctx: lightbulb.Context) -> None:
 @lightbulb.option("city", "The city to be purchased.", int, default=2)
 @lightbulb.command("citycost", "Calculate the cost to purchase a city.")
 @lightbulb.implements(lightbulb.SlashCommand)
-async def citycost(ctx: lightbulb.Context) -> None:
+async def city_cost(ctx: lightbulb.Context) -> None:
     city = ctx.options.city
 
     if city >= 2:
@@ -110,7 +110,7 @@ async def citycost(ctx: lightbulb.Context) -> None:
 @lightbulb.option("nation", "The nation to be viewed. Can be a nation name, leader, or id.")
 @lightbulb.command("nationinfo", "View information about a specified nation.")
 @lightbulb.implements(lightbulb.SlashCommand)
-async def nationinfo(ctx: lightbulb.Context) -> None:
+async def nation_info(ctx: lightbulb.Context) -> None:
     nation = ctx.options.nation
     fetched = await helpers.lookup_nation(nation.lower())
     embed = hikari.Embed()
@@ -201,13 +201,8 @@ async def nationinfo(ctx: lightbulb.Context) -> None:
     await ctx.respond(embed=embed)
 
 
-@lightbulb.option("alliance", "The alliance to be viewed. Can be an alliance name, acronym, or id.")
-@lightbulb.command("allianceinfo", "View information about a specified alliance.")
-@lightbulb.implements(lightbulb.SlashCommand)
-async def allianceinfo(ctx: lightbulb.Context) -> None:
-    alliance = ctx.options.alliance
+def process_alliance_selection(key: str, alliance: str or int, embed: hikari.Embed) -> None:
     fetched = await helpers.lookup_alliance(alliance.lower())
-    embed = hikari.Embed()
 
     if fetched:
         query = """
@@ -232,7 +227,6 @@ async def allianceinfo(ctx: lightbulb.Context) -> None:
             }}
         }}
         """.format(fetched)
-        key = ctx.bot.credentials.pnw_api_key
         data = await pwpy.api.fetch_query(key, query)
         alliances_data = data["alliances"]["data"]
 
@@ -282,7 +276,88 @@ async def allianceinfo(ctx: lightbulb.Context) -> None:
     else:
         embed.description = "No such alliance could be found! Please check your query and try again!"
 
+
+@lightbulb.option("alliance", "The alliance to be viewed. Can be an alliance name, acronym, or id.")
+@lightbulb.option("nation", "Lookup an alliance by a nation. Can be a nation name, leader, or id.")
+@lightbulb.command("allianceinfo", "View information about a specified alliance.")
+@lightbulb.implements(lightbulb.SlashCommand)
+async def alliance_info(ctx: lightbulb.Context) -> None:
+    alliance = ctx.options.alliance
+    nation = ctx.options.nation
+    key = ctx.bot.credentials.pnw_api_key
+
+    embed = hikari.Embed()
+
+    if alliance and nation:
+        embed.description = "You can only specify an alliance or a nation, not both!"
+
+    elif nation:
+        fetched = await helpers.lookup_nation(nation.lower())
+
+        if fetched:
+            query = """
+            nations(first: 1, id: {0}) {{
+                data {{
+                    alliance_id
+                }}
+            }}
+            """.format(fetched)
+            data = await pwpy.api.fetch_query(key, query)
+            nation_data = data["nations"]["data"][0]
+
+            if nation_data:
+                process_alliance_selection(key, nation["alliance_id"], embed)
+
+            else:
+                embed.description = "The nation specified appears to have been deleted!"
+
+        else:
+            embed.description = "No such nation could be found! Please check your query and try again!"
+
+    else:
+        process_alliance_selection(key, alliance, embed)
+
     await ctx.respond(embed=embed)
+
+
+async def generate_targets_pages(targets: list) -> list:
+    pages = []
+
+    for target in targets:
+        nation_name = f"[{target['nation_name']}]({helpers.NATION_URL}{target['id']})"
+        leader_url = helpers.MESSAGE_URL + target["leader_name"].replace(" ", "%20")
+        leader_name = f"[{target['leader_name']}]({leader_url})"
+        page = hikari.Embed(description=f"{nation_name} - {leader_name}")
+
+        page.add_field(name="Score", value=f"{target['score']:,}", inline=True)
+        cities = target["num_cities"]
+        page.add_field(name="Cities", value=cities, inline=True)
+        page.add_field(name="War Policy", value=target["warpolicy"], inline=True)
+
+        if target["alliance"]:
+            alliance_name = f"[{target['alliance']['name']}]({helpers.ALLIANCE_URL}{target['alliance_id']})"
+            page.add_field(name="Alliance", value=alliance_name, inline=True)
+            page.add_field(name="Alliance Score", value=f"{target['alliance']['score']:,}", inline=True)
+            page.add_field(name="Alliance Position", value=target["alliance_position"].title(), inline=True)
+
+        if target["espionage_available"]:
+            page.add_field(name="Espionage Available", value="This nation can be spied on!")
+
+        page.add_field(name="Soldiers", value=f"{target['soldiers']:,}/{15000 * cities:,}", inline=True)
+        page.add_field(name="Tanks", value=f"{target['tanks']:,}/{1250 * cities:,}", inline=True)
+        page.add_field(name="Aircraft", value=f"{target['aircraft']:,}/{75 * cities:,}", inline=True)
+        page.add_field(name="Ships", value=f"{target['ships']:,}/{15 * cities:,}", inline=True)
+        page.add_field(name="Missiles", value=f"{target['missiles']:,}", inline=True)
+        page.add_field(name="Nukes", value=f"{target['nukes']:,}", inline=True)
+
+        ongoing_defensive = pwpy.utils.sort_ongoing_wars(target["defensive_wars"])
+        page.add_field(name="Ongoing Defensive Wars", value=str(len(ongoing_defensive)), inline=True)
+        ongoing_offensive = pwpy.utils.sort_ongoing_wars(target["offensive_wars"])
+        page.add_field(name="Ongoing Offensive Wars", value=str(len(ongoing_offensive)), inline=True)
+
+        pages.append(page)
+
+    return pages
 
 
 @lightbulb.option("score", "The score to use for looking up targets.", float, required=False)
@@ -305,9 +380,8 @@ async def raids(ctx: lightbulb.Context) -> None:
     alliance = None if pirate else ctx.options.alliance
     powered = ctx.options.powered
 
-    key = ctx.bot.credentials.pnw_api_key
     targets = None
-
+    key = ctx.bot.credentials.pnw_api_key
     embed = hikari.Embed()
 
     if score and nation:
@@ -339,6 +413,11 @@ async def raids(ctx: lightbulb.Context) -> None:
                     powered=powered,
                     omit_alliance=nation_data["alliance_id"]
                 )
+                if targets:
+                    targets = await generate_targets_pages(targets)
+
+                else:
+                    embed.description = "No raid targets were found for that nation!"
 
             else:
                 embed.description = "The nation specified appears to have been deleted!"
@@ -347,54 +426,21 @@ async def raids(ctx: lightbulb.Context) -> None:
             embed.description = "No such nation could be found! Please check your query and try again!"
 
     else:
-        targets = await pwpy.api.within_war_range(key, score, alliance=alliance, powered=powered)
+        targets = await pwpy.api.within_war_range(
+            key,
+            score,
+            alliance=alliance,
+            powered=powered
+        )
+        if targets:
+            targets = await generate_targets_pages(targets)
+
+        else:
+            embed.description = "No raid targets were found for that score!"
 
     if targets:
-        pages = []
-        count = 0
-
-        for target in targets:
-            count += 1
-
-            nation_name = f"[{target['nation_name']}]({helpers.NATION_URL}{target['id']})"
-            leader_url = helpers.MESSAGE_URL + target["leader_name"].replace(" ", "%20")
-            leader_name = f"[{target['leader_name']}]({leader_url})"
-            page = hikari.Embed(description=f"{nation_name} - {leader_name}")
-
-            page.add_field(name="Score", value=f"{target['score']:,}", inline=True)
-            cities = target["num_cities"]
-            page.add_field(name="Cities", value=cities, inline=True)
-            page.add_field(name="War Policy", value=target["warpolicy"], inline=True)
-
-            if target["alliance"]:
-                alliance_name = f"[{target['alliance']['name']}]({helpers.ALLIANCE_URL}{target['alliance_id']})"
-                page.add_field(name="Alliance", value=alliance_name, inline=True)
-                page.add_field(name="Alliance Score", value=f"{target['alliance']['score']:,}", inline=True)
-                page.add_field(name="Alliance Position", value=target["alliance_position"].title(), inline=True)
-
-            if target["espionage_available"]:
-                page.add_field(name="Espionage Available", value="This nation can be spied on!")
-
-            page.add_field(name="Soldiers", value=f"{target['soldiers']:,}/{15000 * cities:,}", inline=True)
-            page.add_field(name="Tanks", value=f"{target['tanks']:,}/{1250 * cities:,}", inline=True)
-            page.add_field(name="Aircraft", value=f"{target['aircraft']:,}/{75 * cities:,}", inline=True)
-            page.add_field(name="Ships", value=f"{target['ships']:,}/{15 * cities:,}", inline=True)
-            page.add_field(name="Missiles", value=f"{target['missiles']:,}", inline=True)
-            page.add_field(name="Nukes", value=f"{target['nukes']:,}", inline=True)
-
-            ongoing_defensive = pwpy.utils.sort_ongoing_wars(target["defensive_wars"])
-            page.add_field(name="Ongoing Defensive Wars", value=str(len(ongoing_defensive)), inline=True)
-            ongoing_offensive = pwpy.utils.sort_ongoing_wars(target["offensive_wars"])
-            page.add_field(name="Ongoing Offensive Wars", value=str(len(ongoing_offensive)), inline=True)
-
-            page.set_footer(text=f"Nation {count} of {len(targets)}")
-            pages.append(page)
-
-        navigator = nav.ButtonNavigator(pages)
+        navigator = nav.ButtonNavigator(targets)
         await navigator.run(ctx)
-        return
 
     else:
-        embed.description = "No raid targets were found for that score/nation!"
-
-    await ctx.respond(embed=embed)
+        await ctx.respond(embed=embed)

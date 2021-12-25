@@ -16,10 +16,11 @@
 
 
 from extensions.politics_and_war import helpers
-from pwpy import utils, api
 from lightbulb.utils import nav
+from lib.utils import human_readable_date
 
 import lightbulb
+import pwpy
 import hikari
 
 
@@ -36,7 +37,7 @@ async def infracost(ctx: lightbulb.Context) -> None:
     if cities < 0:
         cities = 1
 
-    cost = utils.infra_cost(starting, ending)
+    cost = pwpy.utils.infra_cost(starting, ending)
     cost *= cities
 
     city_str = "city" if cities == 1 else "cities"
@@ -63,7 +64,7 @@ async def landcost(ctx: lightbulb.Context) -> None:
     if cities < 0:
         cities = 1
 
-    cost = utils.land_cost(starting, ending)
+    cost = pwpy.utils.land_cost(starting, ending)
     cost *= cities
 
     city_str = "city" if cities == 1 else "cities"
@@ -85,7 +86,7 @@ async def citycost(ctx: lightbulb.Context) -> None:
 
     if city >= 2:
         prev_city = city - 1
-        cost = utils.city_cost(city)
+        cost = pwpy.utils.city_cost(city)
 
         output = f"The cost to go from city {prev_city} to {city} are as follows"
         embed = hikari.Embed(description=output)
@@ -152,7 +153,7 @@ async def nationinfo(ctx: lightbulb.Context) -> None:
         }}
         """.format(fetched)
         key = ctx.bot.credentials.pnw_api_key
-        data = await api.fetch_query(key, query)
+        data = await pwpy.api.fetch_query(key, query)
         nations_data = data["nations"]["data"]
 
         if nations_data:
@@ -167,6 +168,9 @@ async def nationinfo(ctx: lightbulb.Context) -> None:
             embed.add_field(name="Color", value=nation["color"].title(), inline=True)
             cities = nation["num_cities"]
             embed.add_field(name="Cities", value=cities, inline=True)
+
+            creation_date = human_readable_date(nation["date"], '%Y-%m-%d %H:%M:%S')
+            embed.add_field(name="Creation Date", value=creation_date)
 
             if nation["alliance"]:
                 alliance_name = f"[{nation['alliance']['name']}]({helpers.ALLIANCE_URL}{nation['alliance_id']})"
@@ -229,7 +233,7 @@ async def allianceinfo(ctx: lightbulb.Context) -> None:
         }}
         """.format(fetched)
         key = ctx.bot.credentials.pnw_api_key
-        data = await api.fetch_query(key, query)
+        data = await pwpy.api.fetch_query(key, query)
         alliances_data = data["alliances"]["data"]
 
         if alliances_data:
@@ -324,11 +328,11 @@ async def raids(ctx: lightbulb.Context) -> None:
                 }}
             }}
             """.format(fetched)
-            data = await api.fetch_query(key, query)
+            data = await pwpy.api.fetch_query(key, query)
             nation_data = data["nations"]["data"][0]
 
             if nation_data:
-                targets = await api.within_war_range(
+                targets = await pwpy.api.within_war_range(
                     key,
                     nation_data["score"],
                     alliance=alliance,
@@ -343,7 +347,7 @@ async def raids(ctx: lightbulb.Context) -> None:
             embed.description = "No such nation could be found! Please check your query and try again!"
 
     else:
-        targets = await api.within_war_range(key, score, alliance=alliance, powered=powered)
+        targets = await pwpy.api.within_war_range(key, score, alliance=alliance, powered=powered)
 
     if targets:
         pages = []
@@ -378,9 +382,9 @@ async def raids(ctx: lightbulb.Context) -> None:
             page.add_field(name="Missiles", value=f"{target['missiles']:,}", inline=True)
             page.add_field(name="Nukes", value=f"{target['nukes']:,}", inline=True)
 
-            ongoing_defensive = utils.sort_ongoing_wars(target["defensive_wars"])
+            ongoing_defensive = pwpy.utils.sort_ongoing_wars(target["defensive_wars"])
             page.add_field(name="Ongoing Defensive Wars", value=str(len(ongoing_defensive)), inline=True)
-            ongoing_offensive = utils.sort_ongoing_wars(target["offensive_wars"])
+            ongoing_offensive = pwpy.utils.sort_ongoing_wars(target["offensive_wars"])
             page.add_field(name="Ongoing Offensive Wars", value=str(len(ongoing_offensive)), inline=True)
 
             page.set_footer(text=f"Nation {count} of {len(targets)}")

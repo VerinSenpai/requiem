@@ -328,7 +328,7 @@ async def alliance_info(ctx: lightbulb.Context) -> None:
             }}
             """.format(fetched)
             data = await pwpy.api.fetch_query(key, query)
-            alliance = data["alliances"]["data"]
+            alliance = data["alliances"]["data"][0]
 
             if alliance:
                 generate_alliance_embed(alliance, embed)

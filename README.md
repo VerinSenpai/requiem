@@ -23,7 +23,7 @@ Self-hosting Requiem requires a bit more from you. To start, you'll need to crea
 Follow [this tutorial](https://tutorials.discordcoding.academy/starting/making-the-bot.html) to create your bot
 application. Note that you **do not** need any of the privileged intents for Requiem to function.
 
-####Windows
+#### Windows
 
 * Step 1 - Install Required Applications
   * For basic functionality, Requiem only requires [Python 3.10](https://python.org) making sure to tick the 

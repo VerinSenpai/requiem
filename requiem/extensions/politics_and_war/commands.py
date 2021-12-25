@@ -322,8 +322,11 @@ async def alliance_info(ctx: lightbulb.Context) -> None:
 
 async def generate_raids_pages(targets: list) -> list:
     pages = []
+    page_num = 0
 
     for target in targets:
+        page_num += 1
+
         nation_name = f"[{target['nation_name']}]({helpers.NATION_URL}{target['id']})"
         leader_url = helpers.MESSAGE_URL + target["leader_name"].replace(" ", "%20")
         leader_name = f"[{target['leader_name']}]({leader_url})"
@@ -354,6 +357,8 @@ async def generate_raids_pages(targets: list) -> list:
         page.add_field(name="Ongoing Defensive Wars", value=str(len(ongoing_defensive)), inline=True)
         ongoing_offensive = pwpy.utils.sort_ongoing_wars(target["offensive_wars"])
         page.add_field(name="Ongoing Offensive Wars", value=str(len(ongoing_offensive)), inline=True)
+
+        page.set_footer(text=f"Target {page_num} of {len(targets)}")
 
         pages.append(page)
 

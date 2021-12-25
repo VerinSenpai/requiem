@@ -201,80 +201,43 @@ async def nation_info(ctx: lightbulb.Context) -> None:
     await ctx.respond(embed=embed)
 
 
-async def process_alliance_selection(key: str, alliance: str or int, embed: hikari.Embed) -> None:
-    fetched = await helpers.lookup_alliance(alliance.lower())
+def generate_alliance_embed(alliance: dict, embed: hikari.Embed) -> None:
+    acr = f" ({alliance['acronym']})" if alliance["acronym"] else ""
+    header = f"[{alliance['name']}{acr}]({helpers.ALLIANCE_URL}{alliance['id']})"
 
-    if fetched:
-        query = """
-        alliances(first: 1, id: {0}) {{
-            data {{
-                color
-                flag
-                id
-                acronym
-                irclink
-                name
-                score
-                nations {{
-                    num_cities
-                    soldiers
-                    tanks
-                    aircraft
-                    ships
-                    missiles
-                    nukes
-                }}
-            }}
-        }}
-        """.format(fetched)
-        data = await pwpy.api.fetch_query(key, query)
-        alliances_data = data["alliances"]["data"]
+    if alliance["irclink"]:
+        header += f" - [Discord]({alliance['irclink']})"
 
-        if alliances_data:
-            alliance = alliances_data[0]
+    embed.description = header
 
-            acr = f" ({alliance['acronym']})" if alliance["acronym"] else ""
-            header = f"[{alliance['name']}{acr}]({helpers.ALLIANCE_URL}{alliance['id']})"
+    embed.add_field(name="Score", value=f"{alliance['score']:,}", inline=True)
+    embed.add_field(name="Color", value=alliance["color"].title(), inline=True)
+    embed.add_field(name="Members", value=str(len(alliance["nations"])), inline=True)
 
-            if alliance["irclink"]:
-                header += f" - [Discord]({alliance['irclink']})"
+    cities = 0
+    soldiers = 0
+    tanks = 0
+    aircraft = 0
+    ships = 0
+    missiles = 0
+    nukes = 0
 
-            embed.description = header
+    for nation in alliance["nations"]:
+        cities += nation["num_cities"]
+        soldiers += nation["soldiers"]
+        tanks += nation["tanks"]
+        aircraft += nation["aircraft"]
+        ships += nation["ships"]
+        missiles += nation["missiles"]
+        nukes += nation["nukes"]
 
-            embed.add_field(name="Score", value=f"{alliance['score']:,}", inline=True)
-            embed.add_field(name="Color", value=alliance["color"].title(), inline=True)
-            embed.add_field(name="Members", value=str(len(alliance["nations"])), inline=True)
-
-            cities = 0
-            soldiers = 0
-            tanks = 0
-            aircraft = 0
-            ships = 0
-            missiles = 0
-            nukes = 0
-
-            for nation in alliance["nations"]:
-                cities += nation["num_cities"]
-                soldiers += nation["soldiers"]
-                tanks += nation["tanks"]
-                aircraft += nation["aircraft"]
-                ships += nation["ships"]
-                missiles += nation["missiles"]
-                nukes += nation["nukes"]
-
-            embed.add_field(name="Soldiers", value=f"{soldiers:,}/{15000 * cities:,}", inline=True)
-            embed.add_field(name="Tanks", value=f"{tanks:,}/{1250 * cities:,}", inline=True)
-            embed.add_field(name="Aircraft", value=f"{aircraft:,}/{75 * cities:,}", inline=True)
-            embed.add_field(name="Ships", value=f"{ships:,}/{15 * cities:,}", inline=True)
-            embed.add_field(name="Missiles", value=f"{missiles:,}", inline=True)
-            embed.add_field(name="Nukes", value=f"{nukes:,}", inline=True)
-            embed.set_thumbnail(alliance["flag"])
-
-        else:
-            embed.description = "The alliance specified appears to have been deleted!"
-
-    else:
-        embed.description = "No such alliance could be found! Please check your query and try again!"
+    embed.add_field(name="Soldiers", value=f"{soldiers:,}/{15000 * cities:,}", inline=True)
+    embed.add_field(name="Tanks", value=f"{tanks:,}/{1250 * cities:,}", inline=True)
+    embed.add_field(name="Aircraft", value=f"{aircraft:,}/{75 * cities:,}", inline=True)
+    embed.add_field(name="Ships", value=f"{ships:,}/{15 * cities:,}", inline=True)
+    embed.add_field(name="Missiles", value=f"{missiles:,}", inline=True)
+    embed.add_field(name="Nukes", value=f"{nukes:,}", inline=True)
+    embed.set_thumbnail(alliance["flag"])
 
 
 @lightbulb.option("alliance", "The alliance to be viewed. Can be an alliance name, acronym, or id.")
@@ -298,7 +261,24 @@ async def alliance_info(ctx: lightbulb.Context) -> None:
             query = """
             nations(first: 1, id: {0}) {{
                 data {{
-                    alliance_id
+                    alliance {{
+                        color
+                        flag
+                        id
+                        acronym
+                        irclink
+                        name
+                        score
+                        nations {{
+                            num_cities
+                            soldiers
+                            tanks
+                            aircraft
+                            ships
+                            missiles
+                            nukes
+                        }}
+                    }}
                 }}
             }}
             """.format(fetched)
@@ -306,7 +286,11 @@ async def alliance_info(ctx: lightbulb.Context) -> None:
             nation_data = data["nations"]["data"][0]
 
             if nation_data:
-                await process_alliance_selection(key, nation["alliance_id"], embed)
+                if nation["alliance"]:
+                    generate_alliance_embed(alliance, embed)
+
+                else:
+                    embed.description = "The nation specified is not in an alliance!"
 
             else:
                 embed.description = "The nation specified appears to have been deleted!"
@@ -315,7 +299,42 @@ async def alliance_info(ctx: lightbulb.Context) -> None:
             embed.description = "No such nation could be found! Please check your query and try again!"
 
     else:
-        await process_alliance_selection(key, alliance, embed)
+        fetched = await helpers.lookup_alliance(alliance.lower())
+
+        if fetched:
+            query = """
+                alliances(first: 1, id: {0}) {{
+                    data {{
+                        color
+                        flag
+                        id
+                        acronym
+                        irclink
+                        name
+                        score
+                        nations {{
+                            num_cities
+                            soldiers
+                            tanks
+                            aircraft
+                            ships
+                            missiles
+                            nukes
+                        }}
+                    }}
+                }}
+                """.format(alliance)
+            data = await pwpy.api.fetch_query(key, query)
+            alliance = data["alliances"]["data"]
+
+            if alliance:
+                generate_alliance_embed(alliance, embed)
+
+            else:
+                embed.description = "The alliance specified appears to have been deleted!"
+
+        else:
+            embed.description = "No such alliance could be found! Please check your query and try again!"
 
     await ctx.respond(embed=embed)
 

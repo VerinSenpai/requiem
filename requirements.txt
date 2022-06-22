@@ -1,10 +1,7 @@
-pwpy
-hikari-lightbulb
-tortoise-orm
-asyncpg
-hikari
-aiohttp
-cattrs
-yarl
-pyyaml
-nekos.py
+hikari-lightbulb==2.2.1
+click~=8.0.4
+cattrs~=1.10.0
+requests~=2.27.1
+aerich~=0.6.2
+tortoise-orm~=0.19.0
+asyncpg~=0.25.0

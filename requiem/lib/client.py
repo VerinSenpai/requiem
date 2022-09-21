@@ -15,22 +15,138 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from lib import tasks, models
+from cattr import global_converter
+from lib import models
+from hikari.internal import ux
 
-import lightbulb
-import tortoise
+import shutil
 import logging
-import random
+import typing
+import yaml
+import aiohttp
+import click
+import hikari
+import pathlib
+import lightbulb
+import abc
+import aerich
+import tortoise
 import asyncpg
 import socket
-import typing
-import hikari
-import yarl
-import abc
 import os
 
 
 _LOGGER = logging.getLogger("requiem.client")
+T = typing.TypeVar("T")
+DATA_DIR = pathlib.Path(click.get_app_dir("requiem"))
+
+
+def start_failsafe(debug: bool) -> None:
+    """
+    Attempts to fetch credentials and start Requiem. Ensures any errors get logged before closing.
+    """
+    flavor = "DEBUG" if debug else "INFO"
+    ux.init_logging(flavor, True, True)
+
+    try:
+        _LOGGER.info("requiem is fetching the configuration!")
+
+        with open(DATA_DIR / "config.yaml") as stream:
+            data = yaml.safe_load(stream)
+
+        credentials = global_converter.structure(data, models.Config)
+
+        _LOGGER.info("requiem has successfully fetched the configuration!")
+
+        requiem = Requiem(credentials)
+        requiem.run()
+
+    except FileNotFoundError:
+        _LOGGER.warning("requiem was unable to find the configuration! run `requiem setup` to create it!")
+
+    except (KeyError, TypeError, ValueError):
+        _LOGGER.warning("requiem was unable to read the configuration! run `requiem setup` to recreate it!")
+
+    except hikari.errors.GatewayServerClosedConnectionError:
+        _LOGGER.warning(
+            "requiem has closed because the gateway server has closed the connection!"
+        )
+
+    except aiohttp.ClientConnectionError:
+        _LOGGER.error(
+            "requiem was unable to connect to discord! check your internet connection and try again!"
+        )
+
+    except hikari.errors.UnauthorizedError:
+        _LOGGER.error(
+            "requiem was unable to login because the provided token is invalid!"
+        )
+
+    except Exception as exc:
+        _LOGGER.critical(
+            "requiem has encountered a critical exception and crashed!", exc_info=exc
+        )
+
+
+async def _setup_database(url: str) -> None:
+    """
+    Attempts a connection to a postgresql server. Falls back to using sqlite.
+    """
+    mig_dir = pathlib.Path(DATA_DIR / "migrations")
+
+    try:
+        command = aerich.Command(
+            tortoise_config={
+                "connections": {
+                    "default": url
+                },
+                "apps": {
+                    "models": {
+                        "models": [
+                            "aerich.models",
+                            "requiem.lib.models"
+                        ],
+                        "default_connection": "default",
+                    },
+                }
+            },
+            location=str(DATA_DIR / "migrations")
+        )
+
+        if mig_dir.exists():
+            await command.init()
+
+            try:
+                update = await command.migrate()
+
+                if update:
+                    await command.upgrade()
+                    _LOGGER.info(f"requiem has updated the database tables!")
+
+            except AttributeError:
+                _LOGGER.warning(
+                    "requiem was unable to retrieve model history from the database! "
+                    "model history will be created from scratch!"
+                )
+
+                shutil.rmtree(mig_dir)
+
+                await command.init_db(True)
+
+        else:
+            await command.init_db(True)
+
+        _LOGGER.info("requiem has connected to the postgres server at <%s>!", url)
+
+        await tortoise.Tortoise.generate_schemas()
+
+    except (
+            tortoise.exceptions.DBConnectionError,
+            asyncpg.InvalidPasswordError,
+            ConnectionRefusedError,
+            socket.gaierror,
+    ):
+        _LOGGER.warning("requiem was unable to connect to a postgres server!")
 
 
 class Requiem(lightbulb.BotApp, abc.ABC):
@@ -38,26 +154,25 @@ class Requiem(lightbulb.BotApp, abc.ABC):
     Custom Requiem client based on lightbulb.BotApp that overwrites and implements Requiem specific methods.
     """
 
-    def __init__(self, credentials: models.Credentials) -> None:
+    def __init__(self, config: models.Config) -> None:
         super().__init__(
-            token=credentials.token,
+            token=config.discord_token,
             banner=None,
-            default_enabled_guilds=credentials.enabled_guilds,
+            default_enabled_guilds=config.enabled_guilds,
         )
 
-        self.credentials = credentials
-        self.executed_commands = 0
+        self.config = config
+        self.cmds_run = 0
 
-        self.subscribe(hikari.StartingEvent, self.handle_starting_operations)
-        self.subscribe(hikari.StartedEvent, self.handle_started_operations)
-        self.subscribe(hikari.StoppingEvent, self.handle_stopping_operations)
-        self.subscribe(lightbulb.SlashCommandCompletionEvent, self.handle_command_completion)
+        self.subscribe(hikari.StartingEvent, self._handle_starting_operations)
+        self.subscribe(hikari.StoppingEvent, self._handle_stopping_operations)
+        self.subscribe(lightbulb.SlashCommandCompletionEvent, self._handle_command_completion)
 
-    async def handle_starting_operations(self, _) -> None:
+    async def _handle_starting_operations(self, _: hikari.StartingEvent) -> None:
         """
-        Prepares the database and loads extensions.
+        Attempts to find and load all extensions.
         """
-        await setup_database(self.credentials)
+        await _setup_database(self.config.database_url)
 
         extensions = (
             plugin
@@ -79,20 +194,10 @@ class Requiem(lightbulb.BotApp, abc.ABC):
             f"successfully loaded {len(self.extensions)} extension(s) and {len(self.slash_commands)} command(s)!"
         )
 
-    async def handle_started_operations(self, _) -> None:
+    async def _handle_stopping_operations(self, _: hikari.StoppingEvent) -> None:
         """
-        Starts any post-start tasks
+        Attempts to unload all loaded extensions and close database connections.
         """
-        handle_presence.start(self)
-
-    async def handle_stopping_operations(self, _) -> None:
-        """
-        Unloads extensions and closes the database while Requiem is closing.
-        """
-        _LOGGER.info("requiem is cleaning up!")
-
-        handle_presence.stop()
-
         for extension in self.extensions[::]:
             try:
                 self.unload_extensions(extension)
@@ -105,52 +210,11 @@ class Requiem(lightbulb.BotApp, abc.ABC):
 
         await tortoise.Tortoise.close_connections()
 
-        _LOGGER.info("requiem has finished cleanup!")
-
-    async def handle_command_completion(self, event: lightbulb.SlashCommandCompletionEvent) -> None:
-        self.executed_commands += 1
+    async def _handle_command_completion(self, event: lightbulb.SlashCommandCompletionEvent) -> None:
+        """
+        Increments cmds_run and logs successful command execution.
+        """
+        self.cmds_run += 1
 
         _LOGGER.info("command %s executed successfully!", event.command.name)
 
-
-async def setup_database(credentials: models.Credentials) -> None:
-    """
-    Attempts a connection to a postgresql server. Falls back to using sqlite.
-    """
-    url = yarl.URL.build(
-        scheme="postgres",
-        host=credentials.postgres_host,
-        port=credentials.postgres_port,
-        user=credentials.postgres_user,
-        password=credentials.postgres_password,
-        path=f"/{credentials.postgres_database}",
-    )
-    modules = {"models": ["lib.models"]}
-
-    try:
-        await tortoise.Tortoise.init(db_url=str(url), modules=modules)
-        _LOGGER.info("requiem has connected to the postgres server at <%s>!", url)
-
-    except (
-            tortoise.exceptions.DBConnectionError,
-            asyncpg.InvalidPasswordError,
-            ConnectionRefusedError,
-            socket.gaierror,
-    ):
-        await tortoise.Tortoise.init(db_url="sqlite://db.sqlite3", modules=modules)
-        _LOGGER.warning(
-            "requiem was unable to connect to a postgres server! sqlite will be used instead!"
-        )
-
-    await tortoise.Tortoise.generate_schemas()
-
-
-@tasks.loop(minutes=5)
-async def handle_presence(bot: Requiem) -> None:
-    possible = (
-        "Listening for Slash Commands",
-        "Waiting for something to do",
-        "Grinding gears"
-    )
-    activity = hikari.Activity(name=random.choice(possible))
-    await bot.update_presence(activity=activity)

@@ -22,7 +22,7 @@ import lightbulb
 import sys
 
 
-plugin = lightbulb.Plugin("Utility")
+plugin = lightbulb.Plugin("Requiem Basic")
 plugin.command(commands.ping)
 plugin.command(commands.about)
 plugin.command(commands.user)

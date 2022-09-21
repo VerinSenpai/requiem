@@ -29,6 +29,7 @@ import hikari
 import pathlib
 import lightbulb
 import abc
+import datetime
 import aerich
 import tortoise
 import asyncpg
@@ -161,12 +162,25 @@ class Requiem(lightbulb.BotApp, abc.ABC):
             default_enabled_guilds=config.enabled_guilds,
         )
 
-        self.config = config
-        self.cmds_run = 0
+        self._config = config
+        self._cmds_run = 0
+        self._started_at = datetime.datetime.now()
 
         self.subscribe(hikari.StartingEvent, self._handle_starting_operations)
         self.subscribe(hikari.StoppingEvent, self._handle_stopping_operations)
         self.subscribe(lightbulb.SlashCommandCompletionEvent, self._handle_command_completion)
+
+    @property
+    def config(self) -> models.Config:
+        return self._config
+
+    @property
+    def cmds_run(self) -> int:
+        return self._cmds_run
+
+    @property
+    def uptime(self) -> datetime.timedelta:
+        return datetime.datetime.now() - self._started_at
 
     async def _handle_starting_operations(self, _: hikari.StartingEvent) -> None:
         """
@@ -214,7 +228,7 @@ class Requiem(lightbulb.BotApp, abc.ABC):
         """
         Increments cmds_run and logs successful command execution.
         """
-        self.cmds_run += 1
+        self._cmds_run += 1
 
         _LOGGER.info("command %s executed successfully!", event.command.name)
 

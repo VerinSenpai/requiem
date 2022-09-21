@@ -15,75 +15,66 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from cattr import global_converter
-from hikari.internal import ux
-from lib import client, models
+from requiem import __version__
+from lib import client, setup
 
-import logging
-import aiohttp
-import hikari
-import typing
-import yaml
+import click
+import importlib
+import requests
+import re
 
 
-_LOGGER = logging.getLogger("requiem.main")
-T = typing.TypeVar("T")
-
-
-def get_credentials() -> T:
-    """
-    Attempts to fetch credentials.yaml file.
-    """
+@click.group()
+def cli() -> None:
     try:
-        _LOGGER.info("requiem is fetching the credentials file!")
+        page = requests.get("https://raw.githubusercontent.com/GodEmpressVerin/requiem/main/requiem/__init__.py")
+        match = re.findall(r"(?<=__version__ = ).*", page.text)
 
-        with open("credentials.yaml") as stream:
-            data = yaml.safe_load(stream)
+        if match:
+            current_version = __version__
+            latest_version = match[0].strip('"')
 
-        credentials = global_converter.structure(data, models.Credentials)
+            if current_version != latest_version:
+                click.echo(f"a newer version of requiem is available, consider upgrading to {latest_version}")
 
-        _LOGGER.info("requiem has successfully fetched the credentials file!")
+        else:
+            click.echo("requiem was unable to check for updates!")
 
-        return credentials
-
-    except FileNotFoundError:
-        _LOGGER.warning("requiem was unable to find the credentials.yaml file!")
-
-    except (TypeError, ValueError):
-        _LOGGER.warning("requiem was unable to read the credentials.yaml file!")
+    except requests.ConnectionError:
+        click.echo("requiem was unable to connect github to check for updates!")
 
 
-def start_requiem_failsafe() -> None:
-    """
-    Starts Requiem. Ensures any and all exceptions that reach this point are logged neatly.
-    """
-    credentials = get_credentials()
+@cli.command()
+def version() -> None:
+    """View the installed version of Requiem, Lightbulb, and Hikari."""
+    click.echo(f"requiem ({__version__})")
+    importlib.import_module("lightbulb.__main__")
 
-    if not credentials:
-        return
 
-    try:
-        requiem = client.Requiem(credentials)
-        requiem.run()
+@cli.command()
+@click.option("--debug", help="Start Requiem in debug mode.", is_flag=True)
+def start(debug: bool) -> None:
+    """Run Requiem."""
+    if debug:
+        confirm = click.confirm("start requiem in debug mode? performance may be impacted!")
 
-    except aiohttp.ClientConnectionError:
-        _LOGGER.error(
-            "requiem was unable to connect to discord! check your internet connection and try again!"
-        )
+        if confirm:
+            click.echo("starting requiem in debug mode!")
 
-    except hikari.errors.UnauthorizedError:
-        _LOGGER.error(
-            "requiem was unable to login because the provided token is invalid!"
-        )
+        else:
+            debug = False
 
-    except Exception as exc:
-        _LOGGER.critical(
-            "requiem has encountered a critical exception and crashed!", exc_info=exc
-        )
+    client.start_failsafe(debug)
+
+
+@cli.command()
+def configure():
+    """Run the Requiem configuration utility."""
+    setup.run_config()
 
 
 if __name__ == "__main__":
-    ux.init_logging("INFO", True, False)
-    start_requiem_failsafe()
-    _LOGGER.info("requiem has closed!")
-    input()
+    client.start_failsafe(False)
+
+
+

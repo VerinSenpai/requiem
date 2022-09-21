@@ -7,3 +7,4 @@ tortoise-orm
 asyncpg
 pyyaml
 nekos.py
+pwpy

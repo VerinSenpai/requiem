@@ -4,3 +4,6 @@
 /requiem.egg-info/
 /.idea/
 *.pyc
+/requiem/db.sqlite3
+/requiem/db.sqlite3-wal
+/requiem/db.sqlite3-shm

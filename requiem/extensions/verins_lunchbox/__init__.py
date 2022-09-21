@@ -22,7 +22,7 @@ import lightbulb
 import sys
 
 
-plugin = lightbulb.Plugin("VerinsLunchbox")
+plugin = lightbulb.Plugin("Verins Lunchbox")
 plugin.command(commands.neko)
 plugin.command(commands.foxgirl)
 

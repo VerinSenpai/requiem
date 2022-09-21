@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from extensions.utility import commands
+from extensions.requiem_basic import commands
 from lib import client
 
 import lightbulb
@@ -24,15 +24,15 @@ import sys
 
 plugin = lightbulb.Plugin("Utility")
 plugin.command(commands.ping)
-plugin.command(commands.userinfo)
 plugin.command(commands.about)
+plugin.command(commands.user)
 plugin.command(commands.avatar)
 
 
-def load(bot: client.Requiem):
+def load(bot: client.Requiem) -> None:
     bot.add_plugin(plugin)
 
 
-def unload(bot: client.Requiem):
+def unload(bot: client.Requiem) -> None:
     bot.remove_plugin(plugin)
     del sys.modules[commands.__name__]

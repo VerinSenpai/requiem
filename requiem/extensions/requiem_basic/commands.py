@@ -15,8 +15,6 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from lib import client
-
 import lightbulb
 import hikari
 import time
@@ -31,14 +29,60 @@ async def ping(ctx: lightbulb.Context):
     start = time.monotonic()
     message = await ctx.respond(embed=embed)
 
-    millis = (time.monotonic() - start) * 1000
-    heartbeat = ctx.bot.heartbeat_latency * 1000
+    ack = int((time.monotonic() - start) * 1000)
+    heartbeat = round(ctx.bot.heartbeat_latency * 1000, 2)
 
     embed.description = ""
-    embed.add_field(name="Heartbeat", value=f"{round(heartbeat, 2)}ms")
-    embed.add_field(name="ACK", value=f"{int(millis)}ms")
+    embed.add_field(name="Heartbeat", value=f"{heartbeat}ms")
+    embed.add_field(name="ACK", value=f"{ack}ms")
 
     await message.edit(embed=embed)
+
+
+@lightbulb.command("about", "View information about Requiem.")
+@lightbulb.implements(lightbulb.SlashCommand)
+async def about(ctx: lightbulb.Context) -> None:
+    bot = ctx.bot
+    embed = hikari.Embed()
+
+    description = """
+    Requiem is a specially crafted discord bot built to provide the largest
+    number of tools and resources for the politics and war community in a
+    convenient and easy to use package. Requiem is, always has been, and
+    always will be free to use for everyone. Have a feature request or an
+    issue to report? Consider dropping by the Requiem [support server](https://discord.gg/uTXdx7J)!
+    Want to take a look at my inner workings or fork Requiem? Take a look
+    at my [repo](https://github.com/GodEmpressVerin/requiem)!
+    """
+
+    embed.add_field(name="Requiem Version", value=__init__.__version__, inline=True)
+    embed.add_field(name="Hikari Version", value=hikari.__version__, inline=True)
+    embed.add_field(name="Lightbulb Version", value=lightbulb.__version__, inline=True)
+    embed.add_field(name="Commands Executed", value=bot.cmds_run + 1, inline=True)
+    embed.add_field(name="Time Alive", value="N/A", inline=True)
+    embed.add_field(name="About Requiem", value=description)
+
+    await ctx.respond(embed=embed)
+
+
+@lightbulb.option(
+    "user",
+    "A user to be looked up. Leave blank to lookup yourself.",
+    type=hikari.Member,
+    required=False
+)
+@lightbulb.command("avatar", "View the avatar of a specified user.")
+@lightbulb.implements(lightbulb.SlashCommand)
+async def avatar(ctx: lightbulb.Context) -> None:
+    member = ctx.options.user
+
+    if not member:
+        member = ctx.member
+
+    embed = hikari.Embed()
+    embed.set_thumbnail(member.avatar_url)
+
+    await ctx.respond(embed=embed)
 
 
 @lightbulb.option(
@@ -49,7 +93,7 @@ async def ping(ctx: lightbulb.Context):
 )
 @lightbulb.command("userinfo", "View info about a specified user.")
 @lightbulb.implements(lightbulb.SlashCommand)
-async def userinfo(ctx: lightbulb.Context):
+async def user(ctx: lightbulb.Context):
     member = ctx.options.user
 
     if not member:
@@ -78,51 +122,3 @@ async def userinfo(ctx: lightbulb.Context):
     embed.set_thumbnail(member.avatar_url)
 
     await ctx.respond(embed=embed)
-
-
-@lightbulb.command("about", "View information about Requiem.")
-@lightbulb.implements(lightbulb.SlashCommand)
-async def about(ctx: lightbulb.Context) -> None:
-    bot = ctx.bot
-    embed = hikari.Embed()
-
-    description = """
-    Requiem is a specially crafted discord bot built to provide the largest
-    number of tools and resources for the politics and war community in a
-    convenient and easy to use package. Requiem is, always has been, and
-    always will be free to use for everyone. Have a feature request or an
-    issue to report? Consider dropping by the Requiem [support server](https://discord.gg/uTXdx7J)!
-    Want to take a look at my inner workings or fork Requiem? Take a look
-    at my [repo](https://github.com/GodEmpressVerin/requiem)!
-    """
-
-    embed.add_field(name="Requiem Version", value=__init__.__version__, inline=True)
-    embed.add_field(name="Hikari Version", value=hikari.__version__, inline=True)
-    embed.add_field(name="Lightbulb Version", value=lightbulb.__version__, inline=True)
-    embed.add_field(name="Commands Executed", value=bot.executed_commands, inline=True)
-    embed.add_field(name="Time Alive", value="N/A", inline=True)
-    embed.add_field(name="About Requiem", value=description)
-
-    await ctx.respond(embed=embed)
-
-
-@lightbulb.option(
-    "user",
-    "A user to be looked up. Leave blank to lookup yourself.",
-    type=hikari.Member,
-    required=False
-)
-@lightbulb.command("avatar", "View the avatar of a specified user.")
-@lightbulb.implements(lightbulb.SlashCommand)
-async def avatar(ctx: lightbulb.Context) -> None:
-    member = ctx.options.user
-
-    if not member:
-        member = ctx.member
-
-    embed = hikari.Embed()
-    embed.set_thumbnail(member.avatar_url)
-
-    await ctx.respond(embed=embed)
-
-

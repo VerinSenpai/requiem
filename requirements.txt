@@ -6,3 +6,4 @@ aerich
 tortoise-orm
 asyncpg
 pyyaml
+nekos.py

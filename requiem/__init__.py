@@ -17,3 +17,5 @@
 
 __version__ = "1.0.0"
 __author__ = "God Empress Verin"
+__url__ = "https://github.com/GodEmpressVerin/requiem/"
+__discord__ = "https://discord.gg/uTXdx7J"

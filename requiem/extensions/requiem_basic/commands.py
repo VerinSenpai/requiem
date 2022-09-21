@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import datetime
 
 import lightbulb
 import hikari
@@ -59,7 +60,7 @@ async def about(ctx: lightbulb.Context) -> None:
     embed.add_field(name="Hikari Version", value=hikari.__version__, inline=True)
     embed.add_field(name="Lightbulb Version", value=lightbulb.__version__, inline=True)
     embed.add_field(name="Commands Executed", value=bot.cmds_run + 1, inline=True)
-    embed.add_field(name="Time Alive", value="N/A", inline=True)
+    embed.add_field(name="Uptime", value=bot.uptime, inline=True)
     embed.add_field(name="About Requiem", value=description)
 
     await ctx.respond(embed=embed)

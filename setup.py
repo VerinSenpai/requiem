@@ -34,6 +34,6 @@ setup(
     license="GPL-3.0",
     url=requiem.__url__,
     packages=find_packages(),
-    entry_points={"console_scripts": ["requiem = requiem.cli:main"]},
+    entry_points={"console_scripts": ["requiem = requiem.__main__:cli"]},
     install_requires=parse_requirements_file("requirements.txt")
 )

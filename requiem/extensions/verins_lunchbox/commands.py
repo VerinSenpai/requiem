@@ -49,3 +49,15 @@ async def neko(ctx: lightbulb.Context):
 @lightbulb.implements(lightbulb.SlashCommand)
 async def foxgirl(ctx: lightbulb.Context):
     await failsafe_neko("fox_girl", ctx)
+
+
+@lightbulb.command("catfact", "Learn yourself a cat fact.")
+@lightbulb.implements(lightbulb.SlashCommand)
+async def catfact(ctx: lightbulb.Context):
+    data = await session_wrap("https://catfact.ninja/fact")
+    embed = hikari.Embed(description=data["fact"])
+    embed.set_footer(text="Results provided by https://catfact.ninja/fact")
+    await ctx.respond(embed=embed)
+
+
+

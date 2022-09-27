@@ -16,7 +16,7 @@
 
 
 from requiem import __version__
-from lib import client, setup
+from lib import setup, client
 
 import click
 import importlib

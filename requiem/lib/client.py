@@ -16,8 +16,8 @@
 
 
 from cattr import global_converter
-from lib import models
 from hikari.internal import ux
+from requiem.lib import models
 
 import shutil
 import logging

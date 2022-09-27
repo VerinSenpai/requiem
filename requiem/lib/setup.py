@@ -16,7 +16,7 @@
 
 
 from requiem import __discord__
-from lib import client
+from requiem.lib import client
 
 import yaml
 import click

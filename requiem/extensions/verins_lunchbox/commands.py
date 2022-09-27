@@ -17,7 +17,16 @@
 
 import lightbulb
 import hikari
-import nekos
+import aiohttp
+
+
+async def session_wrap(url: str) -> dict:
+    """
+    Creates a one use session async session and returns the response json.
+    """
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            return await response.json(content_type="application/json")
 
 
 async def failsafe_neko(reference: str, ctx: lightbulb.Context) -> None:
@@ -25,20 +34,8 @@ async def failsafe_neko(reference: str, ctx: lightbulb.Context) -> None:
     A function to assist in sending of nekos.life payloads and handling NothingFound errors.
     """
     embed = hikari.Embed()
-    attempts = 0
-
-    while attempts < 3:
-        try:
-            image = nekos.img(reference)
-            embed.set_image(image)
-            break
-
-        except nekos.errors.NothingFound:
-            pass
-
-    if attempts == 3:
-        embed.description = "There was a problem connecting to nekos.life!"
-
+    data = await session_wrap(f"https://nekos.life/api/v2/img/{reference}")
+    embed.set_image(data["url"])
     await ctx.respond(embed=embed)
 
 

@@ -15,14 +15,8 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from lib import client, models, tasks
-from pwpy import api, exceptions
-
-import logging
-import asyncio
-
-
-_LOGGER = logging.getLogger("requiem.extensions.politics_and_war")
+from lightbulb.ext import tasks
+from pwpy import api
 
 
 async def generate_identity_queries(api_key: str, query_handler: api.BulkQueryHandler) -> None:
@@ -70,46 +64,3 @@ async def generate_identity_queries(api_key: str, query_handler: api.BulkQueryHa
         }}
         """.format(str(page_number + 1))
         query_handler.add_query(query)
-
-
-@tasks.loop(minutes=5)
-async def gather_and_run_queries(bot: client.Requiem) -> None:
-    """
-    Calls for all queries to be created, fetches queries, and starts processing.
-    """
-    try:
-        while not bot.is_alive:
-            await asyncio.sleep(10)
-
-        api_key = bot.credentials.pnw_api_key
-        query_handler = api.BulkQueryHandler(api_key)
-
-        operations = (
-            asyncio.create_task(generate_identity_queries(api_key, query_handler)),
-        )
-
-        await asyncio.gather(*operations)
-
-        response = await query_handler.fetch_query()
-
-        for key, group in response.items():
-            for item in group["data"]:
-                if key.startswith("NATIONS"):
-                    defaults = {
-                        "name": item["nation_name"].lower(),
-                        "leader": item["leader_name"].lower(),
-                    }
-                    await models.NationsIndex.get_or_create(id=int(item["id"]), defaults=defaults)
-
-                if key.startswith("ALLIANCES"):
-                    defaults = {
-                        "name": item["name"].lower(),
-                        "acronym": item["acronym"].lower()
-                    }
-                    await models.AlliancesIndex.get_or_create(id=int(item["id"]), defaults=defaults)
-
-    except exceptions.InvalidToken as exc:
-        _LOGGER.warning(exc)
-
-    except Exception as exc:
-        _LOGGER.error("gather and run indexing queries encountered an unhandled exception.", exc_info=exc)

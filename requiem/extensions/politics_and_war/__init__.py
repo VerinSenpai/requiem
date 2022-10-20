@@ -15,30 +15,21 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from extensions.politics_and_war import commands, background, helpers
+from extensions.politics_and_war import commands
 from lib import client
 
 import lightbulb
 import sys
 
 
-plugin = lightbulb.Plugin("PoliticsAndWar")
-plugin.command(commands.infra_cost)
-plugin.command(commands.land_cost)
-plugin.command(commands.city_cost)
-plugin.command(commands.nation_info)
-plugin.command(commands.raids)
-plugin.command(commands.alliance_info)
+plugin = lightbulb.Plugin("Politics And War")
+plugin.command(commands.infra)
 
 
 def load(bot: client.Requiem) -> None:
-    background.gather_and_run_queries.start(bot)
     bot.add_plugin(plugin)
 
 
 def unload(bot: client.Requiem) -> None:
-    background.gather_and_run_queries.stop()
     bot.remove_plugin(plugin)
     del sys.modules[commands.__name__]
-    del sys.modules[background.__name__]
-    del sys.modules[helpers.__name__]

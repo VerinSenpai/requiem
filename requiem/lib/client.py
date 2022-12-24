@@ -63,10 +63,10 @@ def start_failsafe(debug: bool) -> None:
         requiem.run()
 
     except FileNotFoundError:
-        _LOGGER.warning("requiem was unable to find the configuration! run `requiem setup` to create it!")
+        _LOGGER.warning("requiem was unable to find the configuration! run `requiem configure` to create it!")
 
     except (KeyError, TypeError, ValueError):
-        _LOGGER.warning("requiem was unable to read the configuration! run `requiem setup` to recreate it!")
+        _LOGGER.warning("requiem was unable to read the configuration! run `requiem configure` to recreate it!")
 
     except hikari.errors.GatewayServerClosedConnectionError:
         _LOGGER.warning(

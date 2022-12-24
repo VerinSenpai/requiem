@@ -143,7 +143,7 @@ def _get_database_url():
             path=f"/{_get_postgres_database()}",
         )
 
-    return "sqlite://db.sqlite3"
+    return f"sqlite://{client.DATA_DIR}//db.sqlite3"
 
 
 def run_config() -> None:

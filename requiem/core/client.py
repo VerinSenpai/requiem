@@ -15,9 +15,9 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
+from requiem.core import models
 from cattr import global_converter
 from hikari.internal import ux
-from requiem.lib import models
 
 import shutil
 import logging
@@ -105,7 +105,7 @@ async def _setup_database(url: str) -> None:
                     "models": {
                         "models": [
                             "aerich.models",
-                            "requiem.lib.models"
+                            "requiem.core.models"
                         ],
                         "default_connection": "default",
                     },
@@ -184,19 +184,19 @@ class Requiem(lightbulb.BotApp, abc.ABC):
 
     async def _handle_starting_operations(self, _: hikari.StartingEvent) -> None:
         """
-        Attempts to find and load all extensions.
+        Attempts to find and load all cogs.
         """
         await _setup_database(self.config.database_url)
 
         extensions = (
             plugin
-            for plugin in os.listdir("extensions")
+            for plugin in os.listdir("cogs")
             if plugin not in ("__init__.py", "__pycache__")
         )
 
         for extension in extensions:
             try:
-                self.load_extensions(f"extensions.{extension}")
+                self.load_extensions(f"requiem.cogs.{extension}")
 
             except Exception as exc:
                 _LOGGER.error(
@@ -210,7 +210,7 @@ class Requiem(lightbulb.BotApp, abc.ABC):
 
     async def _handle_stopping_operations(self, _: hikari.StoppingEvent) -> None:
         """
-        Attempts to unload all loaded extensions and close database connections.
+        Attempts to unload all loaded cogs and close database connections.
         """
         for extension in self.extensions[::]:
             try:
@@ -231,4 +231,3 @@ class Requiem(lightbulb.BotApp, abc.ABC):
         self._cmds_run += 1
 
         _LOGGER.info("command %s executed successfully!", event.command.name)
-

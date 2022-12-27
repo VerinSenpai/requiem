@@ -15,22 +15,13 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from extensions.verins_lunchbox import commands
-from lib import client
-
-import lightbulb
-import sys
+from requiem.cogs.requiem_basic import utilities
+from requiem.core import client
 
 
-plugin = lightbulb.Plugin("Verins Lunchbox")
-plugin.command(commands.neko)
-plugin.command(commands.foxgirl)
+def load(bot: client.Requiem) -> None:
+    bot.add_plugin(utilities.plugin)
 
 
-def load(bot: client.Requiem):
-    bot.add_plugin(plugin)
-
-
-def unload(bot: client.Requiem):
-    bot.remove_plugin(plugin)
-    del sys.modules[commands.__name__]
+def unload(bot: client.Requiem) -> None:
+    bot.remove_plugin(utilities.plugin)

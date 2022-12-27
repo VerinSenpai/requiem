@@ -13,3 +13,16 @@
 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
+import lightbulb
+
+
+plugin = lightbulb.Plugin("RequiemBasicManagement")
+
+
+@plugin.command()
+@lightbulb.command("terminate", "Order Requiem to close.")
+@lightbulb.implements(lightbulb.SlashCommand)
+async def terminate(ctx: lightbulb.Context):
+    pass

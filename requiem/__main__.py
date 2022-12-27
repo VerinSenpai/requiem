@@ -15,13 +15,14 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
+from requiem.core import client, setup
 from requiem import __version__
-from lib import setup, client
 
 import click
 import importlib
 import requests
 import re
+import os
 
 
 @click.group()
@@ -61,9 +62,8 @@ def start(debug: bool) -> None:
         if confirm:
             click.echo("starting requiem in debug mode!")
 
-        else:
-            debug = False
-
+    package_location: str = os.path.dirname(__file__)
+    os.chdir(package_location)
     client.start_failsafe(debug)
 
 
@@ -71,10 +71,3 @@ def start(debug: bool) -> None:
 def configure():
     """Run the Requiem configuration utility."""
     setup.run_config()
-
-
-if __name__ == "__main__":
-    client.start_failsafe(False)
-
-
-

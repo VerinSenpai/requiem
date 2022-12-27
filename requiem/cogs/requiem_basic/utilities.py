@@ -14,14 +14,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import datetime
+
+from requiem import __version__
 
 import lightbulb
 import hikari
 import time
-import __init__
 
 
+plugin = lightbulb.Plugin("RequiemBasicUtilities")
+
+
+@plugin.command()
 @lightbulb.command("ping", "View current ping times for Requiem.")
 @lightbulb.implements(lightbulb.SlashCommand)
 async def ping(ctx: lightbulb.Context):
@@ -40,10 +44,10 @@ async def ping(ctx: lightbulb.Context):
     await message.edit(embed=embed)
 
 
+@plugin.command()
 @lightbulb.command("about", "View information about Requiem.")
 @lightbulb.implements(lightbulb.SlashCommand)
 async def about(ctx: lightbulb.Context) -> None:
-    bot = ctx.bot
     embed = hikari.Embed()
 
     description = """
@@ -56,16 +60,17 @@ async def about(ctx: lightbulb.Context) -> None:
     at my [repo](https://github.com/GodEmpressVerin/requiem)!
     """
 
-    embed.add_field(name="Requiem Version", value=__init__.__version__, inline=True)
+    embed.add_field(name="Requiem Version", value=__version__, inline=True)
     embed.add_field(name="Hikari Version", value=hikari.__version__, inline=True)
     embed.add_field(name="Lightbulb Version", value=lightbulb.__version__, inline=True)
-    embed.add_field(name="Commands Executed", value=bot.cmds_run + 1, inline=True)
-    embed.add_field(name="Uptime", value=bot.uptime, inline=True)
+    embed.add_field(name="Commands Executed", value=ctx.bot.cmds_run + 1, inline=False)
+    embed.add_field(name="Uptime", value=ctx.bot.uptime, inline=False)
     embed.add_field(name="About Requiem", value=description)
 
     await ctx.respond(embed=embed)
 
 
+@plugin.command()
 @lightbulb.option(
     "user",
     "A user to be looked up. Leave blank to lookup yourself.",
@@ -86,6 +91,7 @@ async def avatar(ctx: lightbulb.Context) -> None:
     await ctx.respond(embed=embed)
 
 
+@plugin.command()
 @lightbulb.option(
     "user",
     "A user to be looked up. Leave blank to lookup yourself.",

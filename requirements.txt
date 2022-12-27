@@ -7,3 +7,7 @@ tortoise-orm
 asyncpg
 pyyaml
 pwpy
+yarl
+aiohttp
+attrs
+setuptools

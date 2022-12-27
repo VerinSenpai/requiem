@@ -15,8 +15,8 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
+from requiem.core import client
 from requiem import __discord__
-from requiem.lib import client
 
 import yaml
 import click

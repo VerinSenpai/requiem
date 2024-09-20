@@ -28,7 +28,7 @@ import shutil
 import click
 
 
-_LOGGER = logging.Logger("requiem.db")
+_LOGGER = logging.getLogger("requiem.db")
 
 
 @click.pass_context

@@ -1,0 +1,11 @@
+hikari-lightbulb
+pyyaml
+aiohttp
+aerich
+asyncpg
+tortoise-orm
+requests
+click
+yarl
+attrs
+cattrs

@@ -1,9 +1,3 @@
-/dist/
-/build/
-/venv/
-/requiem.egg-info/
 /.idea/
+/envs/
 *.pyc
-/requiem/db.sqlite3
-/requiem/db.sqlite3-wal
-/requiem/db.sqlite3-shm

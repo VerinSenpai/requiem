@@ -13,9 +13,3 @@
 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-
-__version__ = "1.0.0"
-__author__ = "Verin Senpai"
-__repo_url__ = "https://github.com/VerinSenpai/requiem"
-__discord__ = "https://discord.gg/FcHXrK5YgS"

@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "Requiem"
+version = "1.0.0"
+authors = [
+    {name = "Kyle Tyo", email = "tyo.kyle98@gmail.com"}
+]
+description = "A specialy crafted discord bot for Politics and War"
+readme = "README.md"
+requires-python = ">=3.10"
+keywords = ["discord", "bot"]
+license = {text = "GPL-3"}
+classifiers = [
+    "Framework :: Hikari-Lightbulb",
+    "Programming Language :: Python :: 3"
+]
+dependencies = [
+    "hikari-lightbulb",
+    "pyyaml",
+    "aiohttp",
+    "aerich",
+    "asyncpg",
+    "tortoise-orm",
+    "requests",
+    "click",
+    "yarl",
+    "attrs",
+    "cattrs"
+]
+
+[project.scripts]
+requiem = "requiem.__main__:cli"
+
+[tool.setuptools]
+py-modules = ["requiem"]

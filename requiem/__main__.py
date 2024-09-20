@@ -14,6 +14,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from hikari.internal.aio import get_or_make_loop, destroy_loop
+from requiem.core.config import load_config, RequiemConfig
+from requiem.core.db import start_db, stop_db
+from hikari.internal.ux import init_logging
+from requiem.core.app import RequiemApp
+from pathlib import Path
 
 import click
 import logging
@@ -22,17 +28,11 @@ import aiohttp
 import asyncpg
 import hikari
 
-from pathlib import Path
-from hikari.internal.ux import init_logging
-from hikari.internal.aio import get_or_make_loop, destroy_loop
-from requiem.core.config import load_config, RequiemConfig
-from requiem.core.db import start_db, stop_db
-
 
 _LOGGER = logging.getLogger("requiem.main")
 
 
-def parse_directory(ctx: click.Context, param: click.Parameter, data_path: Path) -> Path:
+def parse_directory(_, __, data_path: Path) -> Path:
     if str(data_path.parent) == ".":
         raise click.BadParameter("You must specify a full path!")
 
@@ -42,14 +42,14 @@ def parse_directory(ctx: click.Context, param: click.Parameter, data_path: Path)
     return data_path
 
 
-def parse_instance(ctx: click.Context, param: click.Option, instance: str) -> str:
+def parse_instance(ctx: click.Context, _, instance: str) -> Path:
     data_path: Path = ctx.params["data_dir"]
     instance_path: Path = data_path / instance
 
     if instance_path.parent != data_path:
         raise click.BadParameter("Use --data-dir to specify a data directory!")
 
-    return instance
+    return instance_path
 
 
 def prompt_debug(ctx: click.Context, _, debug: bool) -> logging.INFO | logging.DEBUG:
@@ -101,9 +101,7 @@ def handle_crash(instance_path: Path, requiem: ..., exc: Exception) -> None:
     except:
         ...
 
-
-def wrapper() -> None:
-    ...
+    _LOGGER.critical("requiem has encountered a critical exception and crashed!", exc_info=exc)
 
 
 @click.group()
@@ -170,7 +168,7 @@ def start(ctx: click.Context) -> None:
 
         prompt_setup()
 
-    instance: str = ctx.parent.params["instance"]
+    instance: Path = ctx.parent.params["instance"]
     instance_path: Path = data_path / instance
 
     if not instance_path.exists():
@@ -187,6 +185,8 @@ def start(ctx: click.Context) -> None:
 
     try:
         loop.run_until_complete(start_db(config.database))
+        app = RequiemApp(config)
+        app.run(close_loop=False)
 
     except asyncpg.InvalidAuthorizationSpecificationError:
         _LOGGER.warning("requiem was unable to connect to the database using the credentials provided!")

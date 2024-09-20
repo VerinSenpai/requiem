@@ -205,7 +205,6 @@ def start(ctx: click.Context) -> None:
         prompt_setup()
 
     except KeyboardInterrupt:
-        _LOGGER.warning("requiem was closed using a keyboard interrupt! attempting to shutdown gracefully...")
         _LOGGER.warning("requiem was closed using a keyboard interrupt! shutting down gracefully...")
 
     except Exception as exc:

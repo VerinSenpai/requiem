@@ -206,6 +206,7 @@ def start(ctx: click.Context) -> None:
 
     except KeyboardInterrupt:
         _LOGGER.warning("requiem was closed using a keyboard interrupt! attempting to shutdown gracefully...")
+        _LOGGER.warning("requiem was closed using a keyboard interrupt! shutting down gracefully...")
 
     except Exception as exc:
         handle_crash(instance_path, ..., exc)

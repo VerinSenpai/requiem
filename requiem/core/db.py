@@ -22,17 +22,14 @@ from pathlib import Path
 import tortoise
 import asyncpg
 import logging
-import pathlib
 import aerich
 import shutil
-import click
 
 
 _LOGGER = logging.getLogger("requiem.db")
 
 
-@click.pass_context
-async def start_db(ctx: click.Context, config: PostgresConfig):
+async def start_db(instance_path: Path, config: PostgresConfig):
     try:
         await Tortoise.init(config.tortoise)
 
@@ -46,7 +43,7 @@ async def start_db(ctx: click.Context, config: PostgresConfig):
 
         _LOGGER.info("connection to postgres server successful! (%s)", str(config.url))
 
-        migrations_path: Path = ctx.parent.params["instance"] / "migrations"
+        migrations_path: Path = instance_path / "migrations"
         command = aerich.Command(tortoise_config=config.tortoise, location=str(migrations_path))
 
         if not migrations_path.exists():

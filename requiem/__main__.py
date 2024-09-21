@@ -92,7 +92,7 @@ def prompt_setup() -> None:
     prompt_close(0)
 
 
-@pass_parameters("instance_path")
+@pass_parameters("instance_dir")
 def handle_crash(instance_path: Path, requiem: ..., exc: Exception) -> None:
     crash_report: str = (
         f"Requiem Crash Report\n\n"
@@ -128,7 +128,7 @@ def handle_crash(instance_path: Path, requiem: ..., exc: Exception) -> None:
     callback=parse_directory
 )
 @click.option(
-    "--instance",
+    "--instance-dir",
     default="requiem",
     show_default=True,
     help="Name of the instance to be configured or started.",
@@ -160,7 +160,7 @@ def handle_crash(instance_path: Path, requiem: ..., exc: Exception) -> None:
 def cli(
     ctx: click.Context,
     data_dir: str,
-    instance: str,
+    instance_dir: str,
     no_prompt: bool,
     debug: logging.INFO | logging.DEBUG,
     allow_color: bool,
@@ -171,7 +171,7 @@ def cli(
 
 
 @cli.command()
-@pass_parameters("data_dir", "instance")
+@pass_parameters("data_dir", "instance_dir")
 def start(data_path: Path, instance_path: Path) -> None:
     if not data_path.exists():
         _LOGGER.warning("instance directory (%s) does not exist!", data_path)

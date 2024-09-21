@@ -19,6 +19,7 @@ from requiem.core.config import load_config, RequiemConfig
 from requiem.core.db import start_db, stop_db
 from hikari.internal.ux import init_logging
 from requiem.core.app import RequiemApp
+from functools import update_wrapper
 from pathlib import Path
 
 import click
@@ -30,6 +31,17 @@ import hikari
 
 
 _LOGGER = logging.getLogger("requiem.main")
+
+
+def pass_parameters(*params):
+    def decorator(func):
+        @click.pass_context
+        def wrapper(ctx: click.Context, *args, **kwargs):
+            _params = {**ctx.params, **ctx.parent.params}
+            selected = (_params.get(param) for param in params)
+            return func(*selected, *args, **kwargs)
+        return update_wrapper(wrapper, func)
+    return decorator
 
 
 def parse_directory(_, __, data_path: Path) -> Path:
@@ -64,9 +76,8 @@ def prompt_debug(ctx: click.Context, _, debug: bool) -> logging.INFO | logging.D
     return logging.INFO
 
 
-@click.pass_context
-def prompt_close(ctx: click.Context, exit_code: int) -> None:
-    no_prompt: bool = ctx.parent.params["no_prompt"]
+@pass_parameters("no_prompt")
+def prompt_close(no_prompt: bool, exit_code: int) -> None:
     _LOGGER.warning(f"requiem has closed with exit code {exit_code}!")
 
     if not no_prompt:
@@ -81,6 +92,7 @@ def prompt_setup() -> None:
     prompt_close(0)
 
 
+@pass_parameters("instance_path")
 def handle_crash(instance_path: Path, requiem: ..., exc: Exception) -> None:
     crash_report: str = (
         f"Requiem Crash Report\n\n"
@@ -159,20 +171,15 @@ def cli(
 
 
 @cli.command()
-@click.pass_context
-def start(ctx: click.Context) -> None:
-    data_path: Path = ctx.parent.params["data_dir"]
-
+@pass_parameters("data_dir", "instance")
+def start(data_path: Path, instance_path: Path) -> None:
     if not data_path.exists():
         _LOGGER.warning("instance directory (%s) does not exist!", data_path)
 
         prompt_setup()
 
-    instance: Path = ctx.parent.params["instance"]
-    instance_path: Path = data_path / instance
-
     if not instance_path.exists():
-        _LOGGER.warning("instance (%s) does not exist!", instance)
+        _LOGGER.warning("instance (%s) does not exist!", instance_path.name)
 
         prompt_setup()
 
@@ -184,7 +191,7 @@ def start(ctx: click.Context) -> None:
     loop = get_or_make_loop()
 
     try:
-        loop.run_until_complete(start_db(config.database))
+        loop.run_until_complete(start_db(instance_path, config.database))
         app = RequiemApp(config)
         app.run(close_loop=False)
 
@@ -208,7 +215,7 @@ def start(ctx: click.Context) -> None:
         _LOGGER.warning("requiem was closed using a keyboard interrupt! shutting down gracefully...")
 
     except Exception as exc:
-        handle_crash(instance_path, ..., exc)
+        handle_crash(..., exc)
 
         prompt_close(1)
 

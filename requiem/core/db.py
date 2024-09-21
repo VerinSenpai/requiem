@@ -64,7 +64,7 @@ async def start_db(instance_path: Path, config: PostgresConfig):
             _LOGGER.info("requiem has updated the database tables!")
 
         except AttributeError:
-            _LOGGER.warning("requiem was unable to access the migrations! they will be recreated!")
+            _LOGGER.warning("requiem was unable to read the migration files! they will be recreated!")
 
             shutil.rmtree(migrations_path)
 

@@ -30,6 +30,8 @@ import os
 import aiohttp
 import asyncpg
 import hikari
+import sys
+import platform
 
 
 _LOGGER = logging.getLogger("requiem.main")
@@ -100,15 +102,16 @@ def handle_crash(instance_path: Path, requiem: RequiemApp, exc: Exception) -> No
     current_time: datetime = datetime.now()
 
     crash_report: str = (
-        f"Requiem Crash Report\n\n"
-        f"Session Details   ----------\n"
+        f"Analytics         ----------\n"
         f"Date/Time:        {current_time}\n"
-        f"Session Time:     {requiem.session_time}\n\n"
+        f"Session Time:     {requiem.session_time}\n"
+        f"Platform          {platform.platform()}\n"
+        f"Python:           {sys.version}\n\n"
         f"Traceback         ----------\n{"".join(tb)}"
     )
-    reports_path: Path = instance_path / "error_reports"
-    report_file: Path = reports_path / f"crash_{current_time.timestamp()}.txt"
-    reports_path.mkdir(parents=True, exist_ok=True)
+
+    report_file: Path = instance_path / "crashes" / f"{current_time.strftime("%Y%m%d%H%M%S")}.txt"
+    report_file.parent.mkdir(parents=True, exist_ok=True)
     report_file.write_text(crash_report)
 
     _LOGGER.critical("requiem has encountered a critical exception and crashed!", exc_info=exc)

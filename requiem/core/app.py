@@ -34,3 +34,7 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
             owner_ids=config.owner_ids,
             default_enabled_guilds=config.guild_ids
         )
+
+    @property
+    def session_time(self) -> int:
+        return 0

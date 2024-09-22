@@ -20,8 +20,10 @@ from requiem.core.db import start_db, stop_db
 from hikari.internal.ux import init_logging
 from requiem.core.app import RequiemApp
 from functools import update_wrapper
+from datetime import datetime
 from pathlib import Path
 
+import traceback
 import click
 import logging
 import os
@@ -93,25 +95,21 @@ def prompt_setup() -> None:
 
 
 @pass_parameters("instance_dir")
-def handle_crash(instance_path: Path, requiem: ..., exc: Exception) -> None:
+def handle_crash(instance_path: Path, requiem: RequiemApp, exc: Exception) -> None:
+    tb = traceback.format_exception(type(exc), exc, exc.__traceback__)
+    current_time: datetime = datetime.now()
+
     crash_report: str = (
         f"Requiem Crash Report\n\n"
-        f"Analytics ----------\n"
-        f"Session Time:     {...}\n"
-        f"Commands:         {...}\n"
-        f"Exceptions:       {...}\n"
-        f"Date/Time:        {...}\n\n"
-        f"Traceback ----------\n{...}"
+        f"Session Details   ----------\n"
+        f"Date/Time:        {current_time}\n"
+        f"Session Time:     {requiem.session_time}\n\n"
+        f"Traceback         ----------\n{"".join(tb)}"
     )
-
-    error_path: Path = instance_path / "error_reports"
-    report_file: Path = error_path / "crash_report_{}.txt"
-
-    try:
-        ...
-
-    except:
-        ...
+    reports_path: Path = instance_path / "error_reports"
+    report_file: Path = reports_path / f"crash_{current_time.timestamp()}.txt"
+    reports_path.mkdir(parents=True, exist_ok=True)
+    report_file.write_text(crash_report)
 
     _LOGGER.critical("requiem has encountered a critical exception and crashed!", exc_info=exc)
 
@@ -189,11 +187,12 @@ def start(data_path: Path, instance_path: Path) -> None:
         prompt_setup()
 
     loop = get_or_make_loop()
+    app = RequiemApp(config)
 
     try:
+        raise Exception("TEST EXCEPTION RAISED")
         loop.run_until_complete(start_db(instance_path, config.database))
-        app = RequiemApp(config)
-        app.run(close_loop=False)
+        app.run(close_loop=False, check_for_updates=False)
 
     except asyncpg.InvalidAuthorizationSpecificationError:
         _LOGGER.warning("requiem was unable to connect to the database using the credentials provided!")
@@ -215,7 +214,7 @@ def start(data_path: Path, instance_path: Path) -> None:
         _LOGGER.warning("requiem was closed using a keyboard interrupt! shutting down gracefully...")
 
     except Exception as exc:
-        handle_crash(..., exc)
+        handle_crash(app, exc)
 
         prompt_close(1)
 

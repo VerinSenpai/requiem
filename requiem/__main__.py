@@ -193,7 +193,6 @@ def start(data_path: Path, instance_path: Path) -> None:
     app = RequiemApp(config)
 
     try:
-        raise Exception("TEST EXCEPTION RAISED")
         loop.run_until_complete(start_db(instance_path, config.database))
         app.run(close_loop=False, check_for_updates=False)
 

@@ -16,6 +16,8 @@
 
 
 from requiem.core.config import RequiemConfig
+from datetime import datetime, timedelta
+from hikari import Intents
 
 import abc
 import lightbulb
@@ -28,6 +30,8 @@ _LOGGER = logging.getLogger("requiem.app")
 class RequiemApp(lightbulb.BotApp, abc.ABC):
 
     def __init__(self, config: RequiemConfig) -> None:
+        self._start_time: datetime = datetime.now()
+
         super().__init__(
             token=config.discord_token,
             banner=None,
@@ -36,5 +40,5 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
         )
 
     @property
-    def session_time(self) -> int:
-        return 0
+    def session_time(self) -> timedelta:
+        return datetime.now() - self._start_time

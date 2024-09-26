@@ -58,14 +58,14 @@ def parse_directory(_, __, data_path: Path) -> Path:
     return data_path
 
 
-def parse_instance(ctx: click.Context, _, instance: str) -> Path:
+def parse_instance(ctx: click.Context, _, instance: str) -> str:
     data_path: Path = ctx.params["data_dir"]
     instance_path: Path = data_path / instance
 
     if instance_path.parent != data_path:
         raise click.BadParameter("Use --data-dir to specify a data directory!")
 
-    return instance_path
+    return instance
 
 
 def prompt_debug(ctx: click.Context, _, debug: bool) -> logging.INFO | logging.DEBUG:
@@ -96,7 +96,7 @@ def prompt_setup() -> None:
     prompt_close(0)
 
 
-@pass_parameters("instance_dir")
+@pass_parameters("instance")
 def handle_crash(instance_path: Path, requiem: RequiemApp, exc: Exception) -> None:
     tb = traceback.format_exception(type(exc), exc, exc.__traceback__)
     current_time: datetime = datetime.now()
@@ -129,7 +129,7 @@ def handle_crash(instance_path: Path, requiem: RequiemApp, exc: Exception) -> No
     callback=parse_directory
 )
 @click.option(
-    "--instance-dir",
+    "--instance",
     default="requiem",
     show_default=True,
     help="Name of the instance to be configured or started.",
@@ -161,7 +161,7 @@ def handle_crash(instance_path: Path, requiem: RequiemApp, exc: Exception) -> No
 def cli(
     ctx: click.Context,
     data_dir: str,
-    instance_dir: str,
+    instance: str,
     no_prompt: bool,
     debug: logging.INFO | logging.DEBUG,
     allow_color: bool,
@@ -172,12 +172,14 @@ def cli(
 
 
 @cli.command()
-@pass_parameters("data_dir", "instance_dir")
-def start(data_path: Path, instance_path: Path) -> None:
+@pass_parameters("data_dir", "instance")
+def start(data_path: Path, instance: str) -> None:
     if not data_path.exists():
         _LOGGER.warning("instance directory (%s) does not exist!", data_path)
 
         prompt_setup()
+
+    instance_path: Path = data_path / instance
 
     if not instance_path.exists():
         _LOGGER.warning("instance (%s) does not exist!", instance_path.name)

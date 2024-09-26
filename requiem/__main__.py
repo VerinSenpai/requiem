@@ -196,7 +196,7 @@ def start(data_path: Path, instance: str) -> None:
     if not config:
         prompt_setup()
 
-    loop = get_or_make_loop()
+    loop: asyncio.AbstractEventLoop = get_or_make_loop()
     app = RequiemApp(config)
 
     try:

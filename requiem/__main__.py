@@ -23,6 +23,7 @@ from functools import update_wrapper
 from datetime import datetime
 from pathlib import Path
 
+import asyncio
 import traceback
 import click
 import logging
@@ -167,6 +168,10 @@ def cli(
     allow_color: bool,
     force_color: bool,
 ) -> None:
+    if os.name != "nt":
+        import uvloop
+        asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+
     ctx.obj = {"config": None, "session": None}
     init_logging(debug, allow_color, force_color)
 

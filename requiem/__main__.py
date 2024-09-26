@@ -19,6 +19,7 @@ from requiem.core.config import load_config, RequiemConfig
 from requiem.core.db import start_db, stop_db
 from hikari.internal.ux import init_logging
 from requiem.core.app import RequiemApp
+from requiem.core.setup import run_setup
 from functools import update_wrapper
 from datetime import datetime
 from pathlib import Path
@@ -232,6 +233,29 @@ def start(data_path: Path, instance: str) -> None:
         destroy_loop(loop, _LOGGER)
 
     prompt_close(0)
+
+
+@cli.command()
+@pass_parameters("data_dir", "instance")
+def setup(data_path: Path, instance: str) -> None:
+    instance_path: Path = data_path / instance
+
+    config: RequiemConfig = load_config(instance_path)
+
+    if config:
+        confirm: bool = click.confirm(f"config for instance '{instance}' already exists! continue?")
+
+        if not confirm:
+            prompt_close(0)
+
+    if not instance_path.exists():
+        click.echo(f"directory for instance '{instance}' will be created in location '{data_path}'!")
+
+    instance_path.mkdir(parents=True, exist_ok=True)
+
+    loop: asyncio.AbstractEventLoop = get_or_make_loop()
+    loop.run_until_complete(run_setup())
+    destroy_loop(loop, _LOGGER)
 
 
 if __name__ == "__main__":

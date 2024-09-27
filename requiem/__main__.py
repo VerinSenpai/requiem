@@ -19,7 +19,7 @@ from requiem.core.config import load_config, RequiemConfig
 from requiem.core.db import start_db, stop_db
 from hikari.internal.ux import init_logging
 from requiem.core.app import RequiemApp
-from requiem.core.setup import run_setup
+from requiem.core.setup import RequiemSetup
 from functools import update_wrapper
 from datetime import datetime
 from pathlib import Path
@@ -198,11 +198,11 @@ def start(data_path: Path, instance: str) -> None:
         prompt_setup()
 
     loop: asyncio.AbstractEventLoop = get_or_make_loop()
-    app = RequiemApp(config)
+    instance = RequiemApp(config)
 
     try:
         loop.run_until_complete(start_db(instance_path, config.database))
-        app.run(close_loop=False, check_for_updates=False)
+        instance.run(close_loop=False, check_for_updates=False)
 
     except asyncpg.InvalidAuthorizationSpecificationError:
         _LOGGER.warning("requiem was unable to connect to the database using the credentials provided!")
@@ -224,7 +224,7 @@ def start(data_path: Path, instance: str) -> None:
         _LOGGER.warning("requiem was closed using a keyboard interrupt! shutting down gracefully...")
 
     except Exception as exc:
-        handle_crash(app, exc)
+        handle_crash(instance, exc)
 
         prompt_close(1)
 
@@ -253,8 +253,9 @@ def setup(data_path: Path, instance: str) -> None:
 
     instance_path.mkdir(parents=True, exist_ok=True)
 
+    instance = RequiemSetup(config)
     loop: asyncio.AbstractEventLoop = get_or_make_loop()
-    loop.run_until_complete(run_setup())
+    loop.run_until_complete(instance.run())
     destroy_loop(loop, _LOGGER)
 
 

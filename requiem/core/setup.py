@@ -1,6 +1,5 @@
 # This is part of Requiem
 # Copyright (C) 2020  Verin Senpai
-from contextlib import suppress
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,39 +21,45 @@ from hikari import urls
 
 import click
 import hikari
-import aiohttp
 import asyncio
+import aiohttp
+import logging
 
 
-def setup_exit_prompt():
-    click.echo("setup was exited by the user! no progress has been saved!")
+_LOGGER = logging.getLogger("requiem.setup")
 
 
 class RequiemSetup:
 
-    def __init__(self, config: RequiemConfig = None):
+    def __init__(self, config: RequiemConfig = None) -> None:
         self.fail_count: int = 0
-        self.config = config or {}
+        self.current = config
+        self.updated = {}
 
-    async def get_token(self):
+    async def get_token(self) -> None:
         while self.fail_count < 5:
-            self.config["token"] = token = click.prompt("enter your discord token")
+            current_token: str | None = self.current.discord_token
 
-            bot = hikari.GatewayBot(token, banner=None)
+            self.updated["token"] = token = click.prompt(
+                "enter a discord token",
+                default=current_token,
+                show_default=bool(current_token)
+            )
 
-            try:
-                await bot.start(check_for_updates=False)
+            _LOGGER.info("setup is validating the provided token with discord.")
+
+            async with aiohttp.ClientSession() as session:
+                response = await session.get(
+                    f"{urls.REST_API_URL}/users/@me",
+                    headers={"Authorization": f"Bot {token}"}
+                )
+
+            if response.status == 200:
+                _LOGGER.info("token passed validation. proceeding with setup.")
 
                 return
 
-            except hikari.UnauthorizedError:
-                self.fail_count += 1
+            _LOGGER.info("the token provided could not be validated! check your input and try again!")
 
-            finally:
-                await bot.close()
-
-
-
-async def run_setup():
-    setup = RequiemSetup()
-    await setup.get_token()
+    async def run(self) -> None:
+        await self.get_token()

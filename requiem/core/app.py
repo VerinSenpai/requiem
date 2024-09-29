@@ -17,12 +17,12 @@
 
 from requiem.core.config import RequiemConfig
 from datetime import datetime, timedelta
+from requiem import exts
 from pathlib import Path
 
 import abc
 import lightbulb
 import logging
-import os
 import hikari
 import typing
 import importlib
@@ -53,7 +53,7 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
 
     @property
     def get_extensions(self) -> typing.Generator:
-        extensions_dir = Path(os.getcwd()) / "exts"
+        extensions_dir = Path(exts.__file__).parent
 
         return (
             extension.name

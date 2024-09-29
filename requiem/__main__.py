@@ -61,14 +61,14 @@ def parse_directory(_, __, data_path: Path) -> Path:
     return data_path
 
 
-def parse_instance(ctx: click.Context, _, instance: str) -> str:
+def parse_instance(ctx: click.Context, _, instance: str) -> Path:
     data_path: Path = ctx.params["data_dir"]
     instance_path: Path = data_path / instance
 
     if instance_path.parent != data_path:
         raise click.BadParameter("Use --data-dir to specify a data directory!")
 
-    return instance
+    return instance_path
 
 
 def prompt_debug(ctx: click.Context, _, debug: bool) -> logging.INFO | logging.DEBUG:
@@ -165,7 +165,7 @@ def handle_crash(instance_path: Path, session: RequiemApp | RequiemSetup, exc: E
 def cli(
     ctx: click.Context,
     data_dir: str,
-    instance: str,
+    instance: Path,
     no_prompt: bool,
     debug: logging.INFO | logging.DEBUG,
     allow_color: bool,
@@ -181,14 +181,11 @@ def cli(
 
 @cli.command()
 @pass_parameters("data_dir", "instance")
-def start(data_path: Path, instance: str) -> None:
-
+def start(data_path: Path, instance_path: Path) -> None:
     if not data_path.exists():
         _LOGGER.warning("instance directory (%s) does not exist!", data_path)
 
         prompt_setup()
-
-    instance_path: Path = data_path / instance
 
     if not instance_path.exists():
         _LOGGER.warning("instance (%s) does not exist!", instance_path.name)
@@ -240,18 +237,17 @@ def start(data_path: Path, instance: str) -> None:
 
 @cli.command()
 @pass_parameters("data_dir", "instance")
-def setup(data_path: Path, instance: str) -> None:
-    instance_path: Path = data_path / instance
+def setup(data_path: Path, instance_path: Path) -> None:
     config: RequiemConfig = load_config(instance_path)
 
     if config:
-        confirm: bool = click.confirm(f"config for instance '{instance}' already exists! continue?")
+        confirm: bool = click.confirm(f"config for instance '{instance_path.name}' already exists! continue?")
 
         if not confirm:
             prompt_close(0)
 
     if not instance_path.exists():
-        click.echo(f"directory for instance '{instance}' will be created in location '{data_path}'!")
+        click.echo(f"directory for instance '{instance_path.name}' will be created in location '{data_path}'!")
 
     instance_path.mkdir(parents=True, exist_ok=True)
 

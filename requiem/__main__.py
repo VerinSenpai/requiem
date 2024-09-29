@@ -255,7 +255,7 @@ def setup(data_path: Path, instance_path: Path) -> None:
     session = RequiemSetup(config)
 
     try:
-        loop.run_until_complete(session.run())
+        loop.run_until_complete(session.run(instance_path))
 
     except Exception as exc:
         handle_crash(session, exc)

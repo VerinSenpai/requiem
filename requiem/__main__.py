@@ -242,7 +242,6 @@ def start(data_path: Path, instance: str) -> None:
 @pass_parameters("data_dir", "instance")
 def setup(data_path: Path, instance: str) -> None:
     instance_path: Path = data_path / instance
-
     config: RequiemConfig = load_config(instance_path)
 
     if config:

@@ -60,7 +60,7 @@ class PostgresConfig:
 
 @attr.s(auto_attribs=True)
 class RequiemConfig:
-    discord_token: str | None = None
+    token: str | None = None
     guild_ids: typing.List[int] = []
     owner_ids: typing.List[int] = []
     database: PostgresConfig = attr.ib(factory=PostgresConfig)

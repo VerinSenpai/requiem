@@ -20,6 +20,7 @@ from requiem.core.db import start_db, stop_db
 from hikari.internal.ux import init_logging
 from requiem.core.app import RequiemApp
 from requiem.core.setup import RequiemSetup
+from requiem import __version__
 from functools import update_wrapper
 from datetime import datetime
 from pathlib import Path
@@ -108,7 +109,8 @@ def handle_crash(instance_path: Path, session: RequiemApp | RequiemSetup, exc: E
         f"Date/Time         {current_time}\n"
         f"Session Time      {session.session_time}\n"
         f"Platform          {platform.platform()}\n"
-        f"Python:           {sys.version}\n\n"
+        f"Python            {sys.version}\n"
+        f"Requiem           {__version__}\n"
         f"Traceback         ----------\n{"".join(tb)}"
     )
 

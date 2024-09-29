@@ -18,6 +18,7 @@
 
 from requiem.core.config import RequiemConfig
 from hikari import urls
+from datetime import datetime, timedelta
 
 import click
 import hikari
@@ -32,9 +33,15 @@ _LOGGER = logging.getLogger("requiem.setup")
 class RequiemSetup:
 
     def __init__(self, config: RequiemConfig = None) -> None:
-        self.fail_count: int = 0
-        self.current = config
-        self.updated = {}
+        self._start_time: datetime = datetime.now()
+        self._fail_count: int = 0
+
+        self.config = config.__dict__
+        self.config["database"] = config.database.__dict__
+
+    @property
+    def session_time(self) -> timedelta:
+        return datetime.now() - self._start_time
 
     async def get_token(self) -> None:
         while self.fail_count < 5:

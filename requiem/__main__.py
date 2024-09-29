@@ -256,10 +256,22 @@ def setup(data_path: Path, instance: str) -> None:
 
     instance_path.mkdir(parents=True, exist_ok=True)
 
-    instance = RequiemSetup(config)
     loop: asyncio.AbstractEventLoop = get_or_make_loop()
-    loop.run_until_complete(instance.run())
-    destroy_loop(loop, _LOGGER)
+    session = RequiemSetup(config)
+
+    try:
+        loop.run_until_complete(session.run())
+
+    except Exception as exc:
+        handle_crash(session, exc)
+
+        prompt_close(1)
+
+    finally:
+        loop.run_until_complete(stop_db())
+        destroy_loop(loop, _LOGGER)
+
+    prompt_close(0)
 
 
 if __name__ == "__main__":

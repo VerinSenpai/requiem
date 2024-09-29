@@ -182,6 +182,7 @@ def cli(
 @cli.command()
 @pass_parameters("data_dir", "instance")
 def start(data_path: Path, instance: str) -> None:
+
     if not data_path.exists():
         _LOGGER.warning("instance directory (%s) does not exist!", data_path)
 
@@ -200,11 +201,11 @@ def start(data_path: Path, instance: str) -> None:
         prompt_setup()
 
     loop: asyncio.AbstractEventLoop = get_or_make_loop()
-    instance = RequiemApp(config)
+    session = RequiemApp(config)
 
     try:
         loop.run_until_complete(start_db(instance_path, config.database))
-        instance.run(close_loop=False, check_for_updates=False)
+        session.run(close_loop=False, check_for_updates=False)
 
     except asyncpg.InvalidAuthorizationSpecificationError:
         _LOGGER.warning("requiem was unable to connect to the database using the credentials provided!")
@@ -226,7 +227,7 @@ def start(data_path: Path, instance: str) -> None:
         _LOGGER.warning("requiem was closed using a keyboard interrupt! shutting down gracefully...")
 
     except Exception as exc:
-        handle_crash(instance, exc)
+        handle_crash(session, exc)
 
         prompt_close(1)
 

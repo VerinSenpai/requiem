@@ -99,14 +99,14 @@ def prompt_setup() -> None:
 
 
 @pass_parameters("instance")
-def handle_crash(instance_path: Path, requiem: RequiemApp, exc: Exception) -> None:
+def handle_crash(instance_path: Path, session: RequiemApp | RequiemSetup, exc: Exception) -> None:
     tb = traceback.format_exception(type(exc), exc, exc.__traceback__)
     current_time: datetime = datetime.now()
 
     crash_report: str = (
         f"Analytics         ----------\n"
-        f"Date/Time:        {current_time}\n"
-        f"Session Time:     {requiem.session_time}\n"
+        f"Date/Time         {current_time}\n"
+        f"Session Time      {session.session_time}\n"
         f"Platform          {platform.platform()}\n"
         f"Python:           {sys.version}\n\n"
         f"Traceback         ----------\n{"".join(tb)}"

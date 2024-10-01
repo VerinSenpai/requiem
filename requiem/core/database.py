@@ -26,10 +26,10 @@ import aerich
 import shutil
 
 
-_LOGGER = logging.getLogger("requiem.db")
+_LOGGER = logging.getLogger("requiem.database")
 
 
-async def start_db(instance_path: Path, config: PostgresConfig):
+async def start_database(instance_path: Path, config: PostgresConfig):
     try:
         await Tortoise.init(config.tortoise)
 
@@ -74,7 +74,7 @@ async def start_db(instance_path: Path, config: PostgresConfig):
         raise
 
 
-async def stop_db():
+async def stop_database():
     if not Tortoise._inited:
         return
 

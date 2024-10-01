@@ -16,7 +16,7 @@
 
 from hikari.internal.aio import get_or_make_loop, destroy_loop
 from requiem.core.config import load_config, RequiemConfig
-from requiem.core.db import start_db, stop_db
+from requiem.core.database import start_database, stop_database
 from hikari.internal.ux import init_logging
 from requiem.core.app import RequiemApp
 from requiem.core.setup import RequiemSetup
@@ -201,7 +201,7 @@ def start(data_path: Path, instance_path: Path) -> None:
     session = RequiemApp(config)
 
     try:
-        loop.run_until_complete(start_db(instance_path, config.database))
+        loop.run_until_complete(start_database(instance_path, config.database))
         session.run(close_loop=False, check_for_updates=False)
 
     except asyncpg.InvalidAuthorizationSpecificationError:
@@ -229,7 +229,7 @@ def start(data_path: Path, instance_path: Path) -> None:
         prompt_close(1)
 
     finally:
-        loop.run_until_complete(stop_db())
+        loop.run_until_complete(stop_database())
         destroy_loop(loop, _LOGGER)
 
     prompt_close(0)
@@ -251,10 +251,10 @@ def setup(data_path: Path, instance_path: Path) -> None:
 
     instance_path.mkdir(parents=True, exist_ok=True)
     loop: asyncio.AbstractEventLoop = get_or_make_loop()
-    session = RequiemSetup(config)
+    session = RequiemSetup(instance_path, config)
 
     try:
-        loop.run_until_complete(session.run(instance_path))
+        loop.run_until_complete(session.run())
 
     except KeyboardInterrupt:
         _LOGGER.info("setup was closed using a keyboard interrupt! shutting down gracefully...")
@@ -265,7 +265,7 @@ def setup(data_path: Path, instance_path: Path) -> None:
         prompt_close(1)
 
     finally:
-        loop.run_until_complete(stop_db())
+        loop.run_until_complete(stop_database())
         destroy_loop(loop, _LOGGER)
 
     prompt_close(0)

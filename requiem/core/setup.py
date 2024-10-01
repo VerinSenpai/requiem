@@ -16,34 +16,33 @@
 
 
 
-from requiem.core.config import RequiemConfig
+from requiem.core.config import RequiemConfig, PostgresConfig
+from requiem.core.database import start_database
+from requiem import __discord__
 from hikari import urls
 from datetime import datetime, timedelta
 from pathlib import Path
+from cattr import global_converter
 
-import os
 import click
 import asyncio
 import aiohttp
 import logging
 import yaml
+import asyncpg
+import contextlib
 
 
 _LOGGER = logging.getLogger("requiem.setup")
 
 
-def prompt_close():
-    click.pause("press any key to exit the script...")
-
-    exit(0)
-
-
 class RequiemSetup:
 
-    def __init__(self, config: RequiemConfig = None) -> None:
+    def __init__(self, instance_path: Path, config: RequiemConfig) -> None:
         self._start_time: datetime = datetime.now()
         self._fail_count: int = 0
-
+        self.instance_path: Path = instance_path
+        config: RequiemConfig = config or global_converter.structure({}, RequiemConfig)
         self.config = config.__dict__
         self.config["database"] = config.database.__dict__
 
@@ -68,46 +67,61 @@ class RequiemSetup:
             if response.status == 200:
                 return
 
-            click.echo("token could not be validated! check your input and try again!")
+            elif self._fail_count < 4:
+                click.echo("token could not be validated! check your input and try again!")
+                await asyncio.sleep(5)
 
-            await asyncio.sleep(5)
+            self._fail_count += 1
 
-        click.echo("failed to validate token within 5 attempts! setup is exiting!")
+        click.echo("failed to validate token within 5 attempts!")
 
-        prompt_close()
-
-    async def setup_db(self) -> None:
+    async def setup_database(self) -> None:
         config: dict = self.config.get("database")
 
         while self._fail_count < 5:
             config["host"] = click.prompt("database host", default=config["host"], show_default=True)
             config["port"] = click.prompt("database port", default=config["port"], show_default=True)
             config["user"] = click.prompt("database user", default=config["user"], show_default=True)
-            current: str | None = config["password"]
-            config["password"] = click.prompt("database password", default=current, show_default=bool(current))
+            config["password"] = click.prompt(
+                "database password", default=config["password"], show_default=bool(config["password"])
+            )
+            config["path"] = f"/{self.instance_path.name}"
 
-    async def run(self, instance_path: Path) -> None:
-        config_file: Path = instance_path / "config.yaml"
+            test_config: PostgresConfig = global_converter.structure(config, PostgresConfig)
+
+            with contextlib.suppress(asyncpg.InvalidAuthorizationSpecificationError):
+                await start_database(self.instance_path, test_config)
+                self.config["database"] = config
+                return
+
+            if self._fail_count < 4:
+                click.echo("database config could not be validated! check your inputs and try again!")
+                await asyncio.sleep(5)
+
+            self._fail_count += 1
+
+        click.echo("failed to validate database credentials within 5 attempts!")
+
+    async def run(self) -> None:
+        config_file: Path = self.instance_path / "config.yaml"
+
+        process = (
+            self.get_token,
+            self.setup_database
+        )
 
         with config_file.open("w") as file:
-            await self.get_token()
-            self._fail_count = 0
-            await self.setup_db()
+            for job in process:
+                self._fail_count = 0
+                await job()
+
+                if self._fail_count == 5:
+                    click.echo(f"you appear to be having difficulty with setup! if you need assistance,\n"
+                               f"feel free to ask for help in the requiem support server!\n\n{__discord__}")
+
+                    _LOGGER.warning("setup aborted! no changes have been saved!")
+                    return
 
             yaml.safe_dump(self.config, file)
 
         _LOGGER.info("setup is complete! config saved to '%s'!", config_file)
-
-        confirm = click.confirm("would you like to create a run file?")
-
-        if not confirm:
-            return
-
-        py_call = "python" if os.name == "nt" else "python3"
-        ext = "bat" if os.name == "nt" else "sh"
-        script: str = f"{py_call} -OO -m requiem start"
-
-        with open(f"run_requiem.{ext}", "w") as file:
-            file.write(script)
-
-        _LOGGER.info("setup script created!")

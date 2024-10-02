@@ -17,7 +17,6 @@
 
 import logging
 import typing
-
 import attr
 import cattrs
 import tortoise
@@ -75,6 +74,7 @@ def load_config(instance_path: Path) -> RequiemConfig | None:
 
         config: RequiemConfig = global_converter.structure(data, RequiemConfig)
         _LOGGER.info("config for instance (%s) has been loaded!", instance_path.name)
+
         return config
 
     except (TypeError, cattrs.ClassValidationError):
@@ -82,3 +82,14 @@ def load_config(instance_path: Path) -> RequiemConfig | None:
 
     except FileNotFoundError:
         _LOGGER.warning("config for instance (%s) could not be found!", instance_path.name)
+
+
+def save_config(instance_path: Path, config: RequiemConfig) -> None:
+    config_file: Path = instance_path / "config.yaml"
+
+    config: dict = global_converter.unstructure(config)
+
+    with config_file.open("w") as file:
+        yaml.safe_dump(config, file)
+
+    _LOGGER.info("config saved to '%s'!", config_file)

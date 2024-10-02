@@ -18,6 +18,7 @@
 from requiem.core.config import RequiemConfig, PostgresConfig, save_config
 from requiem.core.database import start_database, stop_database
 from requiem import __discord__
+from hikari.internal.aio import get_or_make_loop
 from hikari import urls
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -28,26 +29,53 @@ import asyncio
 import aiohttp
 import logging
 import asyncpg
-import os
+import time
 
 
 _LOGGER = logging.getLogger("requiem.setup")
 
 
+async def test_discord_token(token: str) -> bool:
+    async with aiohttp.ClientSession() as session:
+        response = await session.get(
+            f"{urls.REST_API_URL}/users/@me",
+            headers={"Authorization": f"Bot {token}"}
+        )
+
+    return response.status == 200
+
+
+async def test_database(instance_path: Path, config: PostgresConfig) -> bool:
+    try:
+        await start_database(instance_path, config)
+
+        return True
+
+    except asyncpg.InvalidAuthorizationSpecificationError:
+        return False
+
+    finally:
+        await stop_database()
+
+
 class RequiemSetup:
 
     def __init__(self, instance_path: Path, config: RequiemConfig) -> None:
+        self._loop: asyncio.AbstractEventLoop = get_or_make_loop()
         self._start_time: datetime = datetime.now()
         self._fail_count: int = 0
-
         self.instance_path: Path = instance_path
         self.config: RequiemConfig = config or global_converter.structure({}, RequiemConfig)
+
+    @property
+    def loop(self) -> asyncio.AbstractEventLoop:
+        return self._loop
 
     @property
     def session_time(self) -> timedelta:
         return datetime.now() - self._start_time
 
-    async def handle_fail(self, message: str):
+    def handle_fail(self, message: str):
         click.echo(f"{message} check your input and try again!")
 
         if self._fail_count >= 2:
@@ -56,9 +84,9 @@ class RequiemSetup:
         else:
             self._fail_count += 1
 
-        await asyncio.sleep(5)
+        time.sleep(5)
 
-    async def get_token(self) -> None:
+    def get_token(self) -> None:
         current: str | None = self.config.token
 
         while True:
@@ -68,18 +96,12 @@ class RequiemSetup:
                 show_default=bool(current)
             )
 
-            async with aiohttp.ClientSession() as session:
-                response = await session.get(
-                    f"{urls.REST_API_URL}/users/@me",
-                    headers={"Authorization": f"Bot {input_token}"}
-                )
+            passed: bool = self.loop.run_until_complete(test_discord_token(input_token))
+            if passed: return
 
-            if response.status == 200:
-                return
+            self.handle_fail("validation of discord token failed!")
 
-            await self.handle_fail("validation of discord token failed!")
-
-    async def setup_database(self) -> None:
+    def setup_database(self) -> None:
         config: PostgresConfig = self.config.database
 
         while True:
@@ -93,20 +115,12 @@ class RequiemSetup:
             )
             config.path = f"/{self.instance_path.name}"
 
-            try:
-                await start_database(self.instance_path, config)
-                self.config.database = config
-                await stop_database()
-                return
+            passed: bool = self.loop.run_until_complete(test_database(self.instance_path, config))
+            if passed: return
 
-            except asyncpg.InvalidAuthorizationSpecificationError:
-                await self.handle_fail("validation of database config failed!")
+            self.handle_fail("validation of database credentials failed!")
 
-    async def run(self) -> None:
-        await self.get_token()
-        await self.setup_database()
-
+    def run(self) -> None:
+        self.get_token()
+        self.setup_database()
         save_config(self.instance_path, self.config)
-
-        python = "python" if os.name == "nt" else "python3"
-        _LOGGER.info(f"run '{python} -OO -m requiem start' in your terminal to start requiem!")

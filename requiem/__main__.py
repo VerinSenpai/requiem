@@ -250,11 +250,10 @@ def setup(data_path: Path, instance_path: Path) -> None:
         click.echo(f"directory for instance '{instance_path.name}' will be created in location '{data_path}'!")
 
     instance_path.mkdir(parents=True, exist_ok=True)
-    loop: asyncio.AbstractEventLoop = get_or_make_loop()
     session = RequiemSetup(instance_path, config)
 
     try:
-        loop.run_until_complete(session.run())
+        session.run()
 
     except KeyboardInterrupt:
         _LOGGER.info("setup was closed using a keyboard interrupt! shutting down gracefully...")
@@ -265,8 +264,7 @@ def setup(data_path: Path, instance_path: Path) -> None:
         prompt_close(1)
 
     finally:
-        loop.run_until_complete(stop_database())
-        destroy_loop(loop, _LOGGER)
+        destroy_loop(session.loop, _LOGGER)
 
     prompt_close(0)
 

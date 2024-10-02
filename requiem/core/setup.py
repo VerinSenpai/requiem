@@ -27,7 +27,6 @@ import click
 import asyncio
 import aiohttp
 import logging
-import yaml
 import asyncpg
 import os
 

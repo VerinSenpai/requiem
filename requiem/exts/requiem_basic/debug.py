@@ -18,14 +18,26 @@
 from requiem.core.context import RequiemContext
 
 import lightbulb
+import hikari
 
 
 plugin = lightbulb.Plugin("Debug")
 
 
 @plugin.command
+@lightbulb.add_checks(lightbulb.owner_only)
 @lightbulb.command("error", "Raises a random exception to test error handling.")
 @lightbulb.implements(lightbulb.PrefixCommand)
 async def error(ctx: RequiemContext) -> None:
     await ctx.respond("raising an exception...")
     raise Exception("This is a test")
+
+
+@plugin.command
+@lightbulb.add_checks(lightbulb.owner_only)
+@lightbulb.command("terminate", "Exit Requiem.")
+@lightbulb.implements(lightbulb.PrefixCommand)
+async def terminate(ctx: RequiemContext):
+    embed = hikari.Embed(title="Requiem is shutting down!", color=ctx.color)
+    await ctx.respond(embed=embed)
+    await ctx.app.close()

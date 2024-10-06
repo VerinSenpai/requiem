@@ -17,6 +17,7 @@
 
 from requiem.core.config import RequiemConfig
 from datetime import datetime, timedelta
+from requiem.core.context import RequiemSlashContext
 from requiem import exts
 from pathlib import Path
 
@@ -60,6 +61,14 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
             for extension in extensions_dir.iterdir()
             if extension.name not in ("__init__.py", "__pycache__")
         )
+
+    async def get_slash_context(
+        self,
+        event: hikari.InteractionCreateEvent,
+        command: commands.slash.SlashCommand,
+        cls=RequiemSlashContext,
+    ) -> RequiemSlashContext:
+        return cls(self, event, command)
 
     def load_extensions(self, extension: str = None) -> None:
         if extension is None:

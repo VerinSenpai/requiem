@@ -20,7 +20,7 @@ from lightbulb import context as context_, commands
 
 from requiem.core.config import RequiemConfig
 from datetime import datetime, timedelta
-from requiem.core.context import RequiemSlashContext
+from requiem.core.context import RequiemSlashContext, RequiemPrefixContext
 from lightbulb import PrefixCommandErrorEvent, SlashCommandErrorEvent
 from requiem import exts
 from pathlib import Path
@@ -76,6 +76,13 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
         cls=RequiemSlashContext,
     ) -> RequiemSlashContext:
         return cls(self, event, command)
+
+    async def get_prefix_context(
+        self,
+        event: hikari.MessageCreateEvent,
+        cls=RequiemPrefixContext,
+    ) -> t.Optional[RequiemPrefixContext]:
+        return await super().get_prefix_context(event, cls)
 
     def load_extensions(self, extension: str = None) -> None:
         if extension is None:

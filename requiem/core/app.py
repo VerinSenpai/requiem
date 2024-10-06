@@ -1,5 +1,8 @@
 # This is part of Requiem
 # Copyright (C) 2020  Verin Senpai
+import typing as t
+
+from lightbulb import context as context_, commands
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,6 +21,7 @@
 from requiem.core.config import RequiemConfig
 from datetime import datetime, timedelta
 from requiem.core.context import RequiemSlashContext
+from importlib.util import spec_from_file_location, module_from_spec
 from requiem import exts
 from pathlib import Path
 
@@ -73,7 +77,7 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
     def load_extensions(self, extension: str = None) -> None:
         if extension is None:
             for extension in self.get_extensions:
-                self.load_extensions(f"requiem.exts.{extension[:-3]}")
+                self.load_extensions(extension)
 
             _LOGGER.info(
                 "%s extension(s) containing %s plugin(s) have been loaded!",
@@ -83,8 +87,10 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
 
             return
 
+        extension_name = extension.removesuffix(".py")
+
         try:
-            module = importlib.import_module(extension)
+            module = importlib.import_module(f"requiem.exts.{extension}")
 
             if not hasattr(module, "load"):
                 _LOGGER.warning("extension '%s' has no 'load' method!", extension)

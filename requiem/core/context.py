@@ -28,7 +28,7 @@ import abc
 
 class RequiemContext(Context, abc.ABC):
 
-    def __init__(self, app: RequiemApp) -> None:
+    def __init__(self, app: "RequiemApp") -> None:
         super().__init__(app)
 
     @property

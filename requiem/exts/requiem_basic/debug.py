@@ -15,7 +15,17 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
+from requiem.core.context import RequiemContext
+
 import lightbulb
 
 
 plugin = lightbulb.Plugin("Debug")
+
+
+@plugin.command
+@lightbulb.command("error", "Raises a random exception to test error handling.")
+@lightbulb.implements(lightbulb.PrefixCommand)
+async def error(ctx: RequiemContext) -> None:
+    await ctx.respond("raising an exception...")
+    raise Exception("This is a test")

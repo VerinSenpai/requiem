@@ -47,6 +47,8 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
             banner=None,
             owner_ids=config.owner_ids,
             default_enabled_guilds=config.guild_ids
+            default_enabled_guilds=config.guild_ids,
+            prefix=config.prefix
         )
 
         self.subscribe(hikari.StartingEvent, self.handle_starting)

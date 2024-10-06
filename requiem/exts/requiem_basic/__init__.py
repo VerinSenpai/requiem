@@ -27,6 +27,3 @@ def load(app: RequiemApp) -> None:
 def unload(app: RequiemApp) -> None:
     app.remove_plugin(utility.plugin)
     app.remove_plugin(debug.plugin)
-
-    del utility
-    del debug

@@ -27,8 +27,15 @@ plugin = lightbulb.Plugin("Utility")
 
 
 @plugin.command
+@lightbulb.command("util", "Utility commands.")
+@lightbulb.implements(lightbulb.SlashCommandGroup)
+async def util(ctx: RequiemContext):
+    ...
+
+
+@util.child
 @lightbulb.command("ping", "View current ping times for Requiem.")
-@lightbulb.implements(lightbulb.SlashCommand, lightbulb.PrefixCommand)
+@lightbulb.implements(lightbulb.SlashSubCommand)
 async def ping(ctx: RequiemContext):
     start = time.monotonic()
     embed = hikari.Embed(title="Pinging!", color=ctx.color)
@@ -41,9 +48,9 @@ async def ping(ctx: RequiemContext):
     await message.edit(embed=embed)
 
 
-@plugin.command
+@util.child
 @lightbulb.command("about", "View Requiem description and version information.")
-@lightbulb.implements(lightbulb.SlashCommand,  lightbulb.PrefixCommand)
+@lightbulb.implements(lightbulb.SlashCommand)
 async def about(ctx: RequiemContext) -> None:
     embed = hikari.Embed(description=ctx.app.application.description, color=ctx.color)
     embed.add_field(name="Requiem Version", value=__version__, inline=True)

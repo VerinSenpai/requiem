@@ -90,10 +90,11 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
 
             return
 
-        extension_name = extension.removesuffix(".py")
+        extension = extension.removesuffix(".py")
+        extension_path = f"requiem.exts.{extension}"
 
         try:
-            module = importlib.import_module(f"requiem.exts.{extension}")
+            module = importlib.import_module(extension_path)
 
             if not hasattr(module, "load"):
                 _LOGGER.warning("extension '%s' has no 'load' method!", extension)
@@ -117,17 +118,23 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
 
             return
 
-        module = importlib.import_module(extension)
-
-        if not hasattr(module, "unload"):
-            _LOGGER.info("extension '%s' has no 'unload' method!", extension)
-
-            return
+        extension_path = f"requiem.exts.{extension}"
 
         try:
+            module = importlib.import_module(extension_path)
+
+            if not hasattr(module, "unload"):
+                _LOGGER.info("extension '%s' has no 'unload' method!", extension)
+
+                return
+
             module.unload(self)
             self.extensions.remove(extension)
-            del sys.modules[extension]
+
+            for module in sys.modules.copy():
+                if extension_path in module:
+                    del sys.modules[module]
+
             _LOGGER.info("extension '%s' unloaded!", extension)
 
         except Exception as exc:

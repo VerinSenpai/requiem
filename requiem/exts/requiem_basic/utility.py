@@ -16,22 +16,22 @@
 
 
 from requiem import __discord__, __version__, __repo_url__
-from requiem.core.app import RequiemApp
+from requiem.core.context import RequiemContext
 
 import lightbulb
 import hikari
 import time
 
 
-plugin = lightbulb.Plugin("requiem_basic")
+plugin = lightbulb.Plugin("Utility")
 
 
 @plugin.command
 @lightbulb.command("ping", "View current ping times for Requiem.")
 @lightbulb.implements(lightbulb.SlashCommand, lightbulb.PrefixCommand)
-async def ping(ctx: lightbulb.Context):
+async def ping(ctx: RequiemContext):
     start = time.monotonic()
-    embed = hikari.Embed(title="Pinging!")
+    embed = hikari.Embed(title="Pinging!", color=ctx.color)
     message = await ctx.respond(embed=embed)
     heartbeat = round(ctx.bot.heartbeat_latency * 1000, 2)
     ack = int((time.monotonic() - start) * 1000)
@@ -44,17 +44,10 @@ async def ping(ctx: lightbulb.Context):
 @plugin.command
 @lightbulb.command("about", "View Requiem description and version information.")
 @lightbulb.implements(lightbulb.SlashCommand,  lightbulb.PrefixCommand)
-async def about(ctx: lightbulb.Context) -> None:
-    embed = hikari.Embed(description=ctx.app.application.description)
+async def about(ctx: RequiemContext) -> None:
+    embed = hikari.Embed(description=ctx.app.application.description, color=ctx.color)
     embed.add_field(name="Requiem Version", value=__version__, inline=True)
     embed.add_field(name="Hikari Version", value=hikari.__version__, inline=True)
     embed.add_field(name="Lightbulb Version", value=lightbulb.__version__, inline=True)
     await ctx.respond(embed=embed)
 
-
-def load(bot: RequiemApp) -> None:
-    bot.add_plugin(plugin)
-
-
-def unload(bot: RequiemApp) -> None:
-    bot.remove_plugin(plugin)

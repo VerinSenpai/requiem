@@ -43,7 +43,7 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
         self._start_time: datetime = datetime.now()
 
         super().__init__(
-            token=config.token,
+            token=config.token or "",
             banner=None,
             owner_ids=config.owner_ids,
             default_enabled_guilds=config.guild_ids

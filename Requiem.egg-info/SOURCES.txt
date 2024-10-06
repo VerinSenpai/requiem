@@ -1,9 +1,0 @@
-LICENSE
-README.md
-pyproject.toml
-Requiem.egg-info/PKG-INFO
-Requiem.egg-info/SOURCES.txt
-Requiem.egg-info/dependency_links.txt
-Requiem.egg-info/entry_points.txt
-Requiem.egg-info/requires.txt
-Requiem.egg-info/top_level.txt

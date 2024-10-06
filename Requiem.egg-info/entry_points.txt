@@ -1,2 +1,0 @@
-[console_scripts]
-requiem = requiem.__main__:cli

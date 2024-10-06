@@ -21,7 +21,7 @@ from lightbulb import context as context_, commands
 from requiem.core.config import RequiemConfig
 from datetime import datetime, timedelta
 from requiem.core.context import RequiemSlashContext
-from importlib.util import spec_from_file_location, module_from_spec
+from lightbulb import PrefixCommandErrorEvent, SlashCommandErrorEvent
 from requiem import exts
 from pathlib import Path
 
@@ -46,13 +46,14 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
             token=config.token or "",
             banner=None,
             owner_ids=config.owner_ids,
-            default_enabled_guilds=config.guild_ids
             default_enabled_guilds=config.guild_ids,
             prefix=config.prefix
         )
 
         self.subscribe(hikari.StartingEvent, self.handle_starting)
         self.subscribe(hikari.StoppingEvent, self.handle_stopping)
+        self.subscribe(lightbulb.PrefixCommandErrorEvent, self.handle_command_error)
+        self.subscribe(lightbulb.SlashCommandErrorEvent, self.handle_command_error)
 
     @property
     def session_time(self) -> timedelta:
@@ -137,3 +138,10 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
 
     async def handle_stopping(self, event: hikari.StoppingEvent) -> None:
         self.unload_extensions()
+
+    async def handle_command_error(self, event: SlashCommandErrorEvent | PrefixCommandErrorEvent) -> None:
+        _LOGGER.error(
+            "an exception was encountered while executing command '%s'!",
+            event.context.command.name,
+            exc_info=event.exc_info
+        )

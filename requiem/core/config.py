@@ -63,6 +63,8 @@ class RequiemConfig:
     guild_ids: typing.List[int] = []
     owner_ids: typing.List[int] = []
     database: PostgresConfig = attr.ib(factory=PostgresConfig)
+    prefix: str = "r!"
+    allow_custom_prefix: bool = True
 
 
 def load_config(instance_path: Path) -> RequiemConfig | None:

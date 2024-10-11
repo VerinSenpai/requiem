@@ -1,8 +1,5 @@
 # This is part of Requiem
 # Copyright (C) 2020  Verin Senpai
-import typing as t
-
-from lightbulb import context as context_, commands
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -81,7 +78,7 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
     async def get_slash_context(
         self,
         event: hikari.InteractionCreateEvent,
-        command: commands.slash.SlashCommand,
+        command: lightbulb.SlashCommand,
         cls=RequiemSlashContext,
     ) -> RequiemSlashContext:
         return cls(self, event, command)

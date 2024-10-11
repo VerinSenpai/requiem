@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from requiem.core.app import RequiemApp
 
-from lightbulb.context import Context, ApplicationContext, SlashContext, PrefixContext
+from lightbulb.context import Context, ApplicationContext, SlashContext
 from hikari.colors import Color
 
 import abc
@@ -37,10 +37,6 @@ class RequiemContext(Context, abc.ABC):
 
 
 class RequiemApplicationContext(ApplicationContext, RequiemContext, abc.ABC):
-    ...
-
-
-class RequiemPrefixContext(PrefixContext, RequiemContext, abc.ABC):
     ...
 
 

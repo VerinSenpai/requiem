@@ -18,10 +18,9 @@ from lightbulb import context as context_, commands
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
+from requiem.core.context import RequiemSlashContext, RequiemContext
 from requiem.core.config import RequiemConfig
 from datetime import datetime, timedelta
-from requiem.core.context import RequiemSlashContext, RequiemPrefixContext
-from lightbulb import PrefixCommandErrorEvent, SlashCommandErrorEvent
 from requiem import exts
 from pathlib import Path
 
@@ -47,12 +46,10 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
             banner=None,
             owner_ids=config.owner_ids,
             default_enabled_guilds=config.guild_ids,
-            prefix=config.prefix
         )
 
         self.subscribe(hikari.StartingEvent, self.handle_starting)
         self.subscribe(hikari.StoppingEvent, self.handle_stopping)
-        self.subscribe(lightbulb.PrefixCommandErrorEvent, self.handle_command_error)
         self.subscribe(lightbulb.SlashCommandErrorEvent, self.handle_command_error)
 
     @property
@@ -76,13 +73,6 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
         cls=RequiemSlashContext,
     ) -> RequiemSlashContext:
         return cls(self, event, command)
-
-    async def get_prefix_context(
-        self,
-        event: hikari.MessageCreateEvent,
-        cls=RequiemPrefixContext,
-    ) -> t.Optional[RequiemPrefixContext]:
-        return await super().get_prefix_context(event, cls)
 
     def load_extensions(self, extension: str = None) -> None:
         if extension is None:
@@ -152,10 +142,3 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
 
     async def handle_stopping(self, event: hikari.StoppingEvent) -> None:
         self.unload_extensions()
-
-    async def handle_command_error(self, event: SlashCommandErrorEvent | PrefixCommandErrorEvent) -> None:
-        _LOGGER.error(
-            "an exception was encountered while executing command '%s'!",
-            event.context.command.name,
-            exc_info=event.exc_info
-        )

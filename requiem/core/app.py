@@ -17,9 +17,11 @@
 
 from requiem.core.context import RequiemSlashContext, RequiemContext
 from requiem.core.config import RequiemConfig
+from requiem.core.resources import errors
 from datetime import datetime, timedelta
 from requiem import exts
 from pathlib import Path
+from random import choice
 
 import abc
 import lightbulb
@@ -64,16 +66,27 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
         )
 
     async def handle_command_error(self, event: lightbulb.SlashCommandErrorEvent) -> None:
-        ctx: RequiemContext = event.context
+        context: RequiemContext = event.context
+        command: lightbulb.Command = context.command
         exc_type, exception, trace = event.exc_info
 
         if isinstance(exception, lightbulb.CheckFailure):
-            message: str = "check failure. not implemented yet."
+            response = errors.CHECK_FAIL.get(exc_type, str(exception))
+
+            if callable(response):
+                response = response(exception, command)
 
         else:
-            message: str = "Requiem encountered an error while executing "
+            response = f"{choice(errors.UNHANDLED)}\n\nAn unexpected error occurred! Sorry about that!"
 
-        await ctx.respond(f"command error encountered! {exc_type}")
+            _LOGGER.exception(
+                "an unhandled exception occurred while executing command '%s'!",
+                command.name,
+                exc_info=exception
+            )
+
+        embed = hikari.Embed(description=response, color=context.color)
+        await context.respond(embed=embed)
 
     async def get_slash_context(
         self,

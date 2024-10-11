@@ -76,6 +76,9 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
             if callable(response):
                 response = response(exception, command)
 
+        elif isinstance(exception, NotImplementedError):
+            response = f"Command '{command.name}' is not yet ready for use!"
+
         else:
             response = f"{choice(errors.UNHANDLED)}\n\nAn unexpected error occurred! Sorry about that!"
 

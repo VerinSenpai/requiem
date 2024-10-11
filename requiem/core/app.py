@@ -66,6 +66,18 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
             if extension.name not in ("__init__.py", "__pycache__")
         )
 
+    async def handle_command_error(self, event: lightbulb.SlashCommandErrorEvent) -> None:
+        ctx: RequiemContext = event.context
+        exc_type, exception, trace = event.exc_info
+
+        if isinstance(exception, lightbulb.CheckFailure):
+            message: str = "check failure. not implemented yet."
+
+        else:
+            message: str = "Requiem encountered an error while executing "
+
+        await ctx.respond(f"command error encountered! {exc_type}")
+
     async def get_slash_context(
         self,
         event: hikari.InteractionCreateEvent,

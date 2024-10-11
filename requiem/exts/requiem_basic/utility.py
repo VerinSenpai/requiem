@@ -57,4 +57,3 @@ async def about(ctx: RequiemContext) -> None:
     embed.add_field(name="Hikari Version", value=hikari.__version__, inline=True)
     embed.add_field(name="Lightbulb Version", value=lightbulb.__version__, inline=True)
     await ctx.respond(embed=embed)
-

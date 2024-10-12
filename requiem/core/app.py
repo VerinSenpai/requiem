@@ -44,7 +44,7 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
             token=config.token or "",
             banner=None,
             owner_ids=config.owner_ids,
-            default_enabled_guilds=config.guild_ids,
+            default_enabled_guilds=457720586160963604,
         )
 
         self.subscribe(hikari.StartingEvent, self.handle_starting)
@@ -70,23 +70,23 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
         command: lightbulb.Command = context.command
         exc_type, exception, trace = event.exc_info
 
-        if isinstance(exception, lightbulb.CheckFailure):
-            response = errors.CHECK_FAIL.get(exc_type, str(exception))
-
-            if callable(response):
-                response = response(exception, command)
-
-        elif isinstance(exception, NotImplementedError):
-            response = f"Command '{command.name}' is not yet ready for use!"
-
-        else:
+        if isinstance(exception, lightbulb.CommandInvocationError):
             response = f"{choice(errors.UNHANDLED)}\n\nAn unexpected error occurred! Sorry about that!"
 
             _LOGGER.exception(
                 "an unhandled exception occurred while executing command '%s'!",
                 command.name,
-                exc_info=exception
+                exc_info=exception.original
             )
+
+        elif isinstance(exception, NotImplementedError):
+            response = f"Command '{command.name}' is not yet ready for use!"
+
+        else:
+            response = errors.CHECK_FAIL.get(exc_type, str(exception))
+
+            if callable(response):
+                response = response(exception, command)
 
         embed = hikari.Embed(description=response, color=context.color)
         await context.respond(embed=embed)

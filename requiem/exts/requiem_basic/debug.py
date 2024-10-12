@@ -33,17 +33,37 @@ async def debug(ctx: RequiemContext):
 
 
 @debug.child
+@lightbulb.option(
+    name="type",
+    description="Type of exception to be raised",
+    type=int,
+    choices=(
+        hikari.CommandChoice(name="Unhandled", value=0),
+        hikari.CommandChoice(name="CommandIsOnCooldown", value=1),
+        hikari.CommandChoice(name="NotOwner", value=2),
+        hikari.CommandChoice(name="NSFWChannelOnly", value=3),
+        hikari.CommandChoice(name="HumanOnly", value=4)
+    )
+)
 @lightbulb.command("error", "Raises a random exception to test error handling.")
 @lightbulb.implements(lightbulb.SlashSubCommand)
 async def error(ctx: RequiemContext) -> None:
-    await ctx.respond("raising an exception...")
-    raise Exception("This is a test")
+    exceptions = (
+        Exception("Test of general exception handling."),
+        lightbulb.CommandIsOnCooldown("CommandIsOnCooldown raised. You shouldn't see this!", retry_after=10),
+        lightbulb.NotOwner("NotOwner raised. You shouldn't see this!"),
+        lightbulb.NSFWChannelOnly("NSFWChannelOnly raised. You shouldn't see this!"),
+        lightbulb.HumanOnly("HumanOnly raised. You shouldn't see this!")
+    )
+
+    exception = exceptions[ctx.options["type"]]
+    await ctx.respond(embed=hikari.Embed(description=f"raising exception '{type(exception)}'!", color=ctx.color))
+    raise exception
 
 
 @debug.child
 @lightbulb.command("terminate", "Exit Requiem.")
 @lightbulb.implements(lightbulb.SlashSubCommand)
 async def terminate(ctx: RequiemContext):
-    embed = hikari.Embed(title="Requiem is shutting down!", color=ctx.color)
-    await ctx.respond(embed=embed)
+    await ctx.respond(embed=hikari.Embed(title="Requiem is shutting down!", color=ctx.color))
     await ctx.app.close()

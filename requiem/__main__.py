@@ -122,7 +122,6 @@ def handle_crash(instance_path: Path, session: RequiemApp | RequiemSetup, exc: E
 
 
 @click.group()
-@click.pass_context
 @click.option(
     "--data-dir",
     default=click.get_app_dir("requiem"),
@@ -163,7 +162,6 @@ def handle_crash(instance_path: Path, session: RequiemApp | RequiemSetup, exc: E
     help="Force the use of color to denote level in console messages."
 )
 def cli(
-    ctx: click.Context,
     data_dir: str,
     instance: Path,
     no_prompt: bool,
@@ -175,7 +173,6 @@ def cli(
         import uvloop
         asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
-    ctx.obj = {"config": None, "session": None}
     init_logging(debug, allow_color, force_color)
 
 

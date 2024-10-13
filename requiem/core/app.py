@@ -18,9 +18,8 @@
 from requiem.core.context import RequiemSlashContext, RequiemContext
 from requiem.core.config import RequiemConfig
 from requiem.core.resources import errors
+from requiem import __install_path__
 from datetime import datetime, timedelta
-from requiem import exts
-from pathlib import Path
 from random import choice
 
 import abc
@@ -57,7 +56,7 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
 
     @property
     def get_extensions(self) -> typing.Generator:
-        extensions_dir = Path(exts.__file__).parent
+        extensions_dir = __install_path__ / "exts"
 
         return (
             extension.name

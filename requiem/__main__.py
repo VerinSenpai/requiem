@@ -17,13 +17,15 @@
 from hikari.internal.aio import get_or_make_loop, destroy_loop
 from requiem.core.config import load_config, RequiemConfig
 from requiem.core.database import start_database, stop_database
-from hikari.internal.ux import init_logging
+from hikari.internal.ux import supports_color
 from requiem.core.app import RequiemApp
 from requiem.core.setup import RequiemSetup
 from requiem import __version__
 from functools import update_wrapper
 from datetime import datetime
 from pathlib import Path
+from logging.handlers import RotatingFileHandler, QueueListener, QueueHandler
+from colorlog.formatter import ColoredFormatter
 
 import asyncio
 import traceback
@@ -35,9 +37,45 @@ import asyncpg
 import hikari
 import sys
 import platform
+import queue
 
 
 _LOGGER = logging.getLogger("requiem.main")
+_QUEUE_LISTENER: QueueListener | None = None
+
+
+def init_logging(
+    flavor: logging.INFO | logging.DEBUG,
+    allow_color: bool,
+    force_color: bool,
+    instance_path: Path
+) -> None:
+    base_format = logging.Formatter("%(levelname)-1.1s (asctime)23.23s %(name)s: %(message)s")
+    color_format = ColoredFormatter(
+        fmt=(
+            "%(log_color)s%(bold)s%(levelname)-1.1s%(thin)s "
+            "%(asctime)23.23s "
+            "%(bold)s%(name)s: "
+            "%(thin)s%(message)s%(reset)s"
+        ),
+        force_color=True
+    )
+    stream_format = color_format if supports_color(allow_color, force_color) else base_format
+
+    log_queue = queue.Queue()
+    queue_handler = QueueHandler(log_queue)
+
+    stream_handler = logging.StreamHandler(stream=sys.stdout)
+    stream_handler.setFormatter(stream_format)
+
+    latest_file = logging.handlers.RotatingFileHandler(instance_path / "latest.log", maxBytes=1024)
+    latest_file.setFormatter(base_format)
+
+    logging.basicConfig(level=flavor, handlers=(queue_handler, stream_handler))
+
+    global _QUEUE_LISTENER
+    _QUEUE_LISTENER = QueueListener(log_queue, latest_file)
+    _QUEUE_LISTENER.start()
 
 
 def pass_parameters(*params):
@@ -173,7 +211,7 @@ def cli(
         import uvloop
         asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
-    init_logging(debug, allow_color, force_color)
+    init_logging(debug, allow_color, force_color, instance)
 
 
 @cli.command()
@@ -229,6 +267,8 @@ def start(data_path: Path, instance_path: Path) -> None:
         loop.run_until_complete(stop_database())
         destroy_loop(loop, _LOGGER)
 
+        _QUEUE_LISTENER.stop()
+
     prompt_close(0)
 
 
@@ -262,6 +302,8 @@ def setup(data_path: Path, instance_path: Path) -> None:
 
     finally:
         destroy_loop(session.loop, _LOGGER)
+
+        _QUEUE_LISTENER.stop()
 
     prompt_close(0)
 

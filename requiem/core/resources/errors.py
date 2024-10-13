@@ -19,8 +19,12 @@ import lightbulb
 
 
 CHECK_FAIL = {
-    lightbulb.NotOwner: f"This commands is restricted to Requiem owners!",
+    lightbulb.NotOwner: f"This command is restricted to Requiem owners!",
     lightbulb.CommandIsOnCooldown: lambda err, ctx: f"Command is on cooldown! Try again in {err.retry_after} seconds!",
+    lightbulb.NSFWChannelOnly: "This command is restricted to NSFW channels!",
+    lightbulb.HumanOnly: "Requiem does not support usage by other bots.",
+    lightbulb.OnlyInGuild: "This command is restricted to server use only!",
+    lightbulb.OnlyInDM: "This command is restricted to DM use only!"
 }
 
 UNHANDLED = (

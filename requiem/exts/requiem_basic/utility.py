@@ -50,10 +50,16 @@ async def ping(ctx: RequiemContext):
 
 @util.child
 @lightbulb.command("about", "View Requiem description and version information.")
-@lightbulb.implements(lightbulb.SlashCommand)
+@lightbulb.implements(lightbulb.SlashSubCommand)
 async def about(ctx: RequiemContext) -> None:
-    embed = hikari.Embed(description=ctx.app.application.description, color=ctx.color)
-    embed.add_field(name="Requiem Version", value=__version__, inline=True)
-    embed.add_field(name="Hikari Version", value=hikari.__version__, inline=True)
-    embed.add_field(name="Lightbulb Version", value=lightbulb.__version__, inline=True)
+    bot_app = ctx.app.application
+
+    embed = (
+        hikari.Embed(title=f"Requiem Project", url=__repo_url__, description=bot_app.description, color=ctx.color)
+        .add_field(name="Requiem Version", value=__version__, inline=True)
+        .add_field(name="Hikari Version", value=hikari.__version__, inline=True)
+        .add_field(name="Lightbulb Version", value=lightbulb.__version__, inline=True)
+        .set_thumbnail(ctx.app.application.icon_url)
+    )
+
     await ctx.respond(embed=embed)

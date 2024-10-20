@@ -17,10 +17,10 @@
 
 from requiem import __discord__, __version__, __repo_url__
 from requiem.core.context import RequiemContext
+from datetime import datetime
 
 import lightbulb
 import hikari
-import time
 
 
 plugin = lightbulb.Plugin("Utility")
@@ -37,11 +37,11 @@ async def util(ctx: RequiemContext):
 @lightbulb.command("ping", "View current ping times for Requiem.")
 @lightbulb.implements(lightbulb.SlashSubCommand)
 async def ping(ctx: RequiemContext):
-    start = time.monotonic()
+    start_time = datetime.now()
     embed = hikari.Embed(title="Pinging!", color=ctx.color)
     message = await ctx.respond(embed=embed)
     heartbeat = round(ctx.bot.heartbeat_latency * 1000, 2)
-    ack = int((time.monotonic() - start) * 1000)
+    ack = int((datetime.now() - start_time).microseconds / 1000)
     embed.title = None
     embed.add_field(name="Heartbeat", value=f"{heartbeat}ms")
     embed.add_field(name="ACK", value=f"{ack}ms")

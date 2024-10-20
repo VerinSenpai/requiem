@@ -17,6 +17,62 @@
 
 from tortoise import Model, fields
 
+import typing
+
+
+class AutoCompleteIndex:
+
+    __slots__: typing.List[str] = ["_index", "__index", "_history"]
+
+    def __init__(self):
+        self._index: set = set()
+        self.__index: set = set()
+        self._history: dict = dict()
+
+    def __len__(self):
+        return len(self._index)
+
+    @staticmethod
+    def _search(arg: str, iterable: typing.Iterable):
+        for item in set(iterable):
+            if item.startswith(arg) or arg in item:
+                yield item.title()
+
+    def insert(self, value: str) -> None:
+        self.__index.add(value.lower())
+
+    def update(self):
+        self._index = self.__index
+        self.__index = set()
+
+    def search(self, arg: str, user: int, limit: int = 5) -> list:
+        if arg:
+            results = list(self._search(arg.lower(), self._index))
+
+            if arg.title() not in results:
+                results.insert(0, arg.title())
+
+        else:
+            results = list(self._search("", self.history(user)))
+
+        return results[:limit]
+
+    def record(self,  user: int, arg) -> None:
+        arg = arg.lower()
+        history = self.history(user)
+
+        if arg not in history:
+            if len(history) == 5:
+                history.pop(5)
+
+            history.insert(0, arg)
+            self._history[user] = history
+
+    def history(self, user: int) -> list:
+        if user in self._history.keys():
+            return self._history[user]
+        return []
+
 
 class GuildsConfig(Model):
     guild_id: int = fields.BigIntField(primary_key=True)
@@ -24,3 +80,9 @@ class GuildsConfig(Model):
 
 class UsersConfig(Model):
     user_id: int = fields.BigIntField(primary_key=True)
+
+
+class NationStore(Model):
+    nation_id: int = fields.IntField(primary_key=True)
+    founded = fields.DatetimeField()
+    rerolled = fields.DatetimeField(default=None)

@@ -17,7 +17,7 @@
 
 from requiem.core.context import RequiemSlashContext, RequiemContext
 from requiem.core.config import RequiemConfig
-from requiem.core.resources import errors
+from requiem.core.errors import CHECK_FAIL, UNHANDLED
 from requiem import __install_path__
 from datetime import datetime, timedelta
 from random import choice
@@ -46,9 +46,10 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
             default_enabled_guilds=config.guild_ids,
         )
 
-        self.subscribe(hikari.StartingEvent, self.handle_starting)
-        self.subscribe(hikari.StoppingEvent, self.handle_stopping)
-        self.subscribe(lightbulb.SlashCommandErrorEvent, self.handle_command_error)
+        self.subscribe(hikari.StartingEvent, self.on_starting)
+        self.subscribe(hikari.StoppingEvent, self.on_stopping)
+        self.subscribe(lightbulb.SlashCommandErrorEvent, self.on_command_error)
+        self.subscribe(lightbulb.SlashCommandCompletionEvent, self.on_command_completion)
 
     @property
     def session_time(self) -> timedelta:
@@ -64,13 +65,19 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
             if extension.name not in ("__init__.py", "__pycache__")
         )
 
-    async def handle_command_error(self, event: lightbulb.SlashCommandErrorEvent) -> None:
+    @staticmethod
+    async def on_command_error(event: lightbulb.SlashCommandErrorEvent) -> None:
         context: RequiemContext = event.context
         command: lightbulb.Command = context.command
         exc_type, exception, trace = event.exc_info
 
-        if isinstance(exception, lightbulb.CommandInvocationError):
-            response = f"{choice(errors.UNHANDLED)}\n\nAn unexpected error occurred! Sorry about that!"
+        if isinstance(exception, hikari.HTTPResponseError):
+            _LOGGER.warning(str(exception))
+
+            return
+
+        elif isinstance(exception, lightbulb.CommandInvocationError):
+            response = f"{choice(UNHANDLED)}\n\nAn unexpected error occurred! Sorry about that!"
 
             _LOGGER.exception(
                 "an unhandled exception occurred while executing command '%s'!",
@@ -82,13 +89,23 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
             response = f"Command '{command.name}' is not yet ready for use!"
 
         else:
-            response = errors.CHECK_FAIL.get(exc_type, str(exception))
+            response = CHECK_FAIL.get(exc_type, str(exception))
 
             if callable(response):
                 response = response(exception, command)
 
         embed = hikari.Embed(description=response, color=context.color)
         await context.respond(embed=embed)
+
+    @staticmethod
+    async def on_command_completion(event: lightbulb.SlashCommandCompletionEvent) -> None:
+        context: RequiemContext = event.context
+        _LOGGER.info(
+            "command '%s %s' completed in '%sms'!",
+            context.invoked_with,
+            context.invoked.name,
+            context.exec_time
+        )
 
     async def get_slash_context(
         self,
@@ -161,8 +178,8 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
         except Exception as exc:
             _LOGGER.error("extension '%s' encountered an exception while unloading!", extension, exc_info=exc)
 
-    async def handle_starting(self, event: hikari.StartingEvent) -> None:
+    async def on_starting(self, event: hikari.StartingEvent) -> None:
         self.load_extensions()
 
-    async def handle_stopping(self, event: hikari.StoppingEvent) -> None:
+    async def on_stopping(self, event: hikari.StoppingEvent) -> None:
         self.unload_extensions()

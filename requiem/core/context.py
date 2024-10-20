@@ -22,6 +22,7 @@ if TYPE_CHECKING:
 
 from lightbulb.context import Context, ApplicationContext, SlashContext
 from hikari.colors import Color
+from datetime import datetime
 
 import abc
 
@@ -30,6 +31,12 @@ class RequiemContext(Context, abc.ABC):
 
     def __init__(self, app: "RequiemApp") -> None:
         super().__init__(app)
+
+        self._start_time: datetime = datetime.now()
+
+    @property
+    def exec_time(self) -> int:
+        return int((datetime.now() - self._start_time).microseconds / 1000)
 
     @property
     def color(self) -> int:

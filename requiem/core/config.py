@@ -31,6 +31,11 @@ _LOGGER: logging.Logger = logging.getLogger("requiem.config")
 
 
 @attr.s(auto_attribs=True)
+class PnWConfig:
+    api_key: str = None
+
+
+@attr.s(auto_attribs=True)
 class PostgresConfig:
     host: str = "localhost"
     port: int = 5432
@@ -63,6 +68,7 @@ class RequiemConfig:
     guild_ids: typing.List[int] = []
     owner_ids: typing.List[int] = []
     database: PostgresConfig = attr.ib(factory=PostgresConfig)
+    pnw: PnWConfig = attr.ib(factory=PnWConfig)
 
 
 def load_config(instance_path: Path) -> RequiemConfig | None:

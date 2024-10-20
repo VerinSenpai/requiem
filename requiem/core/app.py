@@ -37,6 +37,7 @@ _LOGGER = logging.getLogger("requiem.app")
 class RequiemApp(lightbulb.BotApp, abc.ABC):
 
     def __init__(self, config: RequiemConfig) -> None:
+        self._config = config
         self._start_time: datetime = datetime.now()
 
         super().__init__(
@@ -50,6 +51,10 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
         self.subscribe(hikari.StoppingEvent, self.on_stopping)
         self.subscribe(lightbulb.SlashCommandErrorEvent, self.on_command_error)
         self.subscribe(lightbulb.SlashCommandCompletionEvent, self.on_command_completion)
+
+    @property
+    def config(self) -> RequiemConfig:
+        return self._config
 
     @property
     def session_time(self) -> timedelta:

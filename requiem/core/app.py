@@ -109,7 +109,7 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
             "command '%s %s' completed in '%sms'!",
             context.invoked_with,
             context.invoked.name,
-            context.exec_time
+            context.elapsed
         )
 
     async def get_slash_context(

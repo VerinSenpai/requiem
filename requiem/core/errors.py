@@ -28,6 +28,7 @@ CHECK_FAIL = {
     lightbulb.OnlyInDM: "This command is restricted to DM use only!"
 }
 
+
 UNHANDLED = (
     "Lugging a spy satellite to the nearest subway and asking them to toast it.",
     "Damned pagans and their interdimensional space gods!",

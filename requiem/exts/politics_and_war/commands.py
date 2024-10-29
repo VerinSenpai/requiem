@@ -16,17 +16,17 @@
 
 
 from requiem.core.context import RequiemContext
-from requiem.core.config import PnWConfig
-from pwpy.api import get_query
+from requiem.exts.politics_and_war import queries
+from pwpy.api import QueryWrapper
 from pwpy.models import Nation
 from datetime import datetime, UTC
+from requiem.core.app import RequiemPlugin
 
 import lightbulb
 import hikari
 
 
-plugin = lightbulb.Plugin("PW")
-pw_config: PnWConfig | None = None
+plugin = RequiemPlugin("PW")
 
 
 def time_since(dt: datetime) -> str:
@@ -60,35 +60,7 @@ async def pw(ctx: RequiemContext) -> None:
 @lightbulb.command("nation", "View information for a specified nation.")
 @lightbulb.implements(lightbulb.SlashSubCommand)
 async def nation(ctx: RequiemContext) -> None:
-    query = {
-        "model": "nations",
-        "args": {"id": 34904},
-        "query": {
-            "data": (
-                "id",
-                "nation_name",
-                "leader_name",
-                "score",
-                {"alliance": ("id", "name")},
-                {"cities": ("infrastructure", "land", "powered")},
-                "population",
-                "color",
-                "war_policy",
-                "domestic_policy",
-                "flag",
-                "date",
-                "last_active",
-                "soldiers",
-                "tanks",
-                "aircraft",
-                "ships",
-                "missiles",
-                "nukes"
-            )
-        }
-    }
-
-    response = await get_query(query, pw_config.api_key)
+    response = await WRAPPER.get_query(queries.nation_command_query)
     _nation: Nation = Nation.convert(response["nations"]["data"][0])
 
     header_str =  f"[{_nation.nation_name}]({_nation.url}) - [{_nation.leader_name}]({_nation.message_url})"

@@ -33,6 +33,7 @@ _LOGGER: logging.Logger = logging.getLogger("requiem.config")
 @attr.s(auto_attribs=True)
 class PnWConfig:
     api_key: str = None
+    update_frequency: int = 10
 
 
 @attr.s(auto_attribs=True)

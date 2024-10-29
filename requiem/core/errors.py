@@ -70,7 +70,8 @@ UNHANDLED = (
     "Verin is worse then the tech support in India",
     "Who are you?!? Where are we? Are you kidnapping me?",
     "The cheese said no!",
-    "You didn't hear it from me!"
+    "You didn't hear it from me!",
+    "Buttered toast could not be located...",
     "*Ahem",
     "You can't do that right now! The heavens won't allow it!",
     "I do have at least one sensible error message in here, right?",

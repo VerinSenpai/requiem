@@ -31,7 +31,7 @@ _LOGGER: logging.Logger = logging.getLogger("requiem.config")
 
 
 @attr.s(auto_attribs=True)
-class PnWConfig:
+class PWConfig:
     api_key: str = None
     update_frequency: int = 10
 
@@ -69,7 +69,7 @@ class RequiemConfig:
     guild_ids: typing.List[int] = []
     owner_ids: typing.List[int] = []
     database: PostgresConfig = attr.ib(factory=PostgresConfig)
-    pnw: PnWConfig = attr.ib(factory=PnWConfig)
+    pw: PWConfig = attr.ib(factory=PWConfig)
 
 
 def load_config(instance_path: Path) -> RequiemConfig | None:

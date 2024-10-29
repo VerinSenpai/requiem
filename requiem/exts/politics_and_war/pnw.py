@@ -17,14 +17,35 @@
 
 from requiem.core.context import RequiemContext
 from requiem.core.config import PnWConfig
+from pwpy.api import get_query
+from pwpy.models import Nation
+from datetime import datetime, UTC
 
 import lightbulb
-import pwpy
 import hikari
 
 
 plugin = lightbulb.Plugin("PW")
 pw_config: PnWConfig | None = None
+
+
+def time_since(dt: datetime) -> str:
+    now = datetime.now(UTC)
+    delta = now - dt
+
+    seconds = delta.total_seconds()
+    minutes = seconds / 60
+    hours = minutes / 60
+    days = hours / 24
+
+    if seconds < 60:
+        return f"{int(seconds)} second(s) ago"
+    elif minutes < 60:
+        return f"{int(minutes)} minute(s) ago"
+    elif hours < 24:
+        return f"{int(hours)} hour(s) ago"
+    else:
+        return f"{int(days)} day(s) ago"
 
 
 @plugin.command
@@ -44,73 +65,60 @@ async def nation(ctx: RequiemContext) -> None:
         "args": {"id": 34904},
         "query": {
             "data": (
-                {"alliance": ("name", "id")},
-                {"cities": ("infrastructure", "land")},
+                "id",
                 "nation_name",
                 "leader_name",
-                "id",
-                "num_cities",
+                "score",
+                {"alliance": ("id", "name")},
+                {"cities": ("infrastructure", "land", "powered")},
                 "population",
-                "domestic_policy",
+                "color",
                 "war_policy",
+                "domestic_policy",
+                "flag",
+                "date",
+                "last_active",
                 "soldiers",
                 "tanks",
                 "aircraft",
                 "ships",
                 "missiles",
-                "nukes",
-                "flag",
-                "score",
-                "date",
-                "color"
-            ),
+                "nukes"
+            )
         }
     }
 
-    response = await pwpy.api.get_query(query, pw_config.api_key)
-    _nation = pwpy.models.Nation(response["nations"]["data"][0])
+    response = await get_query(query, pw_config.api_key)
+    _nation: Nation = Nation.convert(response["nations"]["data"][0])
 
-    infra = land = 0
-    for city in _nation.cities:
-        infra += city.infra
-        land += city.land
+    header_str =  f"[{_nation.nation_name}]({_nation.url}) - [{_nation.leader_name}]({_nation.message_url})"
 
-    nation_url: str = f"{pwpy.urls.NATION_PAGE}/id={_nation.id}"
-    message_url: str = f"{pwpy.urls.MESSAGE_PAGE}/receiver={_nation.leader_name}".replace(" ", "%20")
-    embed = hikari.Embed(
-        description=f"[{_nation.nation_name}]({nation_url}) - [{_nation.leader_name}]({message_url})",
-        color=ctx.color
-    )
+    embed = hikari.Embed(description=header_str, color=ctx.color)
+    embed.add_field("Creation Date", value=_nation.date.strftime("%b %d, %Y"), inline=True)
+    embed.add_field("Last Active", value=time_since(_nation.last_active), inline=True)
 
-    if _nation.alliance is not None:
-        alliance_url = f"{pwpy.urls.ALLIANCE_PAGE}/id={_nation.alliance.id}"
-        embed.add_field(name="Alliance", value=f"[{_nation.alliance.name}]({alliance_url})")
+    if _alliance := _nation.alliance:
+        embed.add_field(name="Alliance", value=f"[{_alliance.name}]({_alliance.url})", inline=False)
 
-    score = _nation.score
-    embed.add_field(name="Score", value=str(score), inline=True)
-    min_range, max_range = pwpy.utils.score_range(score)
-    range_url = (f"{pwpy.urls.WARS_PAGE}&keyword={score}&cat=war_range"
-                 f"&ob=score&od=ASC&beige=true&vmode=false&openslots=true")
-    embed.add_field(
-        name="Strike Range",
-        value=f"[{round(min_range, 2)} - {round(max_range, 2)}]({range_url})",
-        inline=True
-    )
-
-    cities_url = f"{pwpy.urls.CITY_MANAGER_PAGE}&l={_nation}"
-    embed.add_field(name="Cities", value=f"[{_nation.num_cities}]({cities_url})", inline=True)
-    embed.add_field(name="Population", value=f'{_nation.population:,}', inline=True)
-    embed.add_field(name="Infra", value=str(infra), inline=True)
-    embed.add_field(name="Land", value=str(land), inline=True)
-    embed.add_field(name="Color", value=_nation.color, inline=True)
-    embed.add_field(name="Domestic Policy", value=_nation.domestic_policy, inline=True)
-    embed.add_field(name="War Policy", value=_nation.war_policy, inline=True)
-    embed.add_field(name="Soldiers", value=f'{_nation.soldiers:,}', inline=True)
-    embed.add_field(name="Tanks", value=f'{_nation.tanks:,}', inline=True)
-    embed.add_field(name="Aircraft", value=f'{_nation.aircraft:,}', inline=True)
-    embed.add_field(name="Ships", value=f'{_nation.ships:,}', inline=True)
-    embed.add_field(name="Missiles", value=f'{_nation.missiles:,}', inline=True)
-    embed.add_field(name="Nukes", value=f'{_nation.nukes:,}', inline=True)
+    embed.add_field(name="Score", value=f"{round(_nation.score, 2):,}", inline=True)
+    embed.add_field(name="Color", value=_nation.color.title(), inline=True)
+    embed.add_field(name="Cities", value=f"[{len(_nation.cities)}]({_nation.city_manager_url})",inline=True)
+    embed.add_field(name="Population", value=f"{_nation.population:,}", inline=True)
+    embed.add_field(name="Infra", value=f"{round(_nation.total_infra, 2):,}", inline=True)
+    embed.add_field(name="Land", value=f"{round(_nation.total_land, 2):,}", inline=True)
+    war_policy = _nation.war_policy.value.replace("_", " ").title()
+    embed.add_field(name="War Policy", value=war_policy, inline=True)
+    dom_policy = _nation.domestic_policy.value.replace("_", " ").title()
+    embed.add_field(name="Domestic Policy", value=dom_policy, inline=True)
+    min_score, max_score = _nation.score_range
+    strike_range_str = f"[{round(min_score, 2):,} - {round(max_score, 2):,}]({_nation.war_range_url})"
+    embed.add_field(name="Strike Range", value=strike_range_str)
+    embed.add_field(name="Soldiers", value=f"{_nation.soldiers:,}", inline=True)
+    embed.add_field(name="Tanks", value=f"{_nation.tanks:,}", inline=True)
+    embed.add_field(name="Aircraft", value=f"{_nation.aircraft:,}", inline=True)
+    embed.add_field(name="Ships", value=f"{_nation.ships:,}", inline=True)
+    embed.add_field(name="Missiles", value=f"{_nation.missiles:,}", inline=True)
+    embed.add_field(name="Nukes", value=f"{_nation.nukes:,}", inline=True)
     embed.set_image(_nation.flag)
 
     await ctx.respond(embed=embed)

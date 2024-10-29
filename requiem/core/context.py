@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from requiem.core.app import RequiemApp
 
+from requiem.core.config import RequiemConfig
 from lightbulb.context import Context, ApplicationContext, SlashContext
 from hikari.colors import Color
 from datetime import datetime
@@ -32,10 +33,25 @@ class RequiemContext(Context, abc.ABC):
     def __init__(self, app: "RequiemApp") -> None:
         super().__init__(app)
 
+        self._app: "RequiemApp" = app
         self._start_time: datetime = datetime.now()
 
     @property
-    def exec_time(self) -> int:
+    def app(self) -> "RequiemApp":
+        """The ``BotApp`` instance the context is linked to."""
+        return self._app
+
+    @property
+    def bot(self) -> "RequiemApp":
+        """Alias for :obj:`~Context.app`."""
+        return self.app
+
+    @property
+    def config(self) -> RequiemConfig:
+        return self.app.config
+
+    @property
+    def elapsed(self) -> int:
         return int((datetime.now() - self._start_time).microseconds / 1000)
 
     @property

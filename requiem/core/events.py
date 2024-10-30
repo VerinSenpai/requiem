@@ -17,10 +17,8 @@
 
 from typing import TYPE_CHECKING
 
-
 if TYPE_CHECKING:
     from requiem.core.app import RequiemApp
-
 
 from requiem.core.context import RequiemContext
 from lightbulb import events

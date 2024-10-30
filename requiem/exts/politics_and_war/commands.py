@@ -14,9 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
 from requiem.core.impl import RequiemContext, RequiemPlugin
-from requiem.exts.politics_and_war import queries
+from requiem.exts.politics_and_war import queries, background
 from pwpy.converters import Nation
 
 import lightbulb
@@ -35,10 +34,11 @@ async def pw(ctx: RequiemContext) -> None:
 
 @pw.child
 @lightbulb.add_cooldown(10, 1, lightbulb.UserBucket)
+@lightbulb.option("nation", "Name or ID of a nation to lookup.", autocomplete=True)
 @lightbulb.command("nation",  "View information for a specified nation.")
 @lightbulb.implements(lightbulb.SlashSubCommand)
 async def nation(ctx: RequiemContext) -> None:
-    response = await WRAPPER.get_query(queries.nation_command_query)
+    response = await background.SESSION.get_query(queries.NATION_COMMAND)
     _nation: Nation = Nation.convert(response["nations"]["data"][0])
 
     header_str =  f"[{_nation.nation_name}]({_nation.url}) - [{_nation.leader_name}]({_nation.message_url})"
@@ -72,3 +72,8 @@ async def nation(ctx: RequiemContext) -> None:
 
     await ctx.respond(embed=embed)
 
+
+@nation.autocomplete("nation")
+async def nation_autocomplete(option: hikari.AutocompleteInteractionOption, interaction: hikari.AutocompleteInteraction) -> None:
+    response = background.NATIONS_INDEX.search(option.value, interaction.user.id)
+    return response

@@ -15,21 +15,21 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-import lightbulb
+from lightbulb import errors
 
 
-CHECK_FAILURE = {
-    lightbulb.NotOwner: f"This command is restricted to Requiem owners!",
-    lightbulb.CommandIsOnCooldown: lambda err, ctx:
+CHECK_FAILURE_ERRORS = {
+    errors.NotOwner: f"This command is restricted to Requiem owners!",
+    errors.CommandIsOnCooldown: lambda err, ctx:
     f"Command is on cooldown! Try again in {int(err.retry_after)} seconds!",
-    lightbulb.NSFWChannelOnly: "This command is restricted to NSFW channels!",
-    lightbulb.HumanOnly: "Requiem does not support usage by other bots.",
-    lightbulb.OnlyInGuild: "This command is restricted to server use only!",
-    lightbulb.OnlyInDM: "This command is restricted to DM use only!"
+    errors.NSFWChannelOnly: "This command is restricted to NSFW channels!",
+    errors.HumanOnly: "Requiem does not support usage by other bots.",
+    errors.OnlyInGuild: "This command is restricted to server use only!",
+    errors.OnlyInDM: "This command is restricted to DM use only!"
 }
 
 
-UNHANDLED = (
+UNHANDLED_ERRORS = (
     "Lugging a spy satellite to the nearest subway and asking them to toast it.",
     "Damned pagans and their interdimensional space gods!",
     "error. miku",

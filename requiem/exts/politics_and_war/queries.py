@@ -15,29 +15,29 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-GAME_INFO = {
-    "model": "gameInfo",
-    "query": ("game_date", "radiation")
+GAME_DATE = {
+    "model": "game_info",
+    "query": "game_date"
 }
 
 
 NATIONS_PAGES = {
     "model": "nations",
     "args": {"first": 500, "page": 1},
-    "query": {"paginatorInfo": "last_page"}
+    "query": {"paginatorInfo": "lastPage"}
 }
 
 
 ALLIANCES_PAGES = {
     "model": "alliances",
     "args": {"first": 50, "page": 1},
-    "query": {"paginatorInfo": "last_page"}
+    "query": {"paginatorInfo": "lastPage"}
 }
 
 
 NATION_COMMAND = {
     "model": "nations",
-    "args": {"id": 34904},
+    "args": None,
     "query": {
         "data": (
             "id",

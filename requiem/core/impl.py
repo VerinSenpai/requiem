@@ -17,12 +17,13 @@
 
 from typing import TYPE_CHECKING
 
-
 if TYPE_CHECKING:
     from requiem.core.app import RequiemApp
 
-
 from requiem.core.config import RequiemConfig
+from lightbulb import context
+from hikari.colors import Color
+from datetime import datetime
 
 import lightbulb
 import abc
@@ -56,3 +57,38 @@ class RequiemPlugin(lightbulb.Plugin, abc.ABC):
     @property
     def config(self) -> RequiemConfig:
         return self.app.config
+
+
+class RequiemContext(context.Context, abc.ABC):
+
+    def __init__(self, app: "RequiemApp") -> None:
+        super().__init__(app)
+
+        self._app: "RequiemApp" = app
+        self._start_time: datetime = datetime.now()
+
+    @property
+    def app(self) -> "RequiemApp":
+        """The ``RequiemApp`` instance the context is linked to."""
+        return self._app
+
+    @property
+    def bot(self) -> "RequiemApp":
+        """Alias for :obj:`~RequiemContext.app`."""
+        return self.app
+
+    @property
+    def config(self) -> RequiemConfig:
+        return self.app.config
+
+    @property
+    def elapsed(self) -> int:
+        return int((datetime.now() - self._start_time).microseconds / 1000)
+
+    @property
+    def color(self) -> int:
+        return Color.from_hex_code("0x9b59b6")
+
+
+class SlashContext(context.SlashContext, RequiemContext, abc.ABC):
+    ...

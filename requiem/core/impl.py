@@ -16,7 +16,7 @@
 
 
 from requiem.core.config import RequiemConfig
-from requiem.core.errors import UNHANDLED, CHECK_FAILURE
+from requiem.core.messages import UNHANDLED_ERRORS, CHECK_FAILURE_ERRORS
 from requiem import __install_path__
 
 from datetime import datetime, timedelta
@@ -159,7 +159,7 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
             response = f"Command '{command.name}' is not yet ready for use!"
 
         else:
-            response = CHECK_FAILURE.get(exc_type, str(exception))
+            response = CHECK_FAILURE_ERRORS.get(exc_type, str(exception))
 
             if callable(response):
                 response = response(exception, command)

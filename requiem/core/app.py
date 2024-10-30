@@ -16,7 +16,7 @@
 
 
 from requiem.core.config import RequiemConfig
-from requiem.core.context import RequiemContext, SlashContext
+from requiem.core.impl import RequiemContext, SlashContext
 from requiem.core.errors import UNHANDLED, CHECK_FAILURE
 from requiem import __install_path__
 from datetime import datetime, timedelta

@@ -15,8 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from requiem.core.context import RequiemContext
-from requiem.core.plugins import RequiemPlugin
+from requiem.core.impl import RequiemContext, RequiemPlugin
 
 import lightbulb
 import hikari

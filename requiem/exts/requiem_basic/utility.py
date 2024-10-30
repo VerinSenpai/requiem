@@ -16,8 +16,7 @@
 
 
 from requiem import __version__, __repo_url__
-from requiem.core.context import RequiemContext
-from requiem.core.plugins import RequiemPlugin
+from requiem.core.impl import RequiemContext, RequiemPlugin
 from datetime import datetime
 
 import lightbulb

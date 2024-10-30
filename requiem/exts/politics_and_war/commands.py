@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from requiem.core.context import RequiemContext
+from requiem.core.impl import RequiemContext, RequiemPlugin
 from requiem.exts.politics_and_war import queries
 from pwpy.converters import Nation
 
@@ -23,7 +23,7 @@ import lightbulb
 import hikari
 
 
-plugin = lightbulb.Plugin("pw")
+plugin = RequiemPlugin("pw")
 
 
 @plugin.command

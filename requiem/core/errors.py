@@ -18,7 +18,7 @@
 import lightbulb
 
 
-CHECK_FAIL = {
+CHECK_FAILURE = {
     lightbulb.NotOwner: f"This command is restricted to Requiem owners!",
     lightbulb.CommandIsOnCooldown: lambda err, ctx:
     f"Command is on cooldown! Try again in {int(err.retry_after)} seconds!",

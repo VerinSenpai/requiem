@@ -15,9 +15,10 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from requiem.core.context import RequiemSlashContext, RequiemContext
 from requiem.core.config import RequiemConfig
-from requiem.core.errors import CHECK_FAIL, UNHANDLED
+from requiem.core.context import RequiemContext, SlashContext
+from requiem.core.events import SlashCommandErrorEvent, SlashCommandCompletionEvent
+from requiem.core.errors import UNHANDLED, CHECK_FAILURE
 from requiem import __install_path__
 from datetime import datetime, timedelta
 from random import choice
@@ -71,7 +72,7 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
         )
 
     @staticmethod
-    async def on_command_error(event: lightbulb.SlashCommandErrorEvent) -> None:
+    async def on_command_error(event: SlashCommandErrorEvent) -> None:
         context: RequiemContext = event.context
         command: lightbulb.Command = context.command
         exc_type, exception, trace = event.exc_info
@@ -94,7 +95,7 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
             response = f"Command '{command.name}' is not yet ready for use!"
 
         else:
-            response = CHECK_FAIL.get(exc_type, str(exception))
+            response = CHECK_FAILURE.get(exc_type, str(exception))
 
             if callable(response):
                 response = response(exception, command)
@@ -103,8 +104,9 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
         await context.respond(embed=embed)
 
     @staticmethod
-    async def on_command_completion(event: lightbulb.SlashCommandCompletionEvent) -> None:
+    async def on_command_completion(event: SlashCommandCompletionEvent) -> None:
         context: RequiemContext = event.context
+
         _LOGGER.info(
             "command '%s %s' completed in '%sms'!",
             context.invoked_with,
@@ -116,8 +118,8 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
         self,
         event: hikari.InteractionCreateEvent,
         command: lightbulb.SlashCommand,
-        cls=RequiemSlashContext,
-    ) -> RequiemSlashContext:
+        cls=SlashContext,
+    ) -> SlashContext:
         return cls(self, event, command)
 
     def load_extensions(self, extension: str = None) -> None:
@@ -183,8 +185,8 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
         except Exception as exc:
             _LOGGER.error("extension '%s' encountered an exception while unloading!", extension, exc_info=exc)
 
-    async def on_starting(self, event: hikari.StartingEvent) -> None:
+    async def on_starting(self, _) -> None:
         self.load_extensions()
 
-    async def on_stopping(self, event: hikari.StoppingEvent) -> None:
+    async def on_stopping(self, _) -> None:
         self.unload_extensions()

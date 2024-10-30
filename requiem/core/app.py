@@ -17,7 +17,6 @@
 
 from requiem.core.config import RequiemConfig
 from requiem.core.context import RequiemContext, SlashContext
-from requiem.core.events import SlashCommandErrorEvent, SlashCommandCompletionEvent
 from requiem.core.errors import UNHANDLED, CHECK_FAILURE
 from requiem import __install_path__
 from datetime import datetime, timedelta
@@ -38,7 +37,7 @@ _LOGGER = logging.getLogger("requiem.app")
 class RequiemApp(lightbulb.BotApp, abc.ABC):
 
     def __init__(self, config: RequiemConfig) -> None:
-        self._config = config
+        self._config: RequiemConfig = config
         self._start_time: datetime = datetime.now()
 
         super().__init__(
@@ -72,7 +71,7 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
         )
 
     @staticmethod
-    async def on_command_error(event: SlashCommandErrorEvent) -> None:
+    async def on_command_error(event: lightbulb.SlashCommandErrorEvent) -> None:
         context: RequiemContext = event.context
         command: lightbulb.Command = context.command
         exc_type, exception, trace = event.exc_info
@@ -104,7 +103,7 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
         await context.respond(embed=embed)
 
     @staticmethod
-    async def on_command_completion(event: SlashCommandCompletionEvent) -> None:
+    async def on_command_completion(event: lightbulb.SlashCommandCompletionEvent) -> None:
         context: RequiemContext = event.context
 
         _LOGGER.info(

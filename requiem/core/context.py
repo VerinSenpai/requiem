@@ -21,14 +21,14 @@ if TYPE_CHECKING:
     from requiem.core.app import RequiemApp
 
 from requiem.core.config import RequiemConfig
-from lightbulb.context import Context, ApplicationContext, SlashContext
+from lightbulb import context
 from hikari.colors import Color
 from datetime import datetime
 
 import abc
 
 
-class RequiemContext(Context, abc.ABC):
+class RequiemContext(context.Context, abc.ABC):
 
     def __init__(self, app: "RequiemApp") -> None:
         super().__init__(app)
@@ -59,9 +59,5 @@ class RequiemContext(Context, abc.ABC):
         return Color.from_hex_code("0x9b59b6")
 
 
-class RequiemApplicationContext(ApplicationContext, RequiemContext, abc.ABC):
-    ...
-
-
-class RequiemSlashContext(SlashContext, RequiemApplicationContext, abc.ABC):
+class SlashContext(context.SlashContext, RequiemContext, abc.ABC):
     ...

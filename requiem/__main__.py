@@ -19,7 +19,7 @@ from hikari.internal.aio import get_or_make_loop, destroy_loop
 from requiem.core.config import load_config, RequiemConfig
 from requiem.core.database import start_database, stop_database
 from hikari.internal.ux import supports_color
-from requiem.core.app import RequiemApp
+from requiem.core.impl import RequiemApp
 from requiem.core.setup import RequiemSetup
 from requiem import __version__
 from functools import update_wrapper

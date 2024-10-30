@@ -15,7 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from requiem.core.app import RequiemApp
+from requiem.core.impl import RequiemApp
 from requiem.exts.politics_and_war import commands
 
 

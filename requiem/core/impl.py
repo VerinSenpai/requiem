@@ -15,18 +15,23 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from requiem.core.app import RequiemApp
-
 from requiem.core.config import RequiemConfig
-from lightbulb import context
-from hikari.colors import Color
-from datetime import datetime
+from requiem.core.errors import UNHANDLED, CHECK_FAILURE
+from requiem import __install_path__
 
-import lightbulb
+from datetime import datetime, timedelta
+from random import choice
+
 import abc
+import lightbulb
+import logging
+import hikari
+import typing
+import importlib
+import sys
+
+
+_LOGGER = logging.getLogger("requiem.app")
 
 
 class RequiemPlugin(lightbulb.Plugin, abc.ABC):
@@ -59,7 +64,7 @@ class RequiemPlugin(lightbulb.Plugin, abc.ABC):
         return self.app.config
 
 
-class RequiemContext(context.Context, abc.ABC):
+class RequiemContext(lightbulb.Context, abc.ABC):
 
     def __init__(self, app: "RequiemApp") -> None:
         super().__init__(app)
@@ -87,8 +92,165 @@ class RequiemContext(context.Context, abc.ABC):
 
     @property
     def color(self) -> int:
-        return Color.from_hex_code("0x9b59b6")
+        return hikari.Color.from_hex_code("0x9b59b6")
 
 
-class SlashContext(context.SlashContext, RequiemContext, abc.ABC):
+class SlashContext(lightbulb.SlashContext, RequiemContext, abc.ABC):
     ...
+
+
+class RequiemApp(lightbulb.BotApp, abc.ABC):
+
+    def __init__(self, config: RequiemConfig) -> None:
+        self._config: RequiemConfig = config
+        self._start_time: datetime = datetime.now()
+
+        super().__init__(
+            token=config.token or "",
+            banner=None,
+            owner_ids=config.owner_ids,
+            default_enabled_guilds=config.guild_ids,
+        )
+
+        self.subscribe(hikari.StartingEvent, self.on_starting)
+        self.subscribe(hikari.StoppingEvent, self.on_stopping)
+        self.subscribe(lightbulb.SlashCommandErrorEvent, self.on_command_error)
+        self.subscribe(lightbulb.SlashCommandCompletionEvent, self.on_command_completion)
+
+    @property
+    def config(self) -> RequiemConfig:
+        return self._config
+
+    @property
+    def session_time(self) -> timedelta:
+        return datetime.now() - self._start_time
+
+    @property
+    def get_extensions(self) -> typing.Generator:
+        extensions_dir = __install_path__ / "exts"
+
+        return (
+            extension.name
+            for extension in extensions_dir.iterdir()
+            if extension.name not in ("__init__.py", "__pycache__")
+        )
+
+    @staticmethod
+    async def on_command_error(event: lightbulb.SlashCommandErrorEvent) -> None:
+        context: RequiemContext = event.context
+        command: lightbulb.Command = context.command
+        exc_type, exception, trace = event.exc_info
+
+        if isinstance(exception, hikari.HTTPResponseError):
+            _LOGGER.warning(str(exception))
+
+            return
+
+        elif isinstance(exception, lightbulb.CommandInvocationError):
+            response = f"{choice(UNHANDLED)}\n\nAn unexpected error occurred! Sorry about that!"
+
+            _LOGGER.exception(
+                "an unhandled exception occurred while executing command '%s'!",
+                command.name,
+                exc_info=exception.original
+            )
+
+        elif isinstance(exception, NotImplementedError):
+            response = f"Command '{command.name}' is not yet ready for use!"
+
+        else:
+            response = CHECK_FAILURE.get(exc_type, str(exception))
+
+            if callable(response):
+                response = response(exception, command)
+
+        embed = hikari.Embed(description=response, color=context.color)
+        await context.respond(embed=embed)
+
+    @staticmethod
+    async def on_command_completion(event: lightbulb.SlashCommandCompletionEvent) -> None:
+        context: RequiemContext = event.context
+
+        _LOGGER.info(
+            "command '%s %s' completed in '%sms'!",
+            context.invoked_with,
+            context.invoked.name,
+            context.elapsed
+        )
+
+    async def get_slash_context(
+        self,
+        event: hikari.InteractionCreateEvent,
+        command: lightbulb.SlashCommand,
+        cls=SlashContext,
+    ) -> SlashContext:
+        return cls(self, event, command)
+
+    def load_extensions(self, extension: str = None) -> None:
+        if extension is None:
+            for extension in self.get_extensions:
+                self.load_extensions(extension)
+
+            _LOGGER.info(
+                "%s extension(s) containing %s plugin(s) have been loaded!",
+                len(self.extensions),
+                len(self.plugins)
+            )
+
+            return
+
+        extension = extension.removesuffix(".py")
+        extension_path = f"requiem.exts.{extension}"
+
+        try:
+            module = importlib.import_module(extension_path)
+
+            if not hasattr(module, "load"):
+                _LOGGER.warning("extension '%s' has no 'load' method!", extension)
+
+                return
+
+            module.load(self)
+            self.extensions.append(extension)
+            _LOGGER.info("extension '%s' loaded!", extension)
+
+        except Exception as exc:
+            _LOGGER.error("extension '%s' encountered an error while loading!", extension, exc_info=exc)
+
+    def unload_extensions(self, extension: str = None):
+        if extension is None:
+            for extension in self.extensions:
+                self.unload_extensions(extension)
+
+            if len(self.plugins) > 0:
+                _LOGGER.warning("one or more extensions failed to remove their plugins on cleanup!")
+
+            return
+
+        extension_path = f"requiem.exts.{extension}"
+
+        try:
+            module = importlib.import_module(extension_path)
+
+            if not hasattr(module, "unload"):
+                _LOGGER.info("extension '%s' has no 'unload' method!", extension)
+
+                return
+
+            module.unload(self)
+            self.extensions.remove(extension)
+
+            for module in sys.modules.copy():
+                if extension_path in module:
+                    del sys.modules[module]
+
+            _LOGGER.info("extension '%s' unloaded!", extension)
+
+        except Exception as exc:
+            _LOGGER.error("extension '%s' encountered an exception while unloading!", extension, exc_info=exc)
+
+    async def on_starting(self, _) -> None:
+        self.load_extensions()
+
+    async def on_stopping(self, _) -> None:
+        self.unload_extensions()

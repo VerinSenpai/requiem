@@ -16,13 +16,16 @@
 
 
 from requiem.core.impl import RequiemApp
-from requiem.exts.politics_and_war import commands
+from requiem.exts.politics_and_war import commands, background
 
 
 def load(app: RequiemApp):
-
+    app.add_plugin(background.plugin)
     app.add_plugin(commands.plugin)
+    background.update_indexes.start()
 
 
 def unload(app: RequiemApp):
+    background.update_indexes.stop()
+    app.remove_plugin(background.plugin)
     app.remove_plugin(commands.plugin)

@@ -1,51 +1,29 @@
 # This is part of Requiem
 # Copyright (C) 2020  Verin Senpai
-
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
 from requiem.core.context import RequiemContext
 from requiem.exts.politics_and_war import queries
-from pwpy.api import QueryWrapper
-from pwpy.models import Nation
-from datetime import datetime, UTC
-from requiem.core.app import RequiemPlugin
+from pwpy.converters import Nation
 
 import lightbulb
 import hikari
 
 
-plugin = RequiemPlugin("PW")
-
-
-def time_since(dt: datetime) -> str:
-    now = datetime.now(UTC)
-    delta = now - dt
-
-    seconds = delta.total_seconds()
-    minutes = seconds / 60
-    hours = minutes / 60
-    days = hours / 24
-
-    if seconds < 60:
-        return f"{int(seconds)} second(s) ago"
-    elif minutes < 60:
-        return f"{int(minutes)} minute(s) ago"
-    elif hours < 24:
-        return f"{int(hours)} hour(s) ago"
-    else:
-        return f"{int(days)} day(s) ago"
+plugin = lightbulb.Plugin("pw")
 
 
 @plugin.command
@@ -57,7 +35,7 @@ async def pw(ctx: RequiemContext) -> None:
 
 @pw.child
 @lightbulb.add_cooldown(10, 1, lightbulb.UserBucket)
-@lightbulb.command("nation", "View information for a specified nation.")
+@lightbulb.command("nation",  "View information for a specified nation.")
 @lightbulb.implements(lightbulb.SlashSubCommand)
 async def nation(ctx: RequiemContext) -> None:
     response = await WRAPPER.get_query(queries.nation_command_query)
@@ -67,7 +45,6 @@ async def nation(ctx: RequiemContext) -> None:
 
     embed = hikari.Embed(description=header_str, color=ctx.color)
     embed.add_field("Creation Date", value=_nation.date.strftime("%b %d, %Y"), inline=True)
-    embed.add_field("Last Active", value=time_since(_nation.last_active), inline=True)
 
     if _alliance := _nation.alliance:
         embed.add_field(name="Alliance", value=f"[{_alliance.name}]({_alliance.url})", inline=False)

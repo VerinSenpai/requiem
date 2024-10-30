@@ -1,35 +1,41 @@
 # This is part of Requiem
 # Copyright (C) 2020  Verin Senpai
-
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-nations_pages_query = {
+GAME_INFO = {
+    "model": "gameInfo",
+    "query": ("game_date", "radiation")
+}
+
+
+NATIONS_PAGES = {
     "model": "nations",
     "args": {"first": 500, "page": 1},
     "query": {"paginatorInfo": "last_page"}
 }
 
 
-alliances_pages_query = {
+ALLIANCES_PAGES = {
     "model": "alliances",
     "args": {"first": 50, "page": 1},
     "query": {"paginatorInfo": "last_page"}
 }
 
 
-nation_command_query = {
+NATION_COMMAND = {
     "model": "nations",
     "args": {"id": 34904},
     "query": {

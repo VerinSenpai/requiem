@@ -147,7 +147,7 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
             return
 
         elif isinstance(exception, lightbulb.CommandInvocationError):
-            response = f"{choice(UNHANDLED)}\n\nAn unexpected error occurred! Sorry about that!"
+            response = f"{choice(UNHANDLED_ERRORS)}\n\nAn unexpected error occurred! Sorry about that!"
 
             _LOGGER.exception(
                 "an unhandled exception occurred while executing command '%s'!",
@@ -217,7 +217,7 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
         except Exception as exc:
             _LOGGER.error("extension '%s' encountered an error while loading!", extension, exc_info=exc)
 
-    def unload_extensions(self, extension: str = None):
+    def unload_extensions(self, extension: str = None) -> None:
         if extension is None:
             for extension in self.extensions:
                 self.unload_extensions(extension)

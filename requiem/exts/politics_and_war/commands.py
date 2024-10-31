@@ -15,14 +15,49 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from requiem.core.impl import RequiemContext, RequiemPlugin
+from requiem.core.models import AutoCompleteIndex
 from requiem.exts.politics_and_war import queries, background
-from pwpy.converters import Nation
+from lightbulb.ext import tasks
 
+import pwpy
 import lightbulb
 import hikari
+import logging
+
+
+_LOGGER = logging.getLogger("pw.commands")
 
 
 plugin = RequiemPlugin("pw")
+
+
+NATIONS = AutoCompleteIndex()
+ALLIANCES = AutoCompleteIndex()
+
+
+async def setup():
+    api_key: str | None = plugin.config.pw.api_key
+
+    if api_key:
+        pwpy.set_global_key(api_key)
+
+        try:
+            await pwpy.get_query(queries.GAME_DATE)
+
+            return
+
+        except pwpy.QueryKeyError:
+            _LOGGER.warning("provided api_key is invalid! pw commands and features will be unavailable!")
+
+    else:
+        _LOGGER.warning("api_key not provided! pw commands and features will be unavailable!")
+
+    perform_indexing.stop()
+
+
+@tasks.task(m=10)
+async def perform_indexing(event: hikari.StartedEvent):
+
 
 
 @plugin.command
@@ -41,7 +76,7 @@ async def nation(ctx: RequiemContext) -> None:
     response = await background.SESSION.get_query(queries.NATION_COMMAND)
     _nation: Nation = Nation.convert(response["nations"]["data"][0])
 
-    header_str =  f"[{_nation.nation_name}]({_nation.url}) - [{_nation.leader_name}]({_nation.message_url})"
+    header_str = f"[{_nation.nation_name}]({_nation.url}) - [{_nation.leader_name}]({_nation.message_url})"
 
     embed = hikari.Embed(description=header_str, color=ctx.color)
     embed.add_field("Creation Date", value=_nation.date.strftime("%b %d, %Y"), inline=True)
@@ -74,6 +109,9 @@ async def nation(ctx: RequiemContext) -> None:
 
 
 @nation.autocomplete("nation")
-async def nation_autocomplete(option: hikari.AutocompleteInteractionOption, interaction: hikari.AutocompleteInteraction) -> None:
-    response = background.NATIONS_INDEX.search(option.value, interaction.user.id)
+async def nation_autocomplete(
+    option: hikari.AutocompleteInteractionOption,
+    interaction: hikari.AutocompleteInteraction
+) -> list:
+    response = NATIONS.search(option.value, interaction.user.id)
     return response

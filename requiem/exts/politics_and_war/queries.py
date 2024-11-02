@@ -16,29 +16,29 @@
 
 
 GAME_DATE = {
-    "model": "game_info",
-    "query": "game_date"
+    "game_info": "game_date"
 }
 
 
 NATIONS_PAGES = {
-    "model": "nations",
-    "args": {"first": 500, "page": 1},
-    "query": {"paginatorInfo": "lastPage"}
+    "nations": {
+        "args": {"first": 500, "page": 1},
+        "paginatorInfo": "lastPage"
+    },
+
 }
 
 
 ALLIANCES_PAGES = {
-    "model": "alliances",
-    "args": {"first": 50, "page": 1},
-    "query": {"paginatorInfo": "lastPage"}
+    "alliances": {
+        "args": {"first": 500, "page": 1},
+        "paginatorInfo": "lastPage"
+    }
 }
 
 
 NATION_COMMAND = {
-    "model": "nations",
-    "args": None,
-    "query": {
+    "nations": {
         "data": (
             "id",
             "nation_name",

@@ -17,7 +17,6 @@
 
 from requiem.core.impl import RequiemApp
 from requiem.exts.politics_and_war import commands, queries
-from pwpy import set_global_key
 
 import logging
 import asyncio
@@ -27,14 +26,11 @@ _LOGGER = logging.getLogger("requiem.exts.politics_and_war")
 
 
 def load(app: RequiemApp):
-    api_key: str = app.config.pw.api_key
-
-    if not api_key:
-        _LOGGER.warning("no api key was provided! pw commands and features will be unavailable!")
-
-    set_global_key(api_key)
+    commands.setup.start()
     app.add_plugin(commands.plugin)
 
 
 def unload(app: RequiemApp):
+    if commands.update_indexes.is_running:
+        commands.update_indexes.stop()
     app.remove_plugin(commands.plugin)

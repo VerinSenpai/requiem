@@ -16,6 +16,7 @@
 
 
 from tortoise import Model, fields
+from datetime import datetime
 
 import typing
 
@@ -41,7 +42,7 @@ class AutoCompleteIndex:
     def insert(self, value: str) -> None:
         self.__index.add(value.lower())
 
-    def update(self):
+    def update(self) -> None:
         self._index = self.__index
         self.__index = set()
 
@@ -83,6 +84,9 @@ class UsersConfig(Model):
 
 
 class NationStore(Model):
-    nation_id: int = fields.IntField(primary_key=True)
-    founded = fields.DatetimeField()
-    rerolled = fields.DatetimeField(default=None)
+    id: int = fields.IntField(primary_key=True)
+    nation_name: str = fields.TextField()
+    leader_name: str = fields.TextField()
+    discord_id: int = fields.BigIntField()
+    date: datetime = fields.DatetimeField()
+    latest_date: datetime = fields.DatetimeField()

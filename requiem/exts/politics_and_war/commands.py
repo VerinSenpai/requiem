@@ -13,10 +13,11 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+from calendar import leapdays
 
 from requiem.core.impl import RequiemContext, RequiemPlugin
-from requiem.core.models import AutoCompleteIndex
-from requiem.exts.politics_and_war import queries, background
+from requiem.core.models import AutoCompleteIndex, NationStore
+from requiem.exts.politics_and_war import queries
 from lightbulb.ext import tasks
 
 import pwpy
@@ -31,10 +32,7 @@ _LOGGER = logging.getLogger("pw.commands")
 plugin = RequiemPlugin("pw")
 
 
-NATIONS = AutoCompleteIndex()
-ALLIANCES = AutoCompleteIndex()
-
-
+@tasks.task(s=1, max_executions=1)
 async def setup():
     api_key: str | None = plugin.config.pw.api_key
 
@@ -43,8 +41,7 @@ async def setup():
 
         try:
             await pwpy.get_query(queries.GAME_DATE)
-
-            return
+            update_indexes.start()
 
         except pwpy.QueryKeyError:
             _LOGGER.warning("provided api_key is invalid! pw commands and features will be unavailable!")
@@ -52,12 +49,35 @@ async def setup():
     else:
         _LOGGER.warning("api_key not provided! pw commands and features will be unavailable!")
 
-    perform_indexing.stop()
+
+NATIONS = AutoCompleteIndex()
 
 
 @tasks.task(m=10)
-async def perform_indexing(event: hikari.StartedEvent):
+async def update_nations_index():
+    ...
 
+
+@tasks.task(m=10)
+async def update_alliances_index():
+    ...
+
+
+@tasks.task(m=10)
+async def update_indexes():
+    global NATIONS
+
+    response = await pwpy.get_query(queries.NATIONS_PAGES, parser=pwpy.PaginatorInfo)
+
+    bulk_query = pwpy.BulkQuery()
+    for page in range(1, response.nations.paginatorInfo.lastPage + 1):
+        index_query = {
+            f"nations_{page}: nations": {
+                "args": {"page": page, "first": 500},
+                "data": ("id", "nation_name", "leader_name", "date")
+            }
+        }
+        bulk_query.insert(index_query)
 
 
 @plugin.command
@@ -72,43 +92,43 @@ async def pw(ctx: RequiemContext) -> None:
 @lightbulb.option("nation", "Name or ID of a nation to lookup.", autocomplete=True)
 @lightbulb.command("nation",  "View information for a specified nation.")
 @lightbulb.implements(lightbulb.SlashSubCommand)
-async def nation(ctx: RequiemContext) -> None:
-    response = await background.SESSION.get_query(queries.NATION_COMMAND)
-    _nation: Nation = Nation.convert(response["nations"]["data"][0])
+async def _nation(ctx: RequiemContext) -> None:
+    response = await pwpy.get_query(queries.NATION_COMMAND)
+    nation: pwpy.Nation = pwpy.Nation.convert(response["nations"]["data"][0])
 
-    header_str = f"[{_nation.nation_name}]({_nation.url}) - [{_nation.leader_name}]({_nation.message_url})"
+    header_str = f"[{nation.nation_name}]({nation.url}) - [{nation.leader_name}]({nation.message_url})"
 
     embed = hikari.Embed(description=header_str, color=ctx.color)
-    embed.add_field("Creation Date", value=_nation.date.strftime("%b %d, %Y"), inline=True)
+    embed.add_field("Creation Date", value=nation.date.strftime("%b %d, %Y"), inline=True)
 
-    if _alliance := _nation.alliance:
+    if _alliance := nation.alliance:
         embed.add_field(name="Alliance", value=f"[{_alliance.name}]({_alliance.url})", inline=False)
 
-    embed.add_field(name="Score", value=f"{round(_nation.score, 2):,}", inline=True)
-    embed.add_field(name="Color", value=_nation.color.title(), inline=True)
-    embed.add_field(name="Cities", value=f"[{len(_nation.cities)}]({_nation.city_manager_url})",inline=True)
-    embed.add_field(name="Population", value=f"{_nation.population:,}", inline=True)
-    embed.add_field(name="Infra", value=f"{round(_nation.total_infra, 2):,}", inline=True)
-    embed.add_field(name="Land", value=f"{round(_nation.total_land, 2):,}", inline=True)
-    war_policy = _nation.war_policy.value.replace("_", " ").title()
+    embed.add_field(name="Score", value=f"{round(nation.score, 2):,}", inline=True)
+    embed.add_field(name="Color", value=nation.color.title(), inline=True)
+    embed.add_field(name="Cities", value=f"[{len(nation.cities)}]({nation.city_manager_url})",inline=True)
+    embed.add_field(name="Population", value=f"{nation.population:,}", inline=True)
+    embed.add_field(name="Infra", value=f"{round(nation.total_infra, 2):,}", inline=True)
+    embed.add_field(name="Land", value=f"{round(nation.total_land, 2):,}", inline=True)
+    war_policy = nation.war_policy.value.replace("_", " ").title()
     embed.add_field(name="War Policy", value=war_policy, inline=True)
-    dom_policy = _nation.domestic_policy.value.replace("_", " ").title()
+    dom_policy = nation.domestic_policy.value.replace("_", " ").title()
     embed.add_field(name="Domestic Policy", value=dom_policy, inline=True)
-    min_score, max_score = _nation.score_range
-    strike_range_str = f"[{round(min_score, 2):,} - {round(max_score, 2):,}]({_nation.war_range_url})"
+    min_score, max_score = nation.score_range
+    strike_range_str = f"[{round(min_score, 2):,} - {round(max_score, 2):,}]({nation.war_range_url})"
     embed.add_field(name="Strike Range", value=strike_range_str)
-    embed.add_field(name="Soldiers", value=f"{_nation.soldiers:,}", inline=True)
-    embed.add_field(name="Tanks", value=f"{_nation.tanks:,}", inline=True)
-    embed.add_field(name="Aircraft", value=f"{_nation.aircraft:,}", inline=True)
-    embed.add_field(name="Ships", value=f"{_nation.ships:,}", inline=True)
-    embed.add_field(name="Missiles", value=f"{_nation.missiles:,}", inline=True)
-    embed.add_field(name="Nukes", value=f"{_nation.nukes:,}", inline=True)
-    embed.set_image(_nation.flag)
+    embed.add_field(name="Soldiers", value=f"{nation.soldiers:,}", inline=True)
+    embed.add_field(name="Tanks", value=f"{nation.tanks:,}", inline=True)
+    embed.add_field(name="Aircraft", value=f"{nation.aircraft:,}", inline=True)
+    embed.add_field(name="Ships", value=f"{nation.ships:,}", inline=True)
+    embed.add_field(name="Missiles", value=f"{nation.missiles:,}", inline=True)
+    embed.add_field(name="Nukes", value=f"{nation.nukes:,}", inline=True)
+    embed.set_image(nation.flag)
 
     await ctx.respond(embed=embed)
 
 
-@nation.autocomplete("nation")
+@_nation.autocomplete("nation")
 async def nation_autocomplete(
     option: hikari.AutocompleteInteractionOption,
     interaction: hikari.AutocompleteInteraction

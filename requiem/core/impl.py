@@ -21,6 +21,7 @@ from requiem import __install_path__
 
 from datetime import datetime, timedelta
 from random import choice
+from lightbulb.ext import tasks
 
 import abc
 import lightbulb
@@ -116,6 +117,8 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
         self.subscribe(hikari.StoppingEvent, self.on_stopping)
         self.subscribe(lightbulb.SlashCommandErrorEvent, self.on_command_error)
         self.subscribe(lightbulb.SlashCommandCompletionEvent, self.on_command_completion)
+
+        tasks.load(self)
 
     @property
     def config(self) -> RequiemConfig:

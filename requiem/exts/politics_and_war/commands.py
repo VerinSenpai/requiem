@@ -13,7 +13,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-from calendar import leapdays
+
 
 from requiem.core.impl import RequiemContext, RequiemPlugin
 from requiem.core.models import AutoCompleteIndex, NationStore
@@ -29,19 +29,42 @@ import logging
 _LOGGER = logging.getLogger("pw.commands")
 
 
+READY = False
+FAILED = False
+
+
+def ready_check(ctx: RequiemContext) -> bool:
+    if FAILED:
+        raise lightbulb.CheckFailure(
+            "PW commands and features are unavailable!\n"
+            "If this issue persists, contact a Requiem administrator!"
+        )
+
+    elif not READY:
+        raise lightbulb.CheckFailure("PW setup has not yet finished! Wait a few minutes and try again!")
+
+    return READY
+
+
 plugin = RequiemPlugin("pw")
+plugin.add_checks(lightbulb.Check(ready_check))
 
 
 @tasks.task(s=1, max_executions=1)
 async def setup():
+    global READY, FAILED
+
     api_key: str | None = plugin.config.pw.api_key
 
     if api_key:
         pwpy.set_global_key(api_key)
 
         try:
-            await pwpy.get_query(queries.GAME_DATE)
-            update_indexes.start()
+            await pwpy.get_query({"game_info": "game_date"})
+
+            READY = True
+
+            return
 
         except pwpy.QueryKeyError:
             _LOGGER.warning("provided api_key is invalid! pw commands and features will be unavailable!")
@@ -49,35 +72,7 @@ async def setup():
     else:
         _LOGGER.warning("api_key not provided! pw commands and features will be unavailable!")
 
-
-NATIONS = AutoCompleteIndex()
-
-
-@tasks.task(m=10)
-async def update_nations_index():
-    ...
-
-
-@tasks.task(m=10)
-async def update_alliances_index():
-    ...
-
-
-@tasks.task(m=10)
-async def update_indexes():
-    global NATIONS
-
-    response = await pwpy.get_query(queries.NATIONS_PAGES, parser=pwpy.PaginatorInfo)
-
-    bulk_query = pwpy.BulkQuery()
-    for page in range(1, response.nations.paginatorInfo.lastPage + 1):
-        index_query = {
-            f"nations_{page}: nations": {
-                "args": {"page": page, "first": 500},
-                "data": ("id", "nation_name", "leader_name", "date")
-            }
-        }
-        bulk_query.insert(index_query)
+    FAILED = True
 
 
 @plugin.command
@@ -93,8 +88,7 @@ async def pw(ctx: RequiemContext) -> None:
 @lightbulb.command("nation",  "View information for a specified nation.")
 @lightbulb.implements(lightbulb.SlashSubCommand)
 async def _nation(ctx: RequiemContext) -> None:
-    response = await pwpy.get_query(queries.NATION_COMMAND)
-    nation: pwpy.Nation = pwpy.Nation.convert(response["nations"]["data"][0])
+    nation = (await pwpy.get_query(queries.NATION_COMMAND)).nations.data[0]
 
     header_str = f"[{nation.nation_name}]({nation.url}) - [{nation.leader_name}]({nation.message_url})"
 
@@ -133,5 +127,4 @@ async def nation_autocomplete(
     option: hikari.AutocompleteInteractionOption,
     interaction: hikari.AutocompleteInteraction
 ) -> list:
-    response = NATIONS.search(option.value, interaction.user.id)
-    return response
+    return ["A", "B", "C"]

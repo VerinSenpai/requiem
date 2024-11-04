@@ -39,6 +39,7 @@ ALLIANCES_PAGES = {
 
 NATION_COMMAND = {
     "nations": {
+        "args": {"id": 34904},
         "data": (
             "id",
             "nation_name",

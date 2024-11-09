@@ -145,7 +145,7 @@ async def pw(ctx: RequiemContext) -> None:
 
 @pw.child
 @lightbulb.option(
-    "nation",
+    "target",
     "Name, ID, or leader of a nation to lookup.",
     type=str,
     autocomplete=True,
@@ -159,11 +159,11 @@ async def pw(ctx: RequiemContext) -> None:
 )
 @lightbulb.command("nation",  "View information for a specified nation.", pass_options=True)
 @lightbulb.implements(lightbulb.SlashSubCommand)
-async def _nation(ctx: RequiemContext, nation: str = None, user: hikari.User = None) -> None:
-    if nation and user:
-        raise lightbulb.CheckFailure("Either nation or user should be specified, not both!")
+async def _nation(ctx: RequiemContext, target: str = None, user: hikari.User = None) -> None:
+    if target and user:
+        raise lightbulb.CheckFailure("You may pass either a target or a discord user, not both!")
 
-    user_query = str(nation or user or ctx.user.id).lower()
+    user_query = str(target or user or ctx.user.id).lower()
     search_result = await NationStore.get_or_none(utils.nations_filter(user_query))
 
     if not search_result:
@@ -173,7 +173,7 @@ async def _nation(ctx: RequiemContext, nation: str = None, user: hikari.User = N
         {"alliance": ("id", "name")},
         {"cities": ("infrastructure", "land", "powered")},
         "id",  "nation_name",  "leader_name", "score", "population", "color", "war_policy", "domestic_policy",
-        "flag", "date", "last_active", "soldiers", "tanks", "aircraft","ships", "missiles", "nukes"
+        "flag", "date", "last_active", "soldiers", "tanks", "aircraft", "ships", "missiles", "nukes"
     )}}
 
     search_result = (await pwpy.get_query(query, parse_query=True)).nations.data

@@ -87,6 +87,6 @@ class NationStore(Model):
     id: int = fields.IntField(primary_key=True)
     nation_name: str = fields.TextField()
     leader_name: str = fields.TextField()
-    discord_id: int = fields.BigIntField()
     date: datetime = fields.DatetimeField()
-    latest_date: datetime = fields.DatetimeField()
+    original_date: datetime = fields.DatetimeField()
+    discord_id: int = fields.BigIntField(null=True)

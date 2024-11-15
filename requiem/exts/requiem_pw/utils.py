@@ -25,18 +25,18 @@ def last_active_str(last_active: datetime) -> str:
 
     if days := delta.days:
         if days > 1:
-            return f"Active {days} days ago"
-        return f"Active 1 day ago"
+            return f"{days} days ago"
+        return f"1 day ago"
 
     elif hours := int(minutes // 60):
         if hours > 1:
-            return f"Active {hours} hours ago"
-        return f"Active 1 hour ago"
+            return f"{hours} hours ago"
+        return f"1 hour ago"
 
     elif minutes > 5:
-        return f"Active {minutes} minutes ago"
+        return f"{minutes} minutes ago"
 
-    return "Active now"
+    return "Now"
 
 
 def nations_filter(query: str) -> Q:

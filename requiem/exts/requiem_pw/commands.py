@@ -81,7 +81,7 @@ NATIONS_INDEX = AutoCompleteIndex()
 @tasks.task(m=10)
 async def build_nations_index():
     pages_query = {"nations": {"args": {"first": 500, "page": 1}, "paginatorInfo": "lastPage"}}
-    nations_pages = (await pwpy.get_query(pages_query, parse_query=True)).nations.paginatorInfo.lastPage
+    nations_pages = (await pwpy.get_query(pages_query, parse=True)).nations.paginatorInfo.lastPage
 
     bulk_query = pwpy.BulkQuery()
 
@@ -145,43 +145,33 @@ async def pw(ctx: RequiemContext) -> None:
 
 @pw.child
 @lightbulb.option(
-    "target",
+    "nation",
     "Name, ID, or leader of a nation to lookup.",
     type=str,
     autocomplete=True,
     required=False
 )
-@lightbulb.option(
-    "user",
-    "Discord user with a linked nation to lookup.",
-    type=hikari.User,
-    required=False
-)
 @lightbulb.command("nation",  "View information for a specified nation.", pass_options=True)
 @lightbulb.implements(lightbulb.SlashSubCommand)
-async def _nation(ctx: RequiemContext, target: str = None, user: hikari.User = None) -> None:
-    if target and user:
-        raise lightbulb.CheckFailure("You may pass either a target or a discord user, not both!")
+async def _nation(ctx: RequiemContext, nation: str = None, discord: int = None) -> None:
+    search_filter = utils.nations_filter(str(nation or discord).lower())
+    nation_lookup = await NationStore.get_or_none(search_filter)
 
-    user_query = str(target or user or ctx.user.id).lower()
-    search_result = await NationStore.get_or_none(utils.nations_filter(user_query))
-
-    if not search_result:
+    if nation_lookup is None:
         raise lightbulb.CheckFailure("No nation matching that query could be found!")
 
-    query = {"nations": {"args": {"id": search_result.id}, "data": (
-        {"alliance": ("id", "name")},
-        {"cities": ("infrastructure", "land", "powered")},
+    query = {"nations": {"args": {"id": nation_lookup.id}, "data": (
+        {"alliance": ("id", "name")}, {"cities": ("infrastructure", "land", "powered")},
         "id",  "nation_name",  "leader_name", "score", "population", "color", "war_policy", "domestic_policy",
         "flag", "date", "last_active", "soldiers", "tanks", "aircraft", "ships", "missiles", "nukes"
     )}}
 
-    search_result = (await pwpy.get_query(query, parse_query=True)).nations.data
+    try:
+        nation = (await pwpy.get_query(query, parse=True)).nations.data[0]
 
-    if not search_result:
+    except IndexError:
         raise lightbulb.CheckFailure("The nation you are requesting no longer exists!")
 
-    nation = search_result[0]
     header_str = f"[{nation.nation_name}]({nation.url}) - [{nation.leader_name}]({nation.message_url})"
     embed = hikari.Embed(description=header_str, color=ctx.color)
     embed.add_field("Creation Date", value=nation.date.strftime("%b %d, %Y"))

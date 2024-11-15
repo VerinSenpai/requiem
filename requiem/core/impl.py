@@ -222,7 +222,7 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
 
     def unload_extensions(self, extension: str = None) -> None:
         if extension is None:
-            for extension in self.extensions:
+            for extension in self.extensions[::]:
                 self.unload_extensions(extension)
 
             if len(self.plugins) > 0:

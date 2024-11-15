@@ -31,7 +31,5 @@ def load(app: RequiemApp):
 
 
 def unload(app: RequiemApp):
-    if commands.build_nations_index.is_running:
-        commands.build_nations_index.stop()
-
+    commands.build_nations_index.cancel()
     app.remove_plugin(commands.plugin)

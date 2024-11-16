@@ -70,6 +70,7 @@ class RequiemConfig:
     owner_ids: typing.List[int] = []
     database: PostgresConfig = attr.ib(factory=PostgresConfig)
     pw: PWConfig = attr.ib(factory=PWConfig)
+    enable_developer_commands: bool = False
 
 
 def load_config(instance_path: Path) -> RequiemConfig | None:

@@ -21,9 +21,13 @@ from requiem.exts.requiem_basic import utility, debug
 
 def load(app: RequiemApp) -> None:
     app.add_plugin(utility.plugin)
-    app.add_plugin(debug.plugin)
+
+    if app.config.enable_developer_commands:
+        app.add_plugin(debug.plugin)
 
 
 def unload(app: RequiemApp) -> None:
     app.remove_plugin(utility.plugin)
-    app.remove_plugin(debug.plugin)
+
+    if app.config.enable_developer_commands:
+        app.remove_plugin(debug.plugin)

@@ -267,7 +267,7 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
             self.unload_extension(extension, in_reload=True)
             self.load_extension(extension, in_reload=True)
 
-            _LOGGER.info("extension '%s' reloaded!")
+            _LOGGER.info("extension '%s' reloaded!", extension)
 
         except Exception as exc:
             sys.modules[extension_path] = old

@@ -13,7 +13,8 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
+import pathlib
+import typing as t
 
 from requiem.core.config import RequiemConfig
 from requiem.core.messages import UNHANDLED_ERRORS, CHECK_FAILURE_ERRORS
@@ -22,6 +23,7 @@ from requiem import __install_path__
 from datetime import datetime, timedelta
 from random import choice
 from lightbulb.ext import tasks
+from lightbulb import internal
 
 import abc
 import lightbulb
@@ -189,19 +191,18 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
     ) -> SlashContext:
         return cls(self, event, command)
 
-    def load_extensions(self, extension: str = None) -> None:
-        if extension is None:
-            for extension in self.get_extensions:
-                self.load_extensions(extension)
+    def load_extensions(self, *extensions: str) -> None:
+        if len(extensions) > 1 or not extensions:
+            for extension in extensions or self.get_extensions:
+                self.load_extension(extension)
 
-            _LOGGER.info(
-                "%s extension(s) containing %s plugin(s) have been loaded!",
-                len(self.extensions),
-                len(self.plugins)
-            )
+        _LOGGER.info(
+            "%s extension(s) containing %s plugin(s) have been loaded!",
+            len(self.extensions),
+            len(self.plugins)
+        )
 
-            return
-
+    def load_extension(self, extension: str, *, in_reload=False):
         extension = extension.removesuffix(".py")
         extension_path = f"requiem.exts.{extension}"
 
@@ -215,21 +216,22 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
 
             module.load(self)
             self.extensions.append(extension)
-            _LOGGER.info("extension '%s' loaded!", extension)
+
+            if not in_reload:
+                _LOGGER.info("extension '%s' loaded!", extension)
 
         except Exception as exc:
             _LOGGER.error("extension '%s' encountered an error while loading!", extension, exc_info=exc)
 
-    def unload_extensions(self, extension: str = None) -> None:
-        if extension is None:
-            for extension in self.extensions[::]:
-                self.unload_extensions(extension)
+    def unload_extensions(self, *extensions: str) -> None:
+        if len(extensions) > 1 or not extensions:
+            for extension in extensions or self.extensions[::]:
+                self.unload_extension(extension)
 
-            if len(self.plugins) > 0:
-                _LOGGER.warning("one or more extensions failed to remove their plugins on cleanup!")
+        if len(self.plugins) > 0:
+            _LOGGER.warning("one or more extensions failed to remove their plugins on cleanup!")
 
-            return
-
+    def unload_extension(self, extension: str, *, in_reload=True) -> None:
         extension_path = f"requiem.exts.{extension}"
 
         try:
@@ -247,7 +249,8 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
                 if extension_path in module:
                     del sys.modules[module]
 
-            _LOGGER.info("extension '%s' unloaded!", extension)
+            if not in_reload:
+                _LOGGER.info("extension '%s' unloaded!", extension)
 
         except Exception as exc:
             _LOGGER.error("extension '%s' encountered an exception while unloading!", extension, exc_info=exc)
@@ -257,3 +260,5 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
 
     async def on_stopping(self, _) -> None:
         self.unload_extensions()
+
+

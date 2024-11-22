@@ -23,7 +23,7 @@ from requiem import __install_path__
 from datetime import datetime, timedelta
 from random import choice
 from lightbulb.ext import tasks
-from lightbulb import internal
+from lightbulb.internal import manage_application_commands
 
 import abc
 import lightbulb
@@ -192,9 +192,8 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
         return cls(self, event, command)
 
     def load_extensions(self, *extensions: str) -> None:
-        if len(extensions) > 1 or not extensions:
-            for extension in extensions or self.get_extensions:
-                self.load_extension(extension)
+        for extension in extensions or self.get_extensions:
+            self.load_extension(extension)
 
         _LOGGER.info(
             "%s extension(s) containing %s plugin(s) have been loaded!",
@@ -224,9 +223,8 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
             _LOGGER.error("extension '%s' encountered an error while loading!", extension, exc_info=exc)
 
     def unload_extensions(self, *extensions: str) -> None:
-        if len(extensions) > 1 or not extensions:
-            for extension in extensions or self.extensions[::]:
-                self.unload_extension(extension)
+        for extension in extensions or self.extensions[::]:
+            self.unload_extension(extension)
 
         if len(self.plugins) > 0:
             _LOGGER.warning("one or more extensions failed to remove their plugins on cleanup!")
@@ -254,6 +252,45 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
 
         except Exception as exc:
             _LOGGER.error("extension '%s' encountered an exception while unloading!", extension, exc_info=exc)
+
+    def reload_extension(self, extension: str) -> None:
+        extension_path = f"requiem.exts.{extension}"
+
+        if extension not in self.extensions:
+            _LOGGER.warning("extension '%s' is not currently loaded!", extension)
+
+            raise lightbulb.ExtensionNotLoaded
+
+        old = sys.modules[extension_path]
+
+        try:
+            self.unload_extension(extension, in_reload=True)
+            self.load_extension(extension, in_reload=True)
+
+            _LOGGER.info("extension '%s' reloaded!")
+
+        except Exception as exc:
+            sys.modules[extension_path] = old
+            _LOGGER.error("extension '%s' encountered an exception while reloading!", extension, exc_info=exc)
+            raise
+
+        else:
+            del old
+
+    def reload_extensions(self, *extensions: str) -> dict:
+        exceptions = {}
+
+        for extension in extensions or self.extensions[::]:
+            try:
+                self.reload_extension(extension)
+
+            except Exception as exc:
+                exceptions[extension] = exc
+
+        return exceptions
+
+    async def resync_commands(self) -> None:
+        await manage_application_commands(self)
 
     async def on_starting(self, _) -> None:
         self.load_extensions()

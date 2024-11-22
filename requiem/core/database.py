@@ -52,6 +52,7 @@ async def start_database(instance_path: Path, config: PostgresConfig):
             return
 
         await command.init()
+        await Tortoise.generate_schemas(True)
 
         try:
             update = await command.migrate()

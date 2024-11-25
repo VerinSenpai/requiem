@@ -146,7 +146,7 @@ async def pw(ctx: RequiemContext) -> None:
 @pw.child
 @lightbulb.option(
     "nation",
-    "Name, ID, or leader of a nation to lookup.",
+    "Name, ID, or leader of a nation.",
     type=str,
     autocomplete=True,
     required=False

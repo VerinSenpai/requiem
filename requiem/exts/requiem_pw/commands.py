@@ -131,7 +131,7 @@ async def build_nations_index():
             updated.append(stored)
 
     if updated:
-        await NationStore.bulk_update(updated, fields=["nation_name", "leader_name", "date"])
+        await NationStore.bulk_update(updated, fields=("nation_name", "leader_name", "date"))
 
     NATIONS_INDEX.update()
 

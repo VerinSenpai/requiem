@@ -30,14 +30,14 @@ plugin = RequiemPlugin("util")
 @plugin.command
 @lightbulb.command("util", "Utility commands.")
 @lightbulb.implements(lightbulb.SlashCommandGroup)
-async def util(ctx: RequiemContext):
+async def util(ctx: RequiemContext) -> None:
     ...
 
 
 @util.child
 @lightbulb.command("ping", "View current ping times for Requiem.")
 @lightbulb.implements(lightbulb.SlashSubCommand)
-async def ping(ctx: RequiemContext):
+async def ping(ctx: RequiemContext) -> None:
     start_time = datetime.now()
     embed = hikari.Embed(title="Pinging!", color=ctx.color)
     message = await ctx.respond(embed=embed)

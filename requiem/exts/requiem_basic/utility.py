@@ -66,3 +66,22 @@ async def about(ctx: RequiemContext) -> None:
     )
 
     await ctx.respond(embed=embed)
+
+
+@util.child
+@lightbulb.command("runtime", "View current session information.")
+@lightbulb.implements(lightbulb.SlashSubCommand)
+async def runtime(ctx: RequiemContext) -> None:
+    uptime = ctx.app.session_time
+    uptime_str = f"{uptime.days}d {uptime.seconds // 3600}h {(uptime.seconds // 60) % 60}m {(uptime.seconds % 60)}s"
+
+    embed = (
+        hikari.Embed(title="Session Information", color=ctx.color)
+        .add_field(name="Uptime", value=uptime_str, inline=True)
+        .add_field(name="Commands Executed", value=f"0", inline=True)
+        .add_field(name="Exceptions Handled", value=f"0", inline=True)
+        .add_field(name="Plugins Loaded", value=str(len(ctx.app.plugins)), inline=True)
+        .add_field(name="Extensions Loaded", value=str(len(ctx.app.extensions)), inline=True)
+    )
+
+    await ctx.respond(embed=embed)

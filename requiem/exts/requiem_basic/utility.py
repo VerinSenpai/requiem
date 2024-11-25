@@ -19,6 +19,7 @@ from requiem import __version__, __repo_url__
 from requiem.core.impl import RequiemContext, RequiemPlugin
 from datetime import datetime
 
+import platform
 import lightbulb
 import hikari
 
@@ -59,6 +60,8 @@ async def about(ctx: RequiemContext) -> None:
         .add_field(name="Requiem Version", value=__version__, inline=True)
         .add_field(name="Hikari Version", value=hikari.__version__, inline=True)
         .add_field(name="Lightbulb Version", value=lightbulb.__version__, inline=True)
+        .add_field(name="Python", value=f"{platform.python_version()} {platform.python_implementation()}", inline=True)
+        .add_field(name="OS", value=platform.platform(), inline=True)
         .set_thumbnail(ctx.app.application.icon_url)
     )
 

@@ -151,9 +151,18 @@ async def pw(ctx: RequiemContext) -> None:
     autocomplete=True,
     required=False
 )
+@lightbulb.option(
+    "discord",
+    "Discord user linked with a nation.",
+    type=hikari.User,
+    required=False
+)
 @lightbulb.command("nation",  "View information for a specified nation.", pass_options=True)
 @lightbulb.implements(lightbulb.SlashSubCommand)
-async def _nation(ctx: RequiemContext, nation: str = None, discord: int = None) -> None:
+async def _nation(ctx: RequiemContext, nation: str = None, discord: hikari.User = None) -> None:
+    if all((nation, discord)):
+        raise lightbulb.CheckFailure("Please pass either nation or discord, not both!")
+
     search_filter = utils.nations_filter(str(nation or discord).lower())
     nation_lookup = await NationStore.get_or_none(search_filter)
 

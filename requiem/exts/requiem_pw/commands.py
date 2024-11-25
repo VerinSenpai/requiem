@@ -215,6 +215,56 @@ async def _nation(ctx: RequiemContext, nation: str = None, discord: hikari.User 
     await ctx.respond(embed=embed)
 
 
+@pw.child
+@lightbulb.option(
+    "alliance",
+    "Name or ID of an alliance.",
+    type=str,
+    autocomplete=True,
+    required=False
+)
+@lightbulb.option(
+    "nation",
+    "Name, ID, or leader of a nation.",
+    type=str,
+    autocomplete=True,
+    required=False
+)
+@lightbulb.option(
+    "discord",
+    "Discord user linked with a nation.",
+    type=hikari.User,
+    required=False
+)
+@lightbulb.command("alliance", "View information for a specified alliance.", pass_options=True)
+@lightbulb.implements(lightbulb.SlashSubCommand)
+async def _alliance(
+    ctx: RequiemContext,
+    alliance: str = None,
+    nation: str = None,
+    discord: hikari.User = None
+) -> None:
+    query = {
+        "alliances": {
+            "args": {"id": 11973},
+            "data": (
+                "id", "name", "color", "flag", "acronym", "score",
+            )
+        }
+    }
+
+    alliance = (await pwpy.get_query(query, parse=True)).alliances.data[0]
+
+    embed = (
+        hikari.Embed(description=f"[{alliance.name} - {alliance.acronym}]({alliance.url})", color=ctx.color)
+        .add_field(name="Score", value=f"{round(alliance.score, 2):,}")
+        .add_field(name="Color", value=alliance.color.title())
+        .set_image(alliance.flag)
+    )
+
+    await ctx.respond(embed=embed)
+
+
 @_nation.autocomplete("nation")
 async def nation_autocomplete(
     option: hikari.AutocompleteInteractionOption,

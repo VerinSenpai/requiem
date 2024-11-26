@@ -191,9 +191,9 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
     ) -> SlashContext:
         return cls(self, event, command)
 
-    def load_extensions(self, *extensions: str) -> None:
+    async def load_extensions(self, *extensions: str) -> None:
         for extension in extensions or self.get_extensions:
-            self.load_extension(extension)
+            await self.load_extension(extension)
 
         _LOGGER.info(
             "%s extension(s) containing %s plugin(s) have been loaded!",
@@ -201,7 +201,7 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
             len(self.plugins)
         )
 
-    def load_extension(self, extension: str, *, in_reload=False):
+    async def load_extension(self, extension: str, *, in_reload=False):
         extension = extension.removesuffix(".py")
         extension_path = f"requiem.exts.{extension}"
 
@@ -213,7 +213,11 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
 
                 return
 
-            module.load(self)
+            function = module.load(self)
+
+            if isinstance(function, t.Awaitable):
+                await function
+
             self.extensions.append(extension)
 
             if not in_reload:
@@ -222,14 +226,14 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
         except Exception as exc:
             _LOGGER.error("extension '%s' encountered an error while loading!", extension, exc_info=exc)
 
-    def unload_extensions(self, *extensions: str) -> None:
+    async def unload_extensions(self, *extensions: str) -> None:
         for extension in extensions or self.extensions[::]:
-            self.unload_extension(extension)
+            await self.unload_extension(extension)
 
         if len(self.plugins) > 0:
             _LOGGER.warning("one or more extensions failed to remove their plugins on cleanup!")
 
-    def unload_extension(self, extension: str, *, in_reload=True) -> None:
+    async def unload_extension(self, extension: str, *, in_reload=True) -> None:
         extension_path = f"requiem.exts.{extension}"
 
         try:
@@ -240,7 +244,11 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
 
                 return
 
-            module.unload(self)
+            function = module.unload(self)
+
+            if isinstance(function, t.Awaitable):
+                await function
+
             self.extensions.remove(extension)
 
             for module in sys.modules.copy():
@@ -253,7 +261,7 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
         except Exception as exc:
             _LOGGER.error("extension '%s' encountered an exception while unloading!", extension, exc_info=exc)
 
-    def reload_extension(self, extension: str) -> None:
+    async def reload_extension(self, extension: str) -> None:
         extension_path = f"requiem.exts.{extension}"
 
         if extension not in self.extensions:
@@ -264,8 +272,8 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
         old = sys.modules[extension_path]
 
         try:
-            self.unload_extension(extension, in_reload=True)
-            self.load_extension(extension, in_reload=True)
+            await self.unload_extension(extension, in_reload=True)
+            await self.load_extension(extension, in_reload=True)
 
             _LOGGER.info("extension '%s' reloaded!", extension)
 
@@ -277,12 +285,12 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
         else:
             del old
 
-    def reload_extensions(self, *extensions: str) -> dict:
+    async def reload_extensions(self, *extensions: str) -> dict:
         exceptions = {}
 
         for extension in extensions or self.extensions[::]:
             try:
-                self.reload_extension(extension)
+                await self.reload_extension(extension)
 
             except Exception as exc:
                 exceptions[extension] = exc
@@ -293,9 +301,9 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
         await manage_application_commands(self)
 
     async def on_starting(self, _) -> None:
-        self.load_extensions()
+        await self.load_extensions()
 
     async def on_stopping(self, _) -> None:
-        self.unload_extensions()
+        await self.unload_extensions()
 
 

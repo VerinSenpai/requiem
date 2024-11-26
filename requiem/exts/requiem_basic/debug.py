@@ -73,14 +73,8 @@ async def terminate(ctx: RequiemContext):
 @lightbulb.command("reload", "Reload one or more loaded extensions and resync commands.", pass_options=True)
 @lightbulb.implements(lightbulb.SlashSubCommand)
 async def reload(ctx: RequiemContext) -> None:
-    exceptions = await ctx.app.reload_extensions()
+    await ctx.app.reload_extensions()
     await ctx.app.resync_commands()
-
-    if exceptions:
-        message = "Errors were encountered while reloading. Check the console for details."
-
-    else:
-        message = "Reloading finished without issue."
-
-    await ctx.respond(embed=hikari.Embed(description=message, color=ctx.color))
+    embed = hikari.Embed(description="Extension reloading finished. Check console for details", color=ctx.color)
+    await ctx.respond(embed=embed)
 

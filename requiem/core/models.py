@@ -83,7 +83,7 @@ class UsersConfig(Model):
     user_id: int = fields.BigIntField(primary_key=True)
 
 
-class NationStore(Model):
+class Nations(Model):
     id: int = fields.IntField(primary_key=True)
     nation_name: str = fields.TextField()
     leader_name: str = fields.TextField()

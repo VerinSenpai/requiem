@@ -70,16 +70,10 @@ async def terminate(ctx: RequiemContext):
 
 
 @debug.child
-@lightbulb.option(
-    name="extension",
-    description="An extension to reload. If one is not provided, all will be reloaded!",
-    required=False
-)
 @lightbulb.command("reload", "Reload one or more loaded extensions and resync commands.", pass_options=True)
 @lightbulb.implements(lightbulb.SlashSubCommand)
-async def reload(ctx: RequiemContext, extension: str = None) -> None:
-    _reload = ctx.app.reload_extensions
-    exceptions = _reload(extension) if extension else _reload()
+async def reload(ctx: RequiemContext) -> None:
+    exceptions = await ctx.app.reload_extensions()
     await ctx.app.resync_commands()
 
     if exceptions:

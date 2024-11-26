@@ -19,17 +19,32 @@ from requiem.core.impl import RequiemApp
 from requiem.exts.requiem_pw import commands
 
 import logging
-import asyncio
+import pwpy
 
 
 _LOGGER = logging.getLogger("requiem.exts.requiem_pw")
 
 
-def load(app: RequiemApp):
-    commands.setup.start()
+async def load(app: RequiemApp):
+    api_key = app.config.pw.api_key
+
+    if not api_key:
+        _LOGGER.warning("no api key provided! pw commands and services will be unavailable!")
+
+        return
+
+    pwpy.set_global_key(api_key)
+
+    try:
+        await pwpy.get_query({"game_info": "game_date"})
+
+    except pwpy.QueryKeyError:
+        _LOGGER.warning("provided api_key is invalid! pw commands and services will be unavailable!")
+
+        return
+
     app.add_plugin(commands.plugin)
 
 
 def unload(app: RequiemApp):
-    commands.build_nations_index.cancel()
     app.remove_plugin(commands.plugin)

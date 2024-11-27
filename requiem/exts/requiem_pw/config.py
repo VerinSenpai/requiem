@@ -15,5 +15,13 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-class PWConfig:
-    ...
+import attr
+
+
+@attr.s(auto_attribs=True)
+class Config:
+    api_key: str = None
+
+
+def load():
+    return Config

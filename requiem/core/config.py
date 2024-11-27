@@ -28,6 +28,9 @@ from cattr import global_converter
 from pathlib import Path
 
 
+__all__ = ["PostgresConfig", "RequiemConfig", "load_config", "save_config"]
+
+
 _LOGGER: logging.Logger = logging.getLogger("requiem.config")
 _EXTENSIONS = []
 _MODELS = ["aerich.models"]
@@ -57,7 +60,6 @@ class PostgresConfig:
         return tortoise.generate_config(str(self.url), {"models": _MODELS})
 
 
-@attr.s(auto_attribs=True)
 class RequiemConfig:
     token: str | None = None
     guild_ids: t.List[int] = []
@@ -66,8 +68,9 @@ class RequiemConfig:
     packages: list = ["requiem"]
 
     @classmethod
-    def add_config(cls, name: str, reference: t.Any):
-        setattr(cls, name, reference)
+    def add_attr(cls, attr_name: str, new_attr: type) -> None:
+        cls.__annotations__[attr_name] = new_attr
+        setattr(cls, attr_name, attr.ib(factory=new_attr))
 
     @property
     def get_extensions(self):
@@ -90,15 +93,15 @@ def _process_extension(extension: Path) -> None:
                     module = importlib.import_module(f"{extension_path}.config")
 
                     if not hasattr(module, "Config"):
-                        _LOGGER.warning("config for extension '%s' has no 'Config' object!", extension_path)
+                        _LOGGER.warning("config for extension '%s' has no 'load' method!", extension_path)
 
                         return
 
-                    RequiemConfig.add_config(extension.name, module.Config)
+                    RequiemConfig.add_attr(extension.name, module.load())
 
                 except Exception as exc:
                     _LOGGER.error(
-                        "config for extension '%s' failed during pre-load processing!",
+                        "config for extension '%s' encountered an exception during pre-load processing!",
                         extension_path,
                         exc_info=exc
                     )
@@ -129,7 +132,8 @@ def load_config(instance_path: Path) -> RequiemConfig | None:
         with config_file.open() as stream:
             data: dict = yaml.safe_load(stream)
 
-        _process_packages(data["packages"])
+        _process_packages(data.get("packages", ["requiem"]))
+        attr.s(RequiemConfig, auto_attribs=True)
         config: RequiemConfig = global_converter.structure(data, RequiemConfig)
         _LOGGER.info("config for instance (%s) has been loaded!", instance_path.name)
         return config

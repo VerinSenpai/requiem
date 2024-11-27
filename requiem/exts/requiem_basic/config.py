@@ -18,6 +18,15 @@
 import attr
 
 
-@attr.s
+@attr.s(auto_attribs=True)
 class Config:
     enable_developer_commands: bool = False
+    enable_rotating_activity: bool = True
+
+
+def load():
+    return Config
+
+
+def setup():
+    ...

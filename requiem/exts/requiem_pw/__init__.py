@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger("requiem.exts.requiem_pw")
 
 
 async def load(app: RequiemApp):
-    api_key = app.config.pw.api_key
+    api_key = app.config.requiem_pw.api_key
 
     if not api_key:
         _LOGGER.warning("no api key provided! pw commands and services will be unavailable!")

@@ -230,6 +230,8 @@ def start(data_path: Path, instance_path: Path) -> None:
 
     config: RequiemConfig | None = load_config(instance_path)
 
+    return
+
     if not config:
         prompt_setup()
 

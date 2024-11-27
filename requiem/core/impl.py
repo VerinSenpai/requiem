@@ -130,16 +130,6 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
     def session_time(self) -> timedelta:
         return datetime.now() - self._start_time
 
-    @property
-    def get_extensions(self) -> typing.Generator:
-        extensions_dir = __install_path__ / "exts"
-
-        return (
-            extension.name
-            for extension in extensions_dir.iterdir()
-            if extension.name not in ("__init__.py", "__pycache__")
-        )
-
     @staticmethod
     async def on_command_error(event: lightbulb.SlashCommandErrorEvent) -> None:
         context: RequiemContext = event.context
@@ -192,7 +182,7 @@ class RequiemApp(lightbulb.BotApp, abc.ABC):
         return cls(self, event, command)
 
     async def load_extensions(self, *extensions: str) -> None:
-        for extension in extensions or self.get_extensions:
+        for extension in extensions or self.config.get_extensions:
             await self.load_extension(extension)
 
         _LOGGER.info(

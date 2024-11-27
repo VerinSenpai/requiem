@@ -16,24 +16,21 @@
 
 
 import logging
-import typing
+import typing as t
 import attr
 import cattrs
 import tortoise
 import yaml
 import yarl
+import importlib
 
 from cattr import global_converter
 from pathlib import Path
 
 
 _LOGGER: logging.Logger = logging.getLogger("requiem.config")
-
-
-@attr.s(auto_attribs=True)
-class PWConfig:
-    api_key: str = None
-    update_frequency: int = 10
+_EXTENSIONS = []
+_MODELS = ["aerich.models"]
 
 
 @attr.s(auto_attribs=True)
@@ -57,20 +54,72 @@ class PostgresConfig:
 
     @property
     def tortoise(self) -> dict:
-        return tortoise.generate_config(
-            str(self.url),
-            {"models": ["aerich.models", "requiem.core.models"]}
-        )
+        return tortoise.generate_config(str(self.url), {"models": _MODELS})
 
 
 @attr.s(auto_attribs=True)
 class RequiemConfig:
     token: str | None = None
-    guild_ids: typing.List[int] = []
-    owner_ids: typing.List[int] = []
+    guild_ids: t.List[int] = []
+    owner_ids: t.List[int] = []
     database: PostgresConfig = attr.ib(factory=PostgresConfig)
-    pw: PWConfig = attr.ib(factory=PWConfig)
-    enable_developer_commands: bool = False
+    packages: list = ["requiem"]
+
+    @classmethod
+    def add_config(cls, name: str, reference: t.Any):
+        setattr(cls, name, reference)
+
+    @property
+    def get_extensions(self):
+        return _EXTENSIONS
+
+
+def _process_extension(extension: Path) -> None:
+    extension_path = ".".join(extension.with_suffix('').parts)
+
+    if extension.name == "__pycache__":
+        return
+
+    elif extension.name == "__init__.py":
+        return
+
+    if extension.is_dir():
+        for file in extension.iterdir():
+            if file.name == "config.py":
+                try:
+                    module = importlib.import_module(f"{extension_path}.config")
+
+                    if not hasattr(module, "Config"):
+                        _LOGGER.warning("config for extension '%s' has no 'Config' object!", extension_path)
+
+                        return
+
+                    RequiemConfig.add_config(extension.name, module.Config)
+
+                except Exception as exc:
+                    _LOGGER.error(
+                        "config for extension '%s' failed during pre-load processing!",
+                        extension_path,
+                        exc_info=exc
+                    )
+
+            if file.name == "models.py":
+                _MODELS.append(f"{extension_path}.models")
+
+    _EXTENSIONS.append(extension_path)
+
+
+def _process_packages(packages):
+    for package in packages:
+        package_dir = Path(package) / "exts"
+
+        if not package_dir.is_dir():
+            _LOGGER.warning("extension package '%s' was not found! is this package installed?", package)
+
+            continue
+
+        for extension in package_dir.iterdir():
+            _process_extension(extension)
 
 
 def load_config(instance_path: Path) -> RequiemConfig | None:
@@ -80,9 +129,9 @@ def load_config(instance_path: Path) -> RequiemConfig | None:
         with config_file.open() as stream:
             data: dict = yaml.safe_load(stream)
 
+        _process_packages(data["packages"])
         config: RequiemConfig = global_converter.structure(data, RequiemConfig)
         _LOGGER.info("config for instance (%s) has been loaded!", instance_path.name)
-
         return config
 
     except (TypeError, cattrs.ClassValidationError):
@@ -94,7 +143,6 @@ def load_config(instance_path: Path) -> RequiemConfig | None:
 
 def save_config(instance_path: Path, config: RequiemConfig) -> None:
     config_file: Path = instance_path / "config.yaml"
-
     config: dict = global_converter.unstructure(config)
 
     with config_file.open("w") as file:

@@ -16,12 +16,10 @@
 
 
 from requiem.core.impl import RequiemContext, RequiemPlugin
-from requiem.core.models import AutoCompleteIndex, NationStore
+from requiem.core.utils.index import AutoCompleteIndex
 from requiem.exts.requiem_pw import utils
 from lightbulb.ext import tasks
-from tortoise.expressions import Q
 
-import typing as t
 import pwpy
 import lightbulb
 import hikari
@@ -55,7 +53,7 @@ plugin.add_checks(lightbulb.Check(ready_check))
 async def setup():
     global READY, FAILED
 
-    api_key: str | None = plugin.config.pw.api_key
+    api_key: str | None = plugin.config.requiem_pw.api_key
 
     if api_key:
         pwpy.set_global_key(api_key)

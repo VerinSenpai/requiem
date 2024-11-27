@@ -15,9 +15,6 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from tortoise import Model, fields
-from datetime import datetime
-
 import typing
 
 
@@ -73,20 +70,3 @@ class AutoCompleteIndex:
         if user in self._history.keys():
             return self._history[user]
         return []
-
-
-class GuildsConfig(Model):
-    guild_id: int = fields.BigIntField(primary_key=True)
-
-
-class UsersConfig(Model):
-    user_id: int = fields.BigIntField(primary_key=True)
-
-
-class Nations(Model):
-    id: int = fields.IntField(primary_key=True)
-    nation_name: str = fields.TextField()
-    leader_name: str = fields.TextField()
-    date: datetime = fields.DatetimeField()
-    original_date: datetime = fields.DatetimeField()
-    discord_id: int = fields.BigIntField(null=True)

@@ -13,3 +13,33 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
+import yaml
+import attr
+
+from pathlib import Path
+from cattr import global_converter
+
+
+instance_path: Path
+
+
+def register_path(root_path: Path, instance: str) -> None:
+    global instance_path
+
+    instance_path = root_path / instance
+
+
+class ConfigBase:
+
+    file_name: str = "config.yaml"
+
+    @classmethod
+    def load(cls):
+        file = instance_path / cls.file_name
+
+        with file.open() as stream:
+            data = yaml.safe_load(stream)
+
+        return global_converter.structure(data, cls)

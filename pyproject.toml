@@ -18,17 +18,11 @@ classifiers = [
     "Programming Language :: Python :: 3"
 ]
 dependencies = [
-    "hikari-lightbulb",
-    "pyyaml",
-    "aiohttp",
-    "aerich",
-    "asyncpg",
-    "tortoise-orm",
-    "requests",
     "click",
     "yarl",
     "attrs",
-    "cattrs"
+    "cattrs",
+    "pyyaml"
 ]
 
 [project.scripts]
